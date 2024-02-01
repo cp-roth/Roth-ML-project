@@ -2,6 +2,8 @@
 
 A template file and folder structure for a data analysis project/paper done with R/Quarto/Github. 
 
+This is Cassia Roth's class project repository.
+
 # Pre-requisites
 
 This is a template for a data analysis project using R, Quarto, Github and a reference manager that can handle bibtex. It is also assumed that you have a word processor installed (e.g. MS Word or [LibreOffice](https://www.libreoffice.org/)). You need that software stack to make use of this template.
