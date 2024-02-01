@@ -8,24 +8,20 @@ format:
     toc: false
     number-sections: true
     highlight-style: github
-bibliography: ../assets/Mada_bib.bib
-csl: ../assets/vancouver.csl
+    bibliography: assets/Mada_Bib.bib
+    csl: assets/vancouver.csl
 ---
 
-This uses MS Word as output format. [See here](https://quarto.org/docs/output-formats/ms-word.html) for more information. You can switch to other formats, like html or pdf. See [the Quarto documentation](https://quarto.org/) for other formats.
-
-
 ```{r, echo=FALSE, message=FALSE}
-# load a few R packages
+#Loading R packages
 library(here)
 library(knitr)
 library(renv)
+library(tidyverse)
 ```
 
-
-
 # Summary/Abstract
-_Write a summary of your project._
+This project uses a linear regression model to understand disparities in infant birth weight in relation to maternal race, age, gestational status (parity or gravidity), and nationality in Rio de Janeiro, Brazil's first public maternity hospital, the Maternidade Laranjeiras (now Maternidade Escola) in the 1920s. I will use a linear model to estimate the relationship of maternal variables on infant birth weight. I hypothesize that infants born to women of color will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery, only abolished in 1888, on population health in Brazil.
 
 
 {{< pagebreak >}}
@@ -34,48 +30,39 @@ _Write a summary of your project._
 # Introduction 
 
 ## General Background Information
-_Provide enough background on your topic that others can understand the why and how of your analysis_ 
+Public health and medical research over the past twenty years has shown that while race is a biological fiction, its social consequences have far-reaching influences on public health outcomes, particularly in countries with high levels of race-based inequality. Studies in Brazil have shown that non-White mothers give birth to infants at lower birth weights than their White counterparts. This is a significant public health concern because low birth weight is associated with higher infant mortality, and with long-term health problems such as diabetes, hypertension, and heart disease.
+
+As a historian of medicine and public health in Brazil, I have collected infant birth weight data from the country's first public maternity hospital, opened in 1904 in the then-capital city of Rio de Janeiro. Brazil was the last country in the Western Hemisphere to abolish slavery (1888), and it had, and still has, the largest number of African-descended peoples in the world outside of Nigeria. Around 51% of country's population today is of African-descent.
+
+In the post-abolition period of the 1890s to 1930s, the Brazilian government expanded public health initiatives and the provision of clinical care. Did the legacy of slavery affect the health of infants born in the first public maternity hospital in Brazil? To date, historians have only provided descriptive examples of health inequities.
 
 ## Description of data and data source
 I will analyze a unique sample of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
 
-The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras (50). I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children (51).
+The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posnerOxornFooteHumanLabor2013].
 
-Clinical notes only sporadically included infant demographic information for spontaneous abortions or stillbirths. For spontaneous abortions, stillbirths, and live births, I recorded, when available, infant sex, weight, length. I followed the original clinical categorizations for type of delivery in the following cases: natural, indicating minimal medical intervention; interventionist, indicating medium medical intervention through the use of forceps; and operatory, indicating a cesarean section or embryotomy. However, I recategorized external manipulations including version and Mauriceau (used during breech deliveries) (52,53), coded as operatory or natural by physicians, as interventionist.
+Clinical notes only sporadically included infant demographic information for spontaneous abortions or stillbirths. For spontaneous abortions, stillbirths, and live births, I recorded, when available, infant sex, weight, length. I followed the original clinical categorizations for type of delivery in the following cases: natural, indicating minimal medical intervention; interventionist, indicating medium medical intervention through the use of forceps; and operatory, indicating a cesarean section or embryotomy. However, I recategorized external manipulations including version and Mauriceau (used during breech deliveries) (@eyraudMauriceauManeuverDeleterious1997), coded as operatory or natural by physicians, as interventionist.
+
 In the initial months of publication, the reports included more complete information, including labor time or detailed descriptions of surgical procedures. Over time, clinical notes became streamlined. When physicians intervened in birth, the notes included the type of intervention, the indication, and the obstetrician.
 
-The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca de Biomedicina-A, Universidade Estadual do Rio de Janeiro (BBA-UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions.
+The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca de Biomedicina-A, Universidade Estadual do Rio de Janeiro (BBA-UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions. This will be converted into a .csv file for upload into R.
 
 ## Questions/Hypotheses to be addressed
-I will quantify how maternal race, nationality, age, and gravidity or parity explain racial disparities in low birth weight (LBW) in Rio de Janeiro, Brazil’s first public maternity hospital, Maternidade Laranjeiras, in the 1920s.
+I will quantify how maternal race, nationality, age, and gravidity or parity explain racial disparities in infant birth weight in Rio de Janeiro, Brazil’s first public maternity hospital, Maternidade Laranjeiras, in the 1920s. I hypothesize that infants born to women of color, defined as mixed-race (*parda*) or Black (*preta*), will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery on population health in Brazil.
 
-To cite other work (important everywhere, but likely happens first in introduction), make sure your references are in the bibtex file specified in the YAML header above (here `dataanalysis_template_references.bib`) and have the right bibtex key. Then you can include like this:
-
-Examples of reproducible research projects can for instance be found in [@mckay2020; @mckay2020a].
-
-
+The outcome I will measure is infant birth weight. The World Health Organization (WHO) currently classifies birth weight into the following categories: extremely low (<999g); very low (1000-1499g); low (1500-2499g); normal (2500-3999g); and high (≥4000g) [@worldhealthorganizationInternationalClassificationDiseases2022]. I will use the WHO’s classification to categorize birth weight. 
 
 {{< pagebreak >}}
 
 
-# Methods 
+# Methods
 
-_Describe your methods. That should describe the data, the cleaning processes, and the analysis approaches. You might want to provide a shorter description here and all the details in the supplement._
+I will use a linear model to estimate the relationship of maternal variables on infant birth weight. Originally, I tried using a logistic regression model with very low birthweight (VLBW), low birth weight (LBW), and normal birth weight as the outcome, but after I started taking a class with Dr. Swartzendruber, I realized that it is important to understand birthweight as a continuous variable. 
 
+**This section was written by GitHub copilot**
+I will use the `lm` function in R to estimate the relationship of maternal variables on infant birth weight. I will use the `tidy` function from the `broom` package to extract the coefficients and standard errors from the model. I will use the `glance` function from the `broom` package to extract the R-squared value from the model. I will use the `augment` function from the `broom` package to extract the residuals from the model. I will use the `ggplot2` package to visualize the results.
 
 ## Schematic of workflow
-
-Sometimes you might want to show a schematic diagram/figure that was not created with code (if you can do it with code, do it). @fig-schematic is an example of some - completely random/unrelated - schematic that was generated with Biorender.
-We store those figures in the `assets` folder.
-
-```{r}
-##| label: fig-schematic
-##| fig-cap: "A figure that is manually generated and shows some overview/schematic. This has nothing to do with the data, it's just a random one from one of our projects I found and placed here."
-##| echo: FALSE
-#knitr::include_graphics(here("products","assets","antigen-recognition.png"))
-```
-
-
 
 
 ## Data aquisition
@@ -83,6 +70,20 @@ _As applicable, explain where and how you got the data. If you directly import t
 
 
 ## Data import and cleaning
+```{r}
+#Setting working directory using here package
+here("data/raw-data/MaternidadeLaranjeiras.csv")
+
+#Reading in file
+ML <- read.csv(here("data/raw-data/MaternidadeLaranjeiras.csv"))
+
+#Looking at structure of data
+str(ML)
+```
+/Users/cassiaroth/Documents/GitHub/MADARoth/Roth-MADA-project/MaternidadeLaranjeiras.csv
+
+```{r}
+```
 _Write code that reads in the file and cleans it so it's ready for analysis. Since this will be fairly long code for most datasets, it might be a good idea to have it in one or several R scripts. If that is the case, explain here briefly what kind of cleaning/processing you do, and provide more details and well documented code somewhere (e.g. as supplement in a paper). All materials, including files that contain code, should be commented well so everyone can follow along._
 
 
@@ -100,48 +101,17 @@ _Explain anything related to your statistical analyses._
 _Use a combination of text/tables/figures to explore and describe your data. Show the most important descriptive results here. Additional ones should go in the supplement. Even more can be in the R and Quarto files that are part of your project._
 
 
-@tbl-summarytable shows a summary of the data.
-
 Note the loading of the data providing a **relative** path using the `../../` notation. (Two dots means a folder up). You never want to specify an **absolute** path like `C:\ahandel\myproject\results\` because if you share this with someone, it won't work for them since they don't have that path. You can also use the `here` R package to create paths. See examples of that below.
-
-```{r}
-##| label: tbl-summarytable
-##| tbl-cap: "Data summary table."
-##| echo: FALSE
-#resulttable=readRDS("../../results/summarytable.rds")
-#knitr::kable(resulttable)
-```
-
-
 
 ## Basic statistical analysis
 
 _To get some further insight into your data, if reasonable you could compute simple statistics (e.g. simple models with 1 predictor) to look for associations between your outcome(s) and each individual predictor variable. Though note that unless you pre-specified the outcome and main exposure, any "p<0.05 means statistical significance" interpretation is not valid._
 
 
-@fig-result shows a scatterplot figure produced by one of the R scripts.
-
-```{r}
-##| label: fig-result
-##| fig-cap: "Height and weight stratified by gender."
-##| echo: FALSE
-#knitr::include_graphics(here("results","height-weight-stratified.png"))
-```
-
 
 ## Full analysis
 
 _Use one or several suitable statistical/machine learning methods to analyze your data and to produce meaningful figures, tables, etc. This might again be code that is best placed in one or several separate R scripts that need to be well documented. You want the code to produce figures and data ready for display as tables, and save those. Then you load them here._
-
-Example @tbl-resulttable2 shows a summary of a linear model fit.
-
-```{r}
-##| label: tbl-resulttable2
-##| tbl-cap: "Linear model fit table."
-##| echo: FALSE
-#resulttable2 = readRDS(here("results","tables-files","resulttable2.rds"))
-#knitr::kable(resulttable2)
-```
 
 
 {{< pagebreak >}}
@@ -160,9 +130,6 @@ _What are the main take-home messages?_
 
 _Include citations in your Rmd file using bibtex, the list of references will automatically be placed at the end_
 
-This paper [@leek2015] discusses types of analyses. 
-
-These papers [@mckay2020; @mckay2020a] are good examples of papers published using a fully reproducible setup similar to the one shown in this template. 
 
 Note that this cited reference will show up at the end of the document, the reference formatting is determined by the CSL file specified in the YAML header. Many more style files for almost any journal [are available](https://www.zotero.org/styles). You also specify the location of your bibtex reference file in the YAML. You can call your reference file anything you like, I just used the generic word `references.bib` but giving it a more descriptive name is probably better.
 
