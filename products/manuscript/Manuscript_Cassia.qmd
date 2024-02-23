@@ -80,7 +80,7 @@ There were three continuous variables: maternal age, infant birth weight, and in
 #| tbl-cap: "Continous Data Summary Table"
 #| echo: FALSE
 summary_stats_table <- readRDS(here::here("results", "tables", "summary_stats_table.rds"))
-summary_stats_table
+summary_stats_table |> gt::as_raw_html()
 ```
 
 Birth weight is the outcome variable of interest, so let's look at some visualizations of the data. Here is a histogram of the birth weight data, with the two dotted red lines marking the upper and lower limits of what the WHO defines as normal birth weight.
