@@ -1,0 +1,171 @@
+---
+title: "Cleaning and Processing"
+author: "Cassia Roth"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Please note I used ChatGPT and CoPilot throughout to help troubleshoot code.
+
+# Processing script
+
+This contains the same code and comments/information as `processingcode.R`. This quarto file does not pull code from the R script but rather includes it directly.
+
+# Setup
+
+Load needed packages. Make sure they are installed.
+
+```{r}
+library(readxl) #for loading Excel files
+library(tidyverse) #for data processing/cleaning
+library(skimr) #for nice visualization of data 
+library(here) #to set paths
+library(renv) #for package management
+library(knitr) #for nice tables
+library(kableExtra) #for nice tables
+```
+
+
+# Data loading
+
+Note that for functions that come from specific packages (instead of base R), you can specify both package and function: `package::function()`. Although not required, specifying the package makes it clearer where the function is coming from. This text is adapted from Dr. Andreas Handel.
+
+```{r}
+# path to data
+# note the use of the here() package and not absolute paths
+data_location <- here::here("data","raw-data","MaternidadeLaranjeiras.csv")
+ML_raw <- read_csv(data_location)
+
+# Structure of Data
+glimpse(ML_raw)
+```
+From this initial read, we can see that the data have 2845 observations and 23 variables. The variables are characterized as character and numerical.
+
+# Check data
+
+First we can look at the Codebook and practice table making.
+```{r}
+# Path to codebook
+codebook_location <- here::here("data", "raw-data", "Codebook.csv")
+codebook <- read_csv(codebook_location)
+
+# Full column specification
+spec(codebook)
+
+# Display the structure of the data frame
+str(codebook)
+
+# Display the first few rows of the data frame
+head(codebook)
+
+# Create table
+codebook_table <- kable(codebook, caption = "Codebook") %>% kable_styling()
+
+#Print table
+print(codebook_table)
+```
+
+# Explore data
+
+There are several ways of looking at the data. This code comes from Dr. Andreas Handel.
+
+```{r}
+# Looking at the data
+dplyr::glimpse(ML_raw)
+summary(ML_raw)
+head(ML_raw)
+skimr::skim(ML_raw)
+```
+
+# Clean data
+
+I created this dataset from published clinical notes from a specific maternity hospital in Rio de Janeiro, Brazil for multiple projects, mostly of a qualitative nature. Thus, I was interested in the notes clinicians included on difficult deliveries and their outcomes. These variables include qualitative information that can be excluded from our processed data, since we are not looking at qualitative notes on cases. We also don't need the citation information to run regressions. So we will be removing the following variables as we process our data: `VolN`, `Page`, `Number`, `Nationality_Notes`, `Birth_Notes`, `Maternal_Notes`, `Fetal_Notes`, `CauseofDeath`, `PreviousHistory`, and `Notes`.
+
+```{r}
+# Remove unnecessary variables
+ML_1 <- ML_raw %>% dplyr::select(-VolN, -Page, -Number, -Nationality_Notes, -Birth_Notes, -Maternal_Notes, -Fetal_Notes, -CauseofDeath, -PreviousHistory, -Notes)
+```
+
+Despite removing variables we won't use because of their qualitative nature, we still have many missing observations for some of the variables. Let's check for missing data.
+
+```{r}
+#Summarize missing data using dplyr
+missing_data_summary <- ML_1 %>% dplyr::summarise_all(funs(sum(is.na(.))))
+```
+We can see that `CivilStatus` has 2834 missing observations and `GestationalAge_Months` has 2789 missing observations. This is a lot. Since I am not interested in understanding the relationship between marital status and infant birth weight and since gestational age in months refers to spontaneous abortions that occurred in the clinic, we can also exclude both these variables, the latter because an abortion precludes the existence of a birth.
+
+```{r}
+# Remove variables with missing data not relevant to hypothesis
+ML_2 <- ML_1 %>% dplyr::select(-CivilStatus, -GestationalAge_Months)
+```
+
+Now we can check for missing data again.
+
+```{r}
+#Summarize missing data using dplyr
+missing_data_summary <- ML_2 %>% dplyr::summarise_all(funs(sum(is.na(.))))
+View(missing_data_summary)
+```
+
+Now I will work on transforming character variables into factors.
+
+```{r}
+# Transform character variables into factors
+ML_3 <- ML_2 %>%
+  mutate(across(c(Color, Status, Nationality, Birth, MaternalOutcome, FetalOutcome, Sex), as.factor))
+
+# Check variables
+glimpse(ML_3)
+
+# Check levels of factor variables
+map(ML_3[c('Color', 'Status', 'Nationality', 'Birth', 'MaternalOutcome', 'FetalOutcome', 'Sex')], levels)
+
+# Define factor variables to check frequencies
+factor_variables <- c('Color', 'Status', 'Nationality', 'Birth', 'MaternalOutcome', 'FetalOutcome', 'Sex')
+
+# Check frequencies of factor variables
+frequency_table <- ML_3 %>%
+  count(across(all_of(factor_variables)))
+
+print(frequency_table)
+```
+
+
+# Create datasets for analysis
+
+There are still missing observations for all the remaining variables except `Date`. For now, I will keep these observations intact because I want the maximum number of observations for summary statistics of all variables. Although the sample size for these summary statistics will then differ from that of my linear regression model, I believe more observations at the exploratory stage provide a fuller picture of what type of patient went to the hospital during the time period under study. Here, I will create two datasets: one for summary statistics and one for the linear regression model.
+
+The latter (linear regression) will exclude the variables `MaternalOutcome` and `Birth`. 
+
+```{r} 
+# Create dataset for summary statistics (includes missing values)
+ML_summary <- ML_3
+
+# Creating dataset for linear regression
+ML_linear <- ML_3 %>% tidyr::drop_na()
+
+# Check for no missing data in linear model
+ML_Linear_summary <- ML_linear %>% dplyr::summarise_all(funs(sum(is.na(.))))
+View(ML_linear_summary)
+```
+Now, I can see that my `ML_linear` dataset has no missing data. It has 2032 observations and 11 variables. This might change as I begin analysis. For example, I might want to exclude infant birth length, which is included at the moment.
+
+# Save data 
+
+Finally, I will save the clean data both the `ML_Linear` dataset and the `ML_summary` dataset as RDS files
+.
+```{r}
+# Save ML_Linear as RDS
+save_data_location <- here::here("data","processed-data","ML_linear_processed.rds")
+saveRDS(ML_linear, file = save_data_location)
+
+# Save ML_summary as RDS
+save_data_location <- here::here("data","processed-data","ML_summary_processed.rds")
+saveRDS(ML_summary, file = save_data_location)
+```
+
+
+
+# Notes
+
+This script is a work in progress. I will be adding more to it as I continue to work on the data. 

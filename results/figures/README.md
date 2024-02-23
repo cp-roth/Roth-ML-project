@@ -1,3 +1,3 @@
-Folder for all figures.
+This folder is for all figures.
 
-You can create further sub-folders if that makes sense.
+All figures for the final manuscript will have a _final in the name.

@@ -1,0 +1,24 @@
+﻿Column_name,Description
+Date,Date of publication from original source
+VolN,Volume and issue number of orginal source publication
+Page,Page number of entry in original source
+Number,Patient number
+Color,Patient skin color
+Status,Gravidity or parity of patient
+Age,Age of patient in years
+Nationality,Nationality of patient
+Nationality_notes,Further descriptive notes on patient nationality
+CivilStatus,"Civil status (married, single, widowed) of patient"
+Birth,Delivery type in clinic
+Birth_Notes,Further descriptive notes on labor and delivery
+MaternalOutcome,Patient outcome after clinic visit
+Maternal_Notes,Further descriptive notes on patient outcome after clinic visit
+FetalOutcome,Fetal or infant outcome after patient's clinic visit
+Fetal_Notes,Further descriptive notes on fetal or infant outcome after patient's clinic visit
+Sex,Sex of fetus or infant
+Weightgrams,Weight in grams of fetus or infant
+Lengthcentimeters,Length in centimeters of fetus or infant
+GestationalAge_Months,Gestational age of fetus or infant in months
+CauseofDeath,Descriptive notes on fetal or infant cause of death
+PreviousHistory,Patient's previous reproductive history
+Notes,Further descriptive notes on entire clinical entry
