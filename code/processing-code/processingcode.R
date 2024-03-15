@@ -28,12 +28,9 @@ ML_raw <- read_csv(data_location)
 glimpse(ML_raw)
 
 ## ---- checkdata --------
-# Check codebook
 # Path to codebook
 codebook_location <- here::here("data", "raw-data", "Codebook.csv")
 codebook <- read_csv(codebook_location)
-# Full column specification
-spec(codebook)
 # Display the structure of the data frame
 str(codebook)
 # Display the first few rows of the data frame
@@ -79,7 +76,8 @@ print(frequency_table)
 # Create dataset for summary statistics (includes missing values)
 ML_summary <- ML_3
 # Creating dataset for linear regression
-ML_linear <- ML_3 %>% tidyr::drop_na()
+ML_linear <- ML_3 %>% tidyr::drop_na() %>%
+  filter(Weightgrams >= 500, FetalOutcome != "morto") # Drop observations of < 500 grams and all non-live births
 # Check for no missing data in linear model
 ML_Linear_summary <- ML_linear %>% dplyr::summarise_all(funs(sum(is.na(.))))
 View(ML_linear_summary)

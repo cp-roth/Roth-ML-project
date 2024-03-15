@@ -1,16 +1,17 @@
 ## ---- packages --------
 #load needed packages. make sure they are installed.
-library(tidyverse) #for data processing/cleaning
+library(tidyverse) #for data processing/cleaning; includes ggplot2, tidyr, readr, dplyr, stringr, purr, forcats
 library(skimr) #for nice visualization of data 
 library(here) #to set paths
 library(renv) #for package management
 library(knitr) #for nice tables
 library(kableExtra) #for nice tables
 library(gt) #for nice tables
+library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(hrbrthemes) #for nice themes
 hrbrthemes::import_roboto_condensed() #import needed fonts for hrbrthemes
-rm(list=ls()) #clear the environment
+#rm(list=ls()) #clear the environment
 
 ## ---- loaddata --------
 #Path to summary data. Note the use of the here() package and not absolute paths
@@ -87,7 +88,133 @@ plot(length_weight_sex)
 figure_file = here("results","figures","length_weight_sex.png")
 ggsave(filename = figure_file, plot=length_weight_sex, bg="white") #background is white
 
+## ---- Dummyvariables --------
+# Create dummy variables
+# Combine "Preta" and "Parda" into a new category Afro or EuroDescent and create dummy variable
+ML_summary$ModifiedColor <- ifelse(ML_summary$Color == "Branca", "EuroDescent",
+                                   ifelse(ML_summary$Color == "Preta", "AfroDescent",
+                                          ifelse(ML_summary$Color == "Parda", "AfroDescent", NA)))
+
+# Or using recode factor from dplyr (easier)
+# ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" # = "AfroDescent", "Branca" = "EuroDescent")
+
+# Create dummy variables for status and change to English
+ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
+
+# Create dummy variables for nationality and change to English
+ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
+
+# View the updated dataframe
+print(head(ML_summary))
+
+## ---- LanguageChange --------
+# Change observations from Portuguese to English
+ML_summary <- ML_summary %>%
+  mutate(
+    ModifiedColor = recode_factor(ModifiedColor, "AfroDescent" = "Afro-Descent", "EuroDescent" = "Euro-Descent"),
+    ModifiedNationality = recode_factor(ModifiedNationality, "European" = "European", "LatinAmerican" = "Latin American", "MiddleEastern" = "Middle Eastern", "Brazilian" = "Brazilian"),
+    Color = recode_factor(Color, "Preta" = "Black", "Parda" = "Mixed Race", "Branca" = "White"),
+    Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
+    Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
+    MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
+  )
+
+## ---- Summarystats --------
+# Create gtsummary table 
+table1 <- 
+  ML_summary %>%
+  tbl_summary(
+    include = c(Color, ModifiedColor, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Weightgrams, Lengthcentimeters),
+    missing = "no",
+    label = list(ModifiedColor ~ "Ancestry", ModifiedStatus ~ "Parity or Gravidity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Weightgrams ~ "Infant Birthweight (grams)", Lengthcentimeters ~ "Infant Birth Length (centimeters)")
+  ) %>%
+  add_n()
+table1
+
+#Save table
+saveRDS(summary_stats_table, file = here::here("results", "tables", "Table1_final.rds"))
+
 ## ---- Summarystatscont --------
+# Calculate frequencies of birth category without abortion
+birth_freq2 <- ML_summary %>%
+  filter(!is.na(Birth)) %>% # Exclude rows with NA in birth variable
+  filter(Birth != "abortion") %>% # Exclude rows with abortion
+  count(Birth, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
+  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
+  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
+print(birth_freq2)
+
+## ---- MMR/SBR/SRaB --------
+#MMR Maternal mortality ratio
+maternal_deaths <-23
+live_births <- 2440
+MMR <- (maternal_deaths / live_births) * 10000
+MMR
+
+#Stillbirth rate SBR
+still_births <- 226
+total_births <- 2666
+SBR <- (still_births / total_births) * 1000
+SBR
+
+#Sex ratio at birth (live male births/live female births)*100
+sex_ratio <- ML_summary %>%
+  filter(!Birth %in% c("Abortion") & !FetalOutcome %in% c("Stillbirth or Neonatal Death")) %>% # Exclude rows with abortion and stillbirth
+  filter(!is.na(Sex) & !is.na(Birth) & !is.na(FetalOutcome)) %>%
+  group_by(Sex) %>%
+  summarise(count = n()) %>%
+  spread(key = Sex, value = count) %>%
+  mutate(SexRatio = M / F) * 100
+sex_ratio
+
+##---- LinearData --------
+#Path to summary data. Note the use of the here() package and not absolute paths
+data_location <- here::here("data","processed-data","ML_linear_processed.rds")
+
+#load data
+ML_linear <- readRDS(data_location)
+
+# Create summary
+summary = skimr::skim(ML_linear)
+print(summary)
+
+# save to file
+lineartable_file = here("results", "tables", "lineartable.rds")
+saveRDS(summary, file = lineartable_file)
+
+# Create dummy variables
+# Combine "Preta" and "Parda" into a new category Afro or EuroDescent and create dummy variable
+ML_linear$ModifiedColor <- ifelse(ML_linear$Color == "Branca", "EuroDescent",
+                                  ifelse(ML_linear$Color == "Preta", "AfroDescent",
+                                         ifelse(ML_linear$Color == "Parda", "AfroDescent", NA)))
+
+# Or using recode factor from dplyr (easier)
+# ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Parda" = "AfroDescent", "Preta" # = "AfroDescent", "Branca" = "EuroDescent")
+
+# Create dummy variables for status and change to English
+ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
+
+# Create dummy variables for nationality and change to English
+ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
+
+# View the updated dataframe
+print(head(ML_linear))
+
+# Change observations from Portuguese to English
+ML_linear <- ML_linear %>%
+  mutate(
+    ModifiedColor = recode_factor(ModifiedColor, "AfroDescent" = "Afro-Descent", "EuroDescent" = "Euro-Descent"),
+    ModifiedNationality = recode_factor(ModifiedNationality, "European" = "European", "LatinAmerican" = "Latin American", "MiddleEastern" = "Middle Eastern", "Brazilian" = "Brazilian"),
+    Color = recode_factor(Color, "Preta" = "Black", "Parda" = "Mixed Race", "Branca" = "White"),
+    Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
+    Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
+    MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
+  )
+
+## ---- Extracode --------
+# Don't use this code in future
 # Summary stats of continuous variables
 summary_stats <- ML_summary %>%
   summarize(
@@ -98,7 +225,9 @@ summary_stats <- ML_summary %>%
     mean_length = mean(Lengthcentimeters, na.rm = TRUE),
     sd_length = sd(Lengthcentimeters, na.rm = TRUE)
   )
+
 print(summary_stats)
+
 # Make into a table
 # Create dataframe
 summary_stats1 <- data.frame(
@@ -106,6 +235,7 @@ summary_stats1 <- data.frame(
   Mean = c(25.30435, 3087.341, 48.33493),
   StandardDev = c(5.759474, 566.5855, 3.92719)
 )
+
 # Create a gt table
 summary_stats_table <- summary_stats1 %>%
   gt() %>%
@@ -118,12 +248,13 @@ summary_stats_table <- summary_stats1 %>%
     Mean = "Mean",
     StandardDev = "Standard Deviation"
   )
+
 # Print the table
 print(summary_stats_table)
-#Save table
-saveRDS(summary_stats_table, file = here::here("results", "tables", "summary_stats_table.rds"))
 
-## ---- Summarystatscat1 --------
+#Save table
+#saveRDS(summary_stats_table, file = here::here("results", "tables", "summary_stats_table.rds"))
+
 # Summary stats of categorical variables
 # Calculate frequencies of color category (branca, parda, preta)
 color_freq <- ML_summary %>%
@@ -133,15 +264,6 @@ color_freq <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(color_freq)
 
-## ---- Summarystatscat2 --------
-# Combine "Preta" and "Parda" into a new category Afro or EuroDescent and create dummy variable
-ML_summary$ModifiedColor <- ifelse(ML_summary$Color == "Branca", "EuroDescent",
-                                   ifelse(ML_summary$Color == "Preta", "AfroDescent",
-                                          ifelse(ML_summary$Color == "Parda", "AfroDescent", NA)))
-# Or using recode factor from dplyr (easier)
-# ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" # = "AfroDescent", "Branca" = "EuroDescent")
-# View the updated dataframe
-print(head(ML_summary))
 # Calculate frequencies of color category (branca, parda, preta)
 color_freq2 <- ML_summary %>%
   filter(!is.na(ModifiedColor)) %>% # Exclude rows with NA in color variable
@@ -150,7 +272,6 @@ color_freq2 <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(color_freq2)
 
-## ---- Summarystatscat3 --------
 # Calculate frequencies of Status category
 status_freq <- ML_summary %>%
   filter(!is.na(Status)) %>% # Exclude rows with NA in status variable
@@ -158,8 +279,7 @@ status_freq <- ML_summary %>%
   mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(status_freq)
-# Create dummy variables for status
-ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Trigesta" = "Multigesta")
+
 # Calculate frequencies of ModifiedStatus category
 status_freq2 <- ML_summary %>%
   filter(!is.na(ModifiedStatus)) %>% # Exclude rows with NA in status variable
@@ -168,7 +288,6 @@ status_freq2 <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(status_freq2)
 
-## ---- Summarystatscat4 --------
 # Calculate frequencies of Nationality category
 nationality_freq <- ML_summary %>%
   filter(!is.na(Nationality)) %>% # Exclude rows with NA in nationality variable
@@ -176,9 +295,8 @@ nationality_freq <- ML_summary %>%
   mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(nationality_freq)
-# Create dummy variables for status
-ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
-# Calculate frequencies of ModifiedStatus category
+
+# Calculate frequencies of ModifiedNationality category
 nationality_freq2 <- ML_summary %>%
   filter(!is.na(ModifiedNationality)) %>% # Exclude rows with NA in nationality variable
   count(ModifiedNationality, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
@@ -186,24 +304,6 @@ nationality_freq2 <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(nationality_freq2)
 
-## ---- Summarystatscat5 --------
-# Calculate frequencies of birth category with abortion
-birth_freq <- ML_summary %>%
-  filter(!is.na(Birth)) %>% # Exclude rows with NA in birth variable
-  count(Birth, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
-  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
-  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
-print(birth_freq)
-# Calculate frequencies of birth category without abortion
-birth_freq2 <- ML_summary %>%
-  filter(!is.na(Birth)) %>% # Exclude rows with NA in birth variable
-  filter(Birth != "aborto") %>% # Exclude rows with abortion
-  count(Birth, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
-  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
-  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
-print(birth_freq2)
-
-## ---- Summarystatscat6 --------
 # Calculate frequencies of MaternalOutcome category
 maternal_freq <- ML_summary %>%
   filter(!is.na(MaternalOutcome)) %>% # Exclude rows with NA in MaternalOutcome variable
@@ -212,25 +312,6 @@ maternal_freq <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(maternal_freq)
 
-## ---- Summarystatscat7 --------
-# Calculate frequencies of FetalOutcome category excluding abortion
-fetal_freq <- ML_summary %>%
-  filter(!is.na(FetalOutcome)) %>% # Exclude rows with NA in FetalOutcome variable
-  count(FetalOutcome, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
-  filter(FetalOutcome != "aborto") %>% # Exclude rows with abortion
-  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
-  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
-print(fetal_freq)
-#MMR Maternal mortality ratio
-maternal_deaths <-23
-live_births <- 2440
-MMR <- (maternal_deaths / live_births) * 10000
-#Stillbirth rate SBR
-still_births <- 226
-total_births <- 2666
-SBR <- (still_births / total_births) * 1000
-
-## ---- Summarystatscat8 --------
 # Calculate frequencies of Sex category
 sex_freq <- ML_summary %>%
   filter(!is.na(Sex)) %>% # Exclude rows with NA in Sex variable
@@ -238,3 +319,20 @@ sex_freq <- ML_summary %>%
   mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(sex_freq)
+
+# Calculate frequencies of birth category with abortion
+birth_freq <- ML_summary %>%
+  filter(!is.na(Birth)) %>% # Exclude rows with NA in birth variable
+  count(Birth, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
+  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
+  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
+print(birth_freq)
+
+# Calculate frequencies of FetalOutcome category excluding abortion
+fetal_freq <- ML_summary %>%
+  filter(!is.na(FetalOutcome)) %>% # Exclude rows with NA in FetalOutcome variable
+  count(FetalOutcome, na.rm = TRUE) %>% # Calculate frequencies while excluding NAs
+  filter(FetalOutcome != "abortion") %>% # Exclude rows with abortion
+  mutate(Total_Sample_Size = sum(n)) %>% # Calculate total sample size 
+  mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
+print(fetal_freq)

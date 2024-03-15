@@ -1,1 +1,1 @@
-Folder for all tables stored as .rds files.
+Folder for all tables stored as .rds files. All tables for the final manuscript will have a _final in the name.

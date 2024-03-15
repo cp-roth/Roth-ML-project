@@ -39,6 +39,7 @@ ML_raw <- read_csv(data_location)
 # Structure of Data
 glimpse(ML_raw)
 ```
+
 From this initial read, we can see that the data have 2845 observations and 23 variables. The variables are characterized as character and numerical.
 
 # Check data
@@ -48,9 +49,6 @@ First we can look at the Codebook and practice table making.
 # Path to codebook
 codebook_location <- here::here("data", "raw-data", "Codebook.csv")
 codebook <- read_csv(codebook_location)
-
-# Full column specification
-spec(codebook)
 
 # Display the structure of the data frame
 str(codebook)
@@ -92,6 +90,7 @@ Despite removing variables we won't use because of their qualitative nature, we 
 #Summarize missing data using dplyr
 missing_data_summary <- ML_1 %>% dplyr::summarise_all(funs(sum(is.na(.))))
 ```
+
 We can see that `CivilStatus` has 2834 missing observations and `GestationalAge_Months` has 2789 missing observations. This is a lot. Since I am not interested in understanding the relationship between marital status and infant birth weight and since gestational age in months refers to spontaneous abortions that occurred in the clinic, we can also exclude both these variables, the latter because an abortion precludes the existence of a birth.
 
 ```{r}
@@ -130,25 +129,24 @@ frequency_table <- ML_3 %>%
 print(frequency_table)
 ```
 
-
 # Create datasets for analysis
 
-There are still missing observations for all the remaining variables except `Date`. For now, I will keep these observations intact because I want the maximum number of observations for summary statistics of all variables. Although the sample size for these summary statistics will then differ from that of my linear regression model, I believe more observations at the exploratory stage provide a fuller picture of what type of patient went to the hospital during the time period under study. Here, I will create two datasets: one for summary statistics and one for the linear regression model.
-
-The latter (linear regression) will exclude the variables `MaternalOutcome` and `Birth`. 
+There are still missing observations for all the remaining variables except `Date`. For now, I will keep these observations intact because I want the maximum number of observations for summary statistics of all variables. Although the sample size for these summary statistics will then differ from that of my linear regression model, I believe more observations at the exploratory stage provide a fuller picture of what type of patient went to the hospital during the time period under study. Here, I will create two datasets: one for summary statistics and one for the linear regression model. In addition, most contemporary studies exclude all birthweights less than 500 grams because they have a high chance of being stillborn. I do so the same here, even if they were marked as a live birth. I will also exclude all stillbirths or neonatal deaths as the analysis is interested in studying live births.
 
 ```{r} 
 # Create dataset for summary statistics (includes missing values)
 ML_summary <- ML_3
 
 # Creating dataset for linear regression
-ML_linear <- ML_3 %>% tidyr::drop_na()
+ML_linear <- ML_3 %>% tidyr::drop_na() %>%
+  filter(Weightgrams >= 500, FetalOutcome != "morto") # Drop observations of < 500 grams and all non-live births
 
 # Check for no missing data in linear model
 ML_Linear_summary <- ML_linear %>% dplyr::summarise_all(funs(sum(is.na(.))))
 View(ML_linear_summary)
 ```
-Now, I can see that my `ML_linear` dataset has no missing data. It has 2032 observations and 11 variables. This might change as I begin analysis. For example, I might want to exclude infant birth length, which is included at the moment.
+
+Now, I can see that my `ML_linear` dataset has no missing data. It has 1944 observations and 11 variables. This might change as I begin analysis. For example, I might want to exclude infant birth length, which is included at the moment.
 
 # Save data 
 
@@ -163,8 +161,6 @@ saveRDS(ML_linear, file = save_data_location)
 save_data_location <- here::here("data","processed-data","ML_summary_processed.rds")
 saveRDS(ML_summary, file = save_data_location)
 ```
-
-
 
 # Notes
 
