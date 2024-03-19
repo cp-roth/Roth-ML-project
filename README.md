@@ -2,9 +2,10 @@
 
 A template file and folder structure for a data analysis project/paper done with R/Quarto/Github. 
 
-This is Cassia Roth's class project repository. This is the master README, which supersedes all others in cases of discrepancies.
+This is Cassia Roth's class project repository. This is the master README, which supersedes all others in cases of discrepancies. 
 
-If reproducing this analysis, please run code in the following order:
+If reproducing this analysis, please run code in the following order. .Qmd files are the master files, and I prefer for you to rely on those.
+
 1) `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder;
 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder;
 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder;
