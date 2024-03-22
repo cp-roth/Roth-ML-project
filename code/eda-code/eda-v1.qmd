@@ -137,13 +137,9 @@ Before we create a summary table, lets clean up our variables for easier analysi
 
 ```{r}
 # Create dummy variables
-# Combine "Preta" and "Parda" into a new category Afro or EuroDescent and create dummy variable
-ML_summary$ModifiedColor <- ifelse(ML_summary$Color == "Branca", "EuroDescent",
-  ifelse(ML_summary$Color == "Preta", "AfroDescent",
-  ifelse(ML_summary$Color == "Parda", "AfroDescent", NA)))
 
 # Or using recode factor from dplyr (easier)
-# ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" # = "AfroDescent", "Branca" = "EuroDescent")
+ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
 
 # Create dummy variables for status and change to English
 ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
@@ -262,13 +258,8 @@ saveRDS(summary, file = lineartable_file)
 
 ```{r}
 # Create dummy variables
-# Combine "Preta" and "Parda" into a new category Afro or EuroDescent and create dummy variable
-ML_linear$ModifiedColor <- ifelse(ML_linear$Color == "Branca", "EuroDescent",
-  ifelse(ML_linear$Color == "Preta", "AfroDescent",
-  ifelse(ML_linear$Color == "Parda", "AfroDescent", NA)))
-
-# Or using recode factor from dplyr (easier)
-# ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Parda" = "AfroDescent", "Preta" # = "AfroDescent", "Branca" = "EuroDescent")
+# Create dummy variables using recode factor from dplyr
+ ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
 
 # Create dummy variables for status and change to English
 ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
