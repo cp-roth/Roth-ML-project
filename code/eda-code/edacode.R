@@ -121,6 +121,9 @@ ML_summary <- ML_summary %>%
     FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
   )
 
+# Save new summary data with recoded factor variables
+saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary_final.rds"))
+
 ## ---- Summarystats --------
 # Create gtsummary table 
 table1 <- 
@@ -134,7 +137,7 @@ table1 <-
 table1
 
 #Save table
-saveRDS(summary_stats_table, file = here::here("results", "tables", "Table1_final.rds"))
+saveRDS(table1, file = here::here("results", "tables", "table1_final.rds"))
 
 ## ---- Summarystatscont --------
 # Calculate frequencies of birth category without abortion
@@ -172,7 +175,6 @@ sex_ratio
 ##---- LinearData --------
 #Path to summary data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_linear_processed.rds")
-
 #load data
 ML_linear <- readRDS(data_location)
 
@@ -185,8 +187,10 @@ lineartable_file = here("results", "tables", "lineartable.rds")
 saveRDS(summary, file = lineartable_file)
 
 # Create dummy variables
+#Check pre-structure
+str(ML_linear)
 
-# Or using recode factor from dplyr (easier)
+# Create dummy variables using recode factor from dplyr
 ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
 
 # Create dummy variables for status and change to English
@@ -194,9 +198,6 @@ ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Mu
 
 # Create dummy variables for nationality and change to English
 ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
-
-# View the updated dataframe
-print(head(ML_linear))
 
 # Change observations from Portuguese to English
 ML_linear <- ML_linear %>%
@@ -209,3 +210,6 @@ ML_linear <- ML_linear %>%
     MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
     FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
   )
+
+# Save new summary data with recoded factor variables
+saveRDS(ML_linear, file = here("data", "processed-data", "ML_linear_final.rds"))

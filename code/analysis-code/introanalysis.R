@@ -14,10 +14,10 @@ library(tidymodels) #for modeling
 
 ## ---- loaddata --------
 #Path to summary data. Note the use of the here() package and not absolute paths
-data_location <- here::here("data","processed-data","ML_linear_processed.rds")
+data_location <- here::here("data","processed-data","ML_linear_final.rds")
 
 #load data
-ML_linear <- readRDS(data_location)
+ML_linear_final <- readRDS(data_location)
 
 ## ---- lm1 --------
 # Set reference level for ModifiedColor
