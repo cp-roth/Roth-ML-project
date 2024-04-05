@@ -1,8 +1,6 @@
 The folders inside this folder contain all the products of this project.
 
-The `manuscript` folder contains the peer-reviewable manuscript in progress.
+The `manuscript` folder contains the peer-reviewable manuscript in progress. It also includes a subfolder 'supplement', with supplemental materials not included in the final manuscript.
 
-The `supplement` folder includes all supplemental files.
-
-The `slides` folder includes slides created for an oral presentations.
+The `slides` folder includes slides created for an oral presentations. As of now, there are no slides in this folder.
 

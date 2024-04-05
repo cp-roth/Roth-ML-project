@@ -122,7 +122,7 @@ ML_summary <- ML_summary %>%
   )
 
 # Save new summary data with recoded factor variables
-saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary_final.rds"))
+saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
 
 ## ---- Summarystats --------
 # Create gtsummary table 
@@ -178,23 +178,15 @@ data_location <- here::here("data","processed-data","ML_linear_processed.rds")
 #load data
 ML_linear <- readRDS(data_location)
 
-# Create summary
-summary = skimr::skim(ML_linear)
-print(summary)
-
-# save to file
-lineartable_file = here("results", "tables", "lineartable.rds")
-saveRDS(summary, file = lineartable_file)
-
 # Create dummy variables
 #Check pre-structure
 str(ML_linear)
 
 # Create dummy variables using recode factor from dplyr
-ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
+ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Preta" = "Afro-Descent", "Parda" = "Afro-Descent", "Branca" = "Euro-Descent")
 
 # Create dummy variables for status and change to English
-ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
+ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Nullipara", "Nulipara" = "Nullipara")
 
 # Create dummy variables for nationality and change to English
 ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
@@ -202,7 +194,6 @@ ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = 
 # Change observations from Portuguese to English
 ML_linear <- ML_linear %>%
   mutate(
-    ModifiedColor = recode_factor(ModifiedColor, "AfroDescent" = "Afro-Descent", "EuroDescent" = "Euro-Descent"),
     ModifiedNationality = recode_factor(ModifiedNationality, "European" = "European", "LatinAmerican" = "Latin American", "MiddleEastern" = "Middle Eastern", "Brazilian" = "Brazilian"),
     Color = recode_factor(Color, "Preta" = "Black", "Parda" = "Mixed Race", "Branca" = "White"),
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
@@ -211,5 +202,8 @@ ML_linear <- ML_linear %>%
     FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
   )
 
+#Check structure
+str(ML_linear)
+
 # Save new summary data with recoded factor variables
-saveRDS(ML_linear, file = here("data", "processed-data", "ML_linear_final.rds"))
+saveRDS(ML_linear, file = here("data", "processed-data", "ML_linear.rds"))

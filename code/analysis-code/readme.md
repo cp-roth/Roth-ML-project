@@ -2,10 +2,14 @@ This folder contains code for analysis on the processed/cleaned data.
 
 The code produces a few tables and figures, which are saved in the `results` folder. All final files will have a _final in the name
 
-It's the same code done 2 times:
+There are two sets of code done 2 times:
 
-* First, there is a Quarto file which contains exactly the same code as the R script. `introanalyis-v1.qmd`
+`Introanalysis-v1`
+1. First, there is a Quarto file which contains exactly the same code as the R script. `introanalyis-v1.qmd`
+2. Second, there is an R script that you can run which does all the cleaning. `introanalysis.R`
 
-* Second, there is an R script that you can run which does all the cleaning. `introanalysis.R`
+`Fullanalysis-v1`
+1. First, there is a Quarto file which contains exactly the same code as the R script. `fullanalyis-v1.qmd`
+2. Second, there is an R script that you can run which does all the cleaning. `fullanalysis.R`
 
-If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.
+The quarto files are the master files, so please run them if possible. If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.

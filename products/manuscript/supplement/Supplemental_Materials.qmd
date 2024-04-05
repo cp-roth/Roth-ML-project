@@ -1,0 +1,82 @@
+---
+title: "Supplemental Materials"
+author: Cassia Roth
+date: "`r Sys.Date()`"
+format:
+  docx:
+    toc: false
+    number-sections: true
+    highlight-style: github
+    bibliography: ../../../assets/Mada_Bib.bib
+    csl: ../../../assets/vancouver.csl
+---
+# Supplemental Materials
+
+## Data Source
+
+In this paper, I analyze a unique sample of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
+
+The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013].
+
+In the initial months of publication, the reports included more complete information, including labor time or detailed descriptions of surgical procedures. Over time, clinical notes became streamlined. When physicians intervened in birth, the notes included the type of intervention, the indication, and the obstetrician. For more information on this as a source, see my other publications [@roth2020, @roth2020a].
+
+The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca de Biomedicina-A, Universidade Estadual do Rio de Janeiro (BBA-UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions. I then converted this into a .csv file for upload into R.
+
+## Study Measures
+
+There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity or gravidity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex.
+
+### Maternal Skin Color
+
+The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and Mixed-Race patients into one category, `Afro-Descent` and all White patients into a `Euro-Descent` category. Please see the `eda-v1.qmd` file for more information on the variable manipulation process.
+
+### Gestational Status
+
+Gestational status was divided into parity and gravidity. Originally, the data had eight categories: nullipara, primipara, secundipara, multipara; and primigravida, secundigravida, trigravida, and multigravida. I combined categories into four final categories: 1) nullipara and primigravida into `nullipara` (or any woman who has never given birth to a viable fetus); 2) primipara into `primipara` (or any woman who has given birth to one viable fetus); 3) secundipara and multipara into `multipara` (or any woman who has given birth to more than one viable fetus); and 4) secundigravida, trigravida, and multigravida into `multigravida` (or any woman who has been pregnant more than one but never given birth to a viable fetus).
+
+### Maternal Nationality
+
+For maternal nationality, I created categories based on individual country (`nationality`) and categories based on region (`modifiednationality`). Recategorization occurred as follows: `Brazilian`; `Latin American` (Argentine, Paraguayan, Uruguayan); `European` (Austrian, French, German, Italian, Polish, Portuguese, Romanian, Russian, Spanish, and Swiss); and `Middle Eastern` (Syrian).
+
+### Clinical Outcomes
+
+The clinical notes upon which I based this dataset only sporadically included infant demographic information for spontaneous abortions or stillbirths. For spontaneous abortions, stillbirths, and live births, I recorded, when available, infant sex, weight, length. I followed the original clinical categorizations for type of delivery in the following cases: natural, indicating minimal medical intervention; interventionist, indicating medium medical intervention through the use of forceps; and operatory, indicating a cesarean section or embryotomy. However, I recategorized external manipulations including version and Mauriceau (used during breech deliveries) (@eyraud1997), coded as operatory or natural by physicians, as interventionist. I classified clinical outcomes as spontaneous abortion, natural (normal delivery), interventionist (interventionist delivery), and operative (surgical delivery). 
+
+## Basic Statistical Analysis
+
+For the basic statistical analysis, I ran three linear models to understand the relationship between maternal factors and infant birth weight. The first model is a simple linear regression with outcome variable (birthweight in grams) and exposure variable maternal ancestry (`Euro-descent` or `Afro-descent`).
+
+```{r}
+#| label: tbl-table2
+#| tbl-cap: "Supplemental Table 1"
+#| echo: FALSE
+table2 <- readRDS(here::here("results", "tables", "table2_final.rds"))
+table_gt <- gtsummary::as_gt(table2)
+table_gt |> gt::as_raw_html()
+```
+
+The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age.
+
+```{r}
+#| label: tbl-table_age
+#| tbl-cap: "Supplemental Table 2"
+#| echo: FALSE
+table_age <- readRDS(here::here("results", "tables", "tableage_final.rds"))
+table_gt <- gtsummary::as_gt(table_age)
+table_gt |> gt::as_raw_html()
+```
+
+The third and final exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, nationality, and gestational status on infant birth weight. 
+
+```{r}
+#| label: tbl-table4
+#| tbl-cap: "Supplemental Table 3"
+#| echo: FALSE
+table4 <- readRDS(here::here("results", "tables", "table4.rds"))
+table_gt <- gtsummary::as_gt(table4)
+table_gt |> gt::as_raw_html()
+```
+
+In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
+
+For all three models, the r-squared is very small (0.007, 0.006, and 0.008), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
