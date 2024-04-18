@@ -134,16 +134,22 @@ ggsave(filename = figure_file, plot=length_weight_sex, bg="white") #background i
 ```
 Now let's make some tables about the data to get a better idea of the overall numbers.
 
-Before we create a summary table, lets clean up our variables for easier analysis. First, we need to create dummy variables for categories. We will start with the `Color` variable, which is maternal skin color. We will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and Mixed-Race patients into one category, `Afro-Descent` and all White patients into a `Euro-Descent` category. For the `Status` variable, we will combine "multigesta", "secundigesta", and "trigesta" into "multigravida", since they mean the same thing (two or more pregnancies) and change the language to English (from gesta to gravida). We will also combine `secundipara` and `multipara` into one category `multipara`, since this means two or more viable pregnancies. The words in Portuguese and English here are the same. For the `Nationality` variable, we will combine all European nationalities into one category, "European", all Latin American nationalities into "LatinAmerican", and all Middle Eastern nationalities into "MiddleEastern". I am combining categories because for many of the `European` and `Latin American` categories, there are very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
+Before we create a summary table, lets clean up our variables for easier analysis. First, we need to create dummy variables for categories. We will start with the `Color` variable, which is maternal skin color. We will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and Mixed-Race patients into one category, `Afro-Descent` and all White patients into a `Euro-Descent` category. 
+
+For the `Status` variable, Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data published in the clinical notes if the physicians were categorizing the women before the delivery or after. With this, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
+
+For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
+
+For the `Nationality` variable, we will combine all European nationalities into one category, "European", all Latin American nationalities into "LatinAmerican", and all Middle Eastern nationalities into "MiddleEastern". I am combining categories because for many of the `European` and `Latin American` categories, there are very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
 
 ```{r}
 # Create dummy variables
 
-# Or using recode factor from dplyr (easier)
+# Recode factor using dplyr (easier)
 ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
 
 # Create dummy variables for status and change to English
-ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nullipara", "Nulipara" = "Nullipara")
+ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
 ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
@@ -164,7 +170,8 @@ ML_summary <- ML_summary %>%
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
     MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
-    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death"),
+    Status = recode_factor(Status, "Multigesta" = "Multigravida", "Trigesta" = "Trigravida", "Secundigesta" = "Secundigravida", "Secundipara" = "Secundiparous", "Multipara" = "Multiparous", "Primigesta" = "Primigravida", "Nulipara" = "Nulliparous", "Primipara" = "Primiparous")
     )
 
 # Save new summary data with recoded factor variables
@@ -178,9 +185,9 @@ I have now learned that `gtsummary` is a very easy way to create summary statist
 table1 <- 
   ML_summary %>%
   tbl_summary(
-    include = c(Color, ModifiedColor, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Weightgrams, Lengthcentimeters),
+    include = c(Color, ModifiedColor, Status, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Weightgrams, Lengthcentimeters),
     missing = "no",
-    label = list(ModifiedColor ~ "Ancestry", ModifiedStatus ~ "Parity or Gravidity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Weightgrams ~ "Infant Birthweight (grams)", Lengthcentimeters ~ "Infant Birth Length (centimeters)")
+    label = list(ModifiedColor ~ "Ancestry", Status ~ "Parity or Gravidity", ModifiedStatus ~ "Parity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Weightgrams ~ "Infant Birthweight (grms)", Lengthcentimeters ~ "Infant Birth Length (cms)")
   ) %>%
   add_n()
 table1
@@ -260,7 +267,7 @@ str(ML_linear)
 ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Preta" = "Afro-Descent", "Parda" = "Afro-Descent", "Branca" = "Euro-Descent")
 
 # Create dummy variables for status and change to English
-ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Nullipara", "Nulipara" = "Nullipara")
+ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
 ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")

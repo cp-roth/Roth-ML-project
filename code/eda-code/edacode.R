@@ -11,7 +11,7 @@ library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(hrbrthemes) #for nice themes
 hrbrthemes::import_roboto_condensed() #import needed fonts for hrbrthemes
-#rm(list=ls()) #clear the environment
+rm(list=ls()) #clear the environment
 
 ## ---- loaddata --------
 #Path to summary data. Note the use of the here() package and not absolute paths
@@ -96,11 +96,11 @@ ggsave(filename = figure_file, plot=length_weight_sex, bg="white") #background i
 ## ---- Dummyvariables --------
 # Create dummy variables
 
-# Or using recode factor from dplyr (easier)
+# Recode factor using dplyr (easier)
 ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
 
 # Create dummy variables for status and change to English
-ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Primigravida")
+ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
 ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
@@ -118,7 +118,8 @@ ML_summary <- ML_summary %>%
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
     MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
-    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death"),
+    Status = recode_factor(Status, "Multigesta" = "Multigravida", "Trigesta" = "Trigravida", "Secundigesta" = "Secundigravida", "Secundipara" = "Secundiparous", "Multipara" = "Multiparous", "Primigesta" = "Primigravida", "Nulipara" = "Nulliparous", "Primipara" = "Primiparous")
   )
 
 # Save new summary data with recoded factor variables
@@ -129,9 +130,9 @@ saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
 table1 <- 
   ML_summary %>%
   tbl_summary(
-    include = c(Color, ModifiedColor, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Weightgrams, Lengthcentimeters),
+    include = c(Color, ModifiedColor, Status, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Weightgrams, Lengthcentimeters),
     missing = "no",
-    label = list(ModifiedColor ~ "Ancestry", ModifiedStatus ~ "Parity or Gravidity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Weightgrams ~ "Infant Birthweight (grams)", Lengthcentimeters ~ "Infant Birth Length (centimeters)")
+    label = list(ModifiedColor ~ "Ancestry", Status ~ "Parity or Gravidity", ModifiedStatus ~ "Parity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Weightgrams ~ "Infant Birthweight (grms)", Lengthcentimeters ~ "Infant Birth Length (cms)")
   ) %>%
   add_n()
 table1
@@ -179,6 +180,8 @@ data_location <- here::here("data","processed-data","ML_linear_processed.rds")
 ML_linear <- readRDS(data_location)
 
 # Create dummy variables
+# Create dummy variables
+
 #Check pre-structure
 str(ML_linear)
 
@@ -186,7 +189,7 @@ str(ML_linear)
 ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Preta" = "Afro-Descent", "Parda" = "Afro-Descent", "Branca" = "Euro-Descent")
 
 # Create dummy variables for status and change to English
-ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multigravida", "Trigesta" = "Multigravida", "Multigesta" = "Multigravida", "Secundipara" = "Multipara", "Multipara" = "Multipara", "Primigesta" = "Nullipara", "Nulipara" = "Nullipara")
+ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
 ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
@@ -202,7 +205,6 @@ ML_linear <- ML_linear %>%
     FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
   )
 
-#Check structure
 str(ML_linear)
 
 # Save new summary data with recoded factor variables

@@ -48,7 +48,7 @@ For the basic statistical analysis, I ran three linear models to understand the 
 
 ```{r}
 #| label: tbl-table2
-#| tbl-cap: "Supplemental Table 1"
+#| tbl-cap: "Supplemental Table"
 #| echo: FALSE
 table2 <- readRDS(here::here("results", "tables", "table2_final.rds"))
 table_gt <- gtsummary::as_gt(table2)
@@ -59,7 +59,7 @@ The second simple bivariate linear analysis, looks at infant birth weight as a f
 
 ```{r}
 #| label: tbl-table_age
-#| tbl-cap: "Supplemental Table 2"
+#| tbl-cap: "Supplemental Table"
 #| echo: FALSE
 table_age <- readRDS(here::here("results", "tables", "tableage_final.rds"))
 table_gt <- gtsummary::as_gt(table_age)
@@ -70,7 +70,7 @@ The third and final exploratory statistical model is a multilinear regression, l
 
 ```{r}
 #| label: tbl-table4
-#| tbl-cap: "Supplemental Table 3"
+#| tbl-cap: "Supplemental Table"
 #| echo: FALSE
 table4 <- readRDS(here::here("results", "tables", "table4.rds"))
 table_gt <- gtsummary::as_gt(table4)
@@ -80,3 +80,45 @@ table_gt |> gt::as_raw_html()
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
 
 For all three models, the r-squared is very small (0.007, 0.006, and 0.008), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
+
+## Performance Measures
+
+Test/train (75-25 split) and cross-validation were performed on all models. Model prediction performance did not improve greatly using these tests. Model performance resulted in insignificant results when run on the testing data given the smaller sample size. All code for the train/test analysis and cross-validation analysis can be found in `fullanalysis-v1.qmd`.
+
+Here I include the cross-validation results for each model.
+
+```{r}
+#| label: tbl-table5
+#| tbl-cap: "Cross-Validation Model 1"
+#| echo: FALSE
+ML_cv1_metrics <- readRDS(here::here("results", "tables", "ML_cv1_metrics.rds"))
+ML_cv1_metrics
+```
+
+```{r}
+#| label: tbl-table6
+#| tbl-cap: "Cross-Validation Model 2"
+#| echo: FALSE
+ML_cv2_metrics <- readRDS(here::here("results", "tables", "ML_cv2_metrics.rds"))
+ML_cv2_metrics
+```
+
+```{r}
+#| label: tbl-table7
+#| tbl-cap: "Cross-Validation Model 3"
+#| echo: FALSE
+ML_cv3_metrics <- readRDS(here::here("results", "tables", "ML_cv3_metrics.rds"))
+ML_cv3_metrics
+```
+
+```{r}
+#| label: tbl-table8
+#| tbl-cap: "Cross-Validation Model 4"
+#| echo: FALSE
+ML_cv4_metrics <- readRDS(here::here("results", "tables", "ML_cv4_metrics.rds"))
+ML_cv4_metrics
+```
+
+{{< pagebreak >}}
+
+# References

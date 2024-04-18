@@ -20,7 +20,7 @@ library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(tidymodels) #for modeling
 
-rm(list=ls()) #clear the environment
+#rm(list=ls()) #clear the environment
 ```
 
 Load the data
@@ -32,13 +32,38 @@ data_location <- here::here("data","processed-data","ML_linear.rds")
 ML_linear <- readRDS(data_location)
 ```
 
+# Preparation for Model Assessment
+
+First, I will create train and test data (75/25) to be able to evaluate the performance of our models. I will also set the seed to ensure reproducibility. For each model, I perform the following steps: 1) run the model on the train data; 2) perform cross-validation on the train data; 3) evaluate the model on the test data. The model outputs included in the final manuscript are on all the data.
+
+
+```{r, message=FALSE,  warning=FALSE}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used 
+rngseed = 1234
+set.seed(rngseed)
+
+# Create training data
+# Put 3/4 of the data into the training set 
+data_split <- initial_split(ML_linear, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
+
+# Model 1
+
 The first simple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \epsilon$$
 
-whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. Results are displayed in Table 2. 
+whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. 
+
+Full results are displayed in Table 2. 
 
 ```{r}
+# Model 1: Final model for paper using all data
 # Model using recipes and workflows
 # Define recipe for model
 ML_recipe1 <- recipe(Weightgrams ~ ModifiedColor, data = ML_linear) %>% 
@@ -103,14 +128,194 @@ table2
 # Save regression output into table
 saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
 ```
+## Model 1 Performance
+
+First we will evaluate the model on our training data. 
+
+```{r}
+# Training model 1
+# Model using recipes and workflows
+# Define recipe for model
+ML_recipe1_train <- recipe(Weightgrams ~ ModifiedColor, data = train_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
+
+# Specify model
+ML_spec1_train <- linear_reg() %>% 
+  set_engine("lm")
+
+# Create work flow
+ML_wf1_train <- workflow() %>%
+  add_recipe(ML_recipe1_train) %>%
+  add_model(ML_spec1_train)
+
+# Fit the work flow
+ML_fit1_train <- fit(ML_wf1_train, data = train_data)
+
+# Summarize model fit with tidiers
+ML_summary1_train <- summary(ML_fit1_train) # Summary of fit
+tidy(ML_fit1_train, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit1_train) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit1_pred_train <- predict(ML_fit1_train, new_data = train_data %>% select(-Weightgrams))
+ML_fit1_pred_train
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit1_pred_train <- bind_cols(ML_fit1_pred_train, train_data %>% select(Weightgrams))
+ML_fit1_pred_train
+
+# Plot observed versus predicted
+plot1_train <- ggplot(ML_fit1_pred_train, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot1_train
+
+# Create metric set including RMSE and R-squared
+metrics_fit1_train <- metric_set(rmse, rsq)
+metrics_fit1_train(ML_fit1_pred_train, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit1_train <- as.data.frame(metrics_fit1_train(ML_fit1_pred_train, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit1_train
+
+# Create a gtsummary table directly from the model
+table2_train <-
+  tbl_regression(ML_fit1_train, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table2_train
+
+# Save regression output into table
+saveRDS(table2_train, file = here::here("results", "tables", "table2_train.rds"))
+```
+Our results here are not that different from the model run on all the data. Our adjusted R-squared is 0.007, the same as the full model. The RMSE is 495, which is slightly lower than the full model (502), which shows better performance.
+
+Now let's perform cross-validation on the training data.
+
+```{r, message=FALSE,  warning=FALSE}
+# CV model 1
+# Set the seed for reproducibility
+set.seed(rngseed)
+
+# Create 10-fold cross-validation
+folds <- vfold_cv(train_data, v = 10)
+folds
+
+# Define recipe for model
+ML_recipe1_cv <- recipe(Weightgrams ~ ModifiedColor, data = train_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
+
+# Set model specification
+ML_spec1_cv <- linear_reg() %>% set_engine("lm")
+
+# Create and initialize workflow that bundles together model specification and formula.
+ML_wf1_cv <- workflow() %>% 
+  add_model(ML_spec1_cv) %>% 
+  add_recipe(ML_recipe1_cv)
+  fit_resamples(ML_wf1_cv, resamples = folds)
+
+# Resample the model
+ML_wf1_cv_rs <- fit_resamples(ML_wf1_cv, resamples = folds)
+ML_wf1_cv_rs
+
+# Get model metrics
+ML_cv1_metrics <- collect_metrics(ML_wf1_cv_rs)
+
+# Filter the data frame to include only rows with "rmse" and "rsq" in the ".metric" column
+ML_cv1_metrics <- ML_cv1_metrics[ML_cv1_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv1_metrics) %in% ".config")]
+ML_cv1_metrics
+
+# Save regression output into table
+saveRDS(ML_cv1_metrics, file = here::here("results", "tables", "ML_cv1_metrics.rds"))
+```
+Performing cross-validation results in an RMSE that is the same as our training model (495), lower than our full model. The r-squared (0.02) is also higher than our training model (0.008) and our full model (0.007), demonstrating better model performance.
+
+Finally, let's run the model on our test data.
+
+```{r, message=FALSE,  warning=FALSE}
+# Testing model 1
+# Model using recipes and workflows
+# Define recipe for model
+ML_recipe1_test <- recipe(Weightgrams ~ ModifiedColor, data = test_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
+
+# Specify model
+ML_spec1_test <- linear_reg() %>% 
+  set_engine("lm")
+
+# Create work flow
+ML_wf1_test <- workflow() %>%
+  add_recipe(ML_recipe1_test) %>%
+  add_model(ML_spec1_test)
+
+# Fit the work flow
+ML_fit1_test <- fit(ML_wf1_test, data = test_data)
+
+# Summarize model fit with tidiers
+ML_summary1_test <- summary(ML_fit1_test) # Summary of fit
+tidy(ML_fit1_test, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit1_test) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit1_pred_test <- predict(ML_fit1_test, new_data = test_data %>% select(-Weightgrams))
+ML_fit1_pred_test
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit1_pred_test <- bind_cols(ML_fit1_pred_test, test_data %>% select(Weightgrams))
+ML_fit1_pred_test
+
+# Plot observed versus predicted
+plot1_test <- ggplot(ML_fit1_pred_test, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot1_test
+
+# Create metric set including RMSE and R-squared
+metrics_fit1_test <- metric_set(rmse, rsq)
+metrics_fit1_test(ML_fit1_pred_test, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit1_test <- as.data.frame(metrics_fit1_test(ML_fit1_pred_test, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit1_test
+
+# Create a gtsummary table directly from the model
+table2_test <-
+  tbl_regression(ML_fit1_test, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table2_test
+
+# Save regression output into table
+saveRDS(table2_test, file = here::here("results", "tables", "table2_test.rds"))
+```
+
+When running the model on our testing dataset, our results are not significant, given the small sample size. 
+
+# Model 2
 
 The second multiple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$
 
-whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), Gest is gestational status (nullipara, primipara, multipara, multigravida), Age is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
+whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), Gest is gestational status (nulliparous or multiparous), Age is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
 
 ```{r}
+# Final model 2 for paper using all data
 # Using recipes and workflows
 # Define recipe for model
 ML_recipe2 <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>% 
@@ -136,6 +341,32 @@ ML_lm2_summary <- summary(ML_fit2) # Summary of fit
 tidy(ML_fit2, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
 glance(ML_fit2) # Model-level statistics
 
+# Produce predictions for R-squared
+ML_fit2_pred <- predict(ML_fit2, new_data = ML_linear %>% select(-Weightgrams))
+ML_fit2_pred
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit2_pred <- bind_cols(ML_fit2_pred, ML_linear %>% select(Weightgrams))
+ML_fit2_pred
+
+# Plot observed versus predicted
+plot2 <- ggplot(ML_fit2_pred, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot2
+
+# Create metric set including RMSE and R-squared
+metrics_fit2 <- metric_set(rmse, rsq)
+metrics_fit2(ML_fit2_pred, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit2 <- as.data.frame(metrics_fit2(ML_fit2_pred, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit2
+
 # Create a gtsummary table directly from the model
 table3 <- pull_workflow_fit(ML_fit2) %>%
   tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
@@ -148,6 +379,191 @@ table3
 # Save regression output into table
 saveRDS(table3, file = here::here("results", "tables", "table3_final.rds"))
 ```
+Our RMSE is 498 and our r-squared is 0.02.
+
+## Model 2 Performance
+
+Now let's run the model on our training data. 
+
+```{r}
+# Training model 2
+# Using recipes and workflows
+# Define recipe for model
+ML_recipe2_train <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Define model specification
+ML_spec2_train <- linear_reg() %>% 
+  set_engine("lm") %>%
+  set_mode("regression")
+
+# Create workflow
+ML_wf2_train <- workflow() %>%
+  add_recipe(ML_recipe2_train) %>%
+  add_model(ML_spec2_train)
+
+# Fit the workflow
+ML_fit2_train <- fit(ML_wf2_train, data = train_data)
+
+# Summarize model fit with tidiers
+ML_lm2_summary_train <- summary(ML_fit2_train) # Summary of fit
+tidy(ML_fit2_train, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_fit2_train) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit2_pred_train <- predict(ML_fit2_train, new_data = train_data %>% select(-Weightgrams))
+ML_fit2_pred_train
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit2_pred_train <- bind_cols(ML_fit2_pred_train, train_data %>% select(Weightgrams))
+ML_fit2_pred_train
+
+# Plot observed versus predicted
+plot2_train <- ggplot(ML_fit2_pred_train, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot2_train
+
+# Create metric set including RMSE and R-squared
+metrics_fit2_train <- metric_set(rmse, rsq)
+metrics_fit2_train(ML_fit2_pred_train, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit2_train <- as.data.frame(metrics_fit2_train(ML_fit2_pred_train, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit2_train
+
+# Create a gtsummary table directly from the model
+table3_train <- pull_workflow_fit(ML_fit2_train) %>%
+  tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  bold_p()
+table3_train
+
+# Save regression output into table
+saveRDS(table3_train, file = here::here("results", "tables", "table3_train.rds"))
+```
+Our RMSE is 490 and our r-squared is 0.03, a slightly better performance than the full model.
+
+Now let's run cross-validation.
+
+```{r, message=FALSE,  warning=FALSE}
+# CV model 2
+# Set the seed for reproducibility
+set.seed(rngseed)
+
+# Create 10-fold cross-validation
+folds <- vfold_cv(train_data, v = 10)
+folds
+
+# Define recipe for model
+ML_recipe2_cv <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Set model specification
+ML_spec2_cv <- linear_reg() %>% set_engine("lm")
+
+# Create and initialize workflow that bundles together model specification and formula.
+ML_wf2_cv <- workflow() %>% 
+  add_model(ML_spec2_cv) %>% 
+  add_recipe(ML_recipe2_cv)
+  fit_resamples(ML_wf2_cv, resamples = folds)
+
+# Resample the model
+ML_wf2_cv_rs <- fit_resamples(ML_wf2_cv, resamples = folds)
+ML_wf2_cv_rs
+
+# Get model metrics
+ML_cv2_metrics <- collect_metrics(ML_wf2_cv_rs)
+
+# Filter the data frame to include only rows with "rmse" and "rsq" in the ".metric" column
+ML_cv2_metrics <- ML_cv2_metrics[ML_cv2_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv2_metrics) %in% ".config")]
+ML_cv2_metrics
+
+# Save regression output into table
+saveRDS(ML_cv2_metrics, file = here::here("results", "tables", "ML_cv2_metrics.rds"))
+```
+Here, our RMSE is 458, an improvement from both the full model and the training model, and our r-squared is 0.03, the same as our training model.
+
+Finally, let's run our model on the test data.
+
+```{r}
+# Testing model 2
+# Using recipes and workflows
+# Define recipe for model
+ML_recipe2_test <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = test_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Define model specification
+ML_spec2_test <- linear_reg() %>% 
+  set_engine("lm") %>%
+  set_mode("regression")
+
+# Create workflow
+ML_wf2_test <- workflow() %>%
+  add_recipe(ML_recipe2_test) %>%
+  add_model(ML_spec2_test)
+
+# Fit the workflow
+ML_fit2_test <- fit(ML_wf2_test, data = test_data)
+
+# Summarize model fit with tidiers
+ML_lm2_summary_test <- summary(ML_fit2_test) # Summary of fit
+tidy(ML_fit2_test, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_fit2_test) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit2_pred_test <- predict(ML_fit2_test, new_data = test_data %>% select(-Weightgrams))
+ML_fit2_pred_test
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit2_pred_test <- bind_cols(ML_fit2_pred_test, test_data %>% select(Weightgrams))
+ML_fit2_pred_test
+
+# Plot observed versus predicted
+plot2_test <- ggplot(ML_fit2_pred_test, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot2_test
+
+# Create metric set including RMSE and R-squared
+metrics_fit2_test <- metric_set(rmse, rsq)
+metrics_fit2_test(ML_fit2_pred_test, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit2_test <- as.data.frame(metrics_fit2_test(ML_fit2_pred_test, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit2_test
+
+# Create a gtsummary table directly from the model
+table3_test <- pull_workflow_fit(ML_fit2_test) %>%
+  tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  bold_p()
+table3_test
+
+# Save regression output into table
+saveRDS(table3_test, file = here::here("results", "tables", "table3_test.rds"))
+```
+Running the model on our test data, we see that the only significant result is for the nulliparous status. All other results are insignificant.
+
+# Model 3
 
 The second two models are also simple and multiple linear regressions with outcome variable as birthweight in grams. However, in these two models, I maintained maternal skin color as three categories, White (the reference group), Black, and mixed race to see if there is differential outcomes for Black and mixed-race women. The first simple linear regression model is as follows:
 
@@ -155,6 +571,7 @@ $$\text{BW} = \alpha + \beta_1 \text{MC} + \epsilon$$
 whereas BW is birthweight in grams, MC is maternal skin color (White, Black, and mixed race), and $\epsilon$ is the error term. Results are displayed in Table 4.
 
 ```{r}
+# Final model 3 for paper using all data
 # Using recipes and workflows
 # Simple linear model
 # Specify recipe
@@ -178,6 +595,32 @@ ML_summary3 <- summary(ML_fit3)
 tidy(ML_fit3, conf.int = TRUE) # Coefficients and confidence intervals
 glance(ML_fit3) # Model-level statistics
 
+# Produce predictions for R-squared
+ML_fit3_pred <- predict(ML_fit3, new_data = ML_linear %>% select(-Weightgrams))
+ML_fit3_pred
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit3_pred <- bind_cols(ML_fit3_pred, ML_linear %>% select(Weightgrams))
+ML_fit3_pred
+
+# Plot observed versus predicted
+plot3 <- ggplot(ML_fit3_pred, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot3
+
+# Create metric set including RMSE and R-squared
+metrics_fit3 <- metric_set(rmse, rsq)
+metrics_fit3(ML_fit3_pred, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit3 <- as.data.frame(metrics_fit3(ML_fit3_pred, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit3
+
 # Create a gtsummary table from model
 table4 <- tbl_regression(ML_fit3, exponentiate = FALSE, intercept = TRUE) %>%
   bold_p() %>%
@@ -190,6 +633,187 @@ table4
 saveRDS(table4, file = here("results", "tables", "table4_final.rds"))
 ```
 
+Our RMSE is 502 and our r-squared is 0.007.
+
+## Model 3 Performance
+
+Let's now evaluate the model on our training data.
+
+```{r, message=FALSE,  warning=FALSE}
+# Training model 3
+# Using recipes and workflows
+# Specify recipe
+ML_recipe3_train <- recipe(Weightgrams ~ Color, data = train_data) %>%
+  step_relevel(Color, ref_level = "White")
+
+# Specify model
+ML_spec3_train <- linear_reg() %>%
+  set_engine("lm")
+
+# Create workflow
+ML_wf3_train <- workflow() %>%
+  add_recipe(ML_recipe3_train) %>%
+  add_model(ML_spec3_train)
+
+# Fit the workflow
+ML_fit3_train <- fit(ML_wf3_train, data = train_data)
+
+# Summarize model fit with tidiers and create a gtsummary table directly from the model
+ML_summary3_train <- summary(ML_fit3_train)
+tidy(ML_fit3_train, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit3_train) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit3_pred_train <- predict(ML_fit3_train, new_data = train_data %>% select(-Weightgrams))
+ML_fit3_pred_train
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit3_pred_train <- bind_cols(ML_fit3_pred_train, train_data %>% select(Weightgrams))
+ML_fit3_pred_train
+
+# Plot observed versus predicted
+plot3_train <- ggplot(ML_fit3_pred_train, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot3_train
+
+# Create metric set including RMSE and R-squared
+metrics_fit3_train <- metric_set(rmse, rsq)
+metrics_fit3_train(ML_fit3_pred_train, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit3_train <- as.data.frame(metrics_fit3_train(ML_fit3_pred_train, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit3_train
+
+# Create a gtsummary table from model
+table4_train <- tbl_regression(ML_fit3_train, exponentiate = FALSE, intercept = TRUE) %>%
+  bold_p() %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table4_train
+
+# Save regression output into table
+saveRDS(table4_train, file = here("results", "tables", "table4_train.rds"))
+```
+
+Our RMSE is 495 and our r-squared is 0.009, slightly better performance than the full model. Our results are not significantly different from the full model.
+
+Now let's run cross-validation.
+
+```{r, message=FALSE,  warning=FALSE}
+# CV model 3
+# Set the seed for reproducibility
+set.seed(rngseed)
+
+# Create 10-fold cross-validation
+folds <- vfold_cv(train_data, v = 10)
+folds
+
+# Define recipe for model
+ML_recipe3_cv <- recipe(Weightgrams ~ Color, data = train_data) %>%
+  step_relevel(Color, ref_level = "White")
+
+# Set model specification
+ML_spec3_cv <- linear_reg() %>% set_engine("lm")
+
+# Create and initialize workflow that bundles together model specification and formula.
+ML_wf3_cv <- workflow() %>% 
+  add_model(ML_spec3_cv) %>% 
+  add_recipe(ML_recipe3_cv)
+  fit_resamples(ML_wf3_cv, resamples = folds)
+
+# Resample the model
+ML_wf3_cv_rs <- fit_resamples(ML_wf3_cv, resamples = folds)
+ML_wf3_cv_rs
+
+# Get model metrics
+collect_metrics(ML_wf3_cv_rs)
+
+# Get model metrics
+ML_cv3_metrics <- collect_metrics(ML_wf3_cv_rs)
+
+# Filter the data frame to include only rows with "rmse" and "rsq" in the ".metric" column
+ML_cv3_metrics <- ML_cv3_metrics[ML_cv3_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv3_metrics) %in% ".config")]
+ML_cv3_metrics
+
+# Save regression output into table
+saveRDS(ML_cv3_metrics, file = here::here("results", "tables", "ML_cv3_metrics.rds"))
+```
+Using cross-validation, our RMSE is 495 and our r-squared is 0.02, a similar performance to our training model.
+
+Finally, let's run our model on the test data.
+
+```{r, message=FALSE, warning=FALSE}
+# Testing model 3
+# Using recipes and workflows
+# Specify recipe
+ML_recipe3_test <- recipe(Weightgrams ~ Color, data = test_data) %>%
+  step_relevel(Color, ref_level = "White")
+
+# Specify model
+ML_spec3_test <- linear_reg() %>%
+  set_engine("lm")
+
+# Create workflow
+ML_wf3_test <- workflow() %>%
+  add_recipe(ML_recipe3_test) %>%
+  add_model(ML_spec3_test)
+
+# Fit the workflow
+ML_fit3_test <- fit(ML_wf3_test, data = test_data)
+
+# Summarize model fit with tidiers and create a gtsummary table directly from the model
+ML_summary3_test <- summary(ML_fit3_test)
+tidy(ML_fit3_test, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit3_test) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit3_pred_test <- predict(ML_fit3_test, new_data = test_data %>% select(-Weightgrams))
+ML_fit3_pred_test
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit3_pred_test <- bind_cols(ML_fit3_pred_test, test_data %>% select(Weightgrams))
+ML_fit3_pred_test
+
+# Plot observed versus predicted
+plot3_test <- ggplot(ML_fit3_pred_test, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot3_test
+
+# Create metric set including RMSE and R-squared
+metrics_fit3_test <- metric_set(rmse, rsq)
+metrics_fit3_test(ML_fit3_pred_test, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit3_test <- as.data.frame(metrics_fit3_test(ML_fit3_pred_test, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit3_test
+
+# Create a gtsummary table from model
+table4_test <- tbl_regression(ML_fit3_test, exponentiate = FALSE, intercept = TRUE) %>%
+  bold_p() %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table4_test
+
+# Save regression output into table
+saveRDS(table4_test, file = here("results", "tables", "table4_test.rds"))
+```
+
+Much like in the other testing models, our results are not significant (except the intercept). Our performance is also worse (RMSE of 518 and r-squared of 0.005).
+
+# Model 4
+
 The second multiple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$
@@ -197,12 +821,13 @@ $$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{N
 whereas BW is birthweight in grams, MC is maternal skin color (White, Black and mixed race), Gest is gestational status (nullipara, primipara, multipara, multigravida), Nat is maternal nationality (Brazilian, Latin American, European, Middle Eastern), Age is maternal age in years, and $\epsilon$ is the error term.
 
 ```{r}
-# Using reipes and workflows
+# Final model 4 for paper using all data
+# Using recipes and workflows
 # Complex linear model
 # Specify recipe
 ML_recipe4 <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
-  step_relevel(ModifiedStatus, ref_level = "Multipara") %>% # Set reference level for ModifiedStatus
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
   step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
   step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
@@ -223,6 +848,32 @@ ML_summary4 <- summary(ML_fit4)
 tidy(ML_fit4, conf.int = TRUE) # Coefficients and confidence intervals
 glance(ML_fit4) # Model-level statistics
 
+# Produce predictions for R-squared
+ML_fit4_pred <- predict(ML_fit4, new_data = ML_linear %>% select(-Weightgrams))
+ML_fit4_pred
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit4_pred <- bind_cols(ML_fit4_pred, ML_linear %>% select(Weightgrams))
+ML_fit4_pred
+
+# Plot observed versus predicted
+plot4 <- ggplot(ML_fit4_pred, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot4
+
+# Create metric set including RMSE and R-squared
+metrics_fit4 <- metric_set(rmse, rsq)
+metrics_fit4(ML_fit4_pred, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit4 <- as.data.frame(metrics_fit4(ML_fit4_pred, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit4
+
 # Create a gtsummary table from model
 table5 <- tbl_regression(ML_fit4, exponentiate = FALSE, intercept = TRUE) %>%
   bold_p() %>%
@@ -234,3 +885,190 @@ table5
 # Save regression output into table
 saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
 ```
+Our RMSE is 498 and our r-squared is 0.02.
+
+## Model 4 Performance
+
+Let's now evaluate the model on our training data.
+
+```{r, message=FALSE,  warning=FALSE}
+# Model 4 training
+# Using recipes and workflows
+# Complex linear model
+# Specify recipe
+ML_recipe4_train <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>%
+  step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Specify model
+ML_spec4_train <- linear_reg() %>%
+  set_engine("lm")
+
+# Create workflow
+ML_wf4_train <- workflow() %>%
+  add_recipe(ML_recipe4_train) %>%
+  add_model(ML_spec4_train)
+
+# Fit the workflow
+ML_fit4_train <- fit(ML_wf4_train, data = train_data)
+
+# Summarize model fit with tidiers and create a gtsummary table directly from the model
+ML_summary4_train <- summary(ML_fit4_train)
+tidy(ML_fit4_train, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit4_train) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit4_pred_train <- predict(ML_fit4_train, new_data = train_data %>% select(-Weightgrams))
+ML_fit4_pred_train
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit4_pred_train <- bind_cols(ML_fit4_pred_train, train_data %>% select(Weightgrams))
+ML_fit4_pred_train
+
+# Plot observed versus predicted
+plot4_train <- ggplot(ML_fit4_pred_train, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot4_train
+
+# Create metric set including RMSE and R-squared
+metrics_fit4_train <- metric_set(rmse, rsq)
+metrics_fit4_train(ML_fit4_pred_train, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit4_train <- as.data.frame(metrics_fit4_train(ML_fit4_pred_train, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit4_train
+
+# Create a gtsummary table from model
+table5_train <- tbl_regression(ML_fit4_train, exponentiate = FALSE, intercept = TRUE) %>%
+  bold_p() %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table5_train
+
+# Save regression output into table
+saveRDS(table5_train, file = here("results", "tables", "table5_train.rds"))
+```
+Our RMSE is 490 and our r-squared is 0.03, a slightly better performance than the full model.
+
+Now let's run cross-validation.
+
+```{r, message=FALSE,  warning=FALSE}
+# CV model 4
+# Set the seed for reproducibility
+set.seed(rngseed)
+
+# Create 10-fold cross-validation
+folds <- vfold_cv(train_data, v = 10)
+folds
+
+# Define recipe for model
+ML_recipe4_cv <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
+  step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Set model specification
+ML_spec4_cv <- linear_reg() %>% set_engine("lm")
+
+# Create and initialize workflow that bundles together model specification and formula.
+ML_wf4_cv <- workflow() %>% 
+  add_model(ML_spec4_cv) %>% 
+  add_recipe(ML_recipe4_cv)
+  fit_resamples(ML_wf4_cv, resamples = folds)
+
+# Resample the model
+ML_wf4_cv_rs <- fit_resamples(ML_wf4_cv, resamples = folds)
+ML_wf4_cv_rs
+
+# Get model metrics
+collect_metrics(ML_wf4_cv_rs)
+
+# Get model metrics
+ML_cv4_metrics <- collect_metrics(ML_wf4_cv_rs)
+
+# Filter the data frame to include only rows with "rmse" and "rsq" in the ".metric" column
+ML_cv4_metrics <- ML_cv4_metrics[ML_cv4_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv4_metrics) %in% ".config")]
+ML_cv4_metrics
+
+# Save regression output into table
+saveRDS(ML_cv4_metrics, file = here::here("results", "tables", "ML_cv4_metrics.rds"))
+```
+Here, our RMSE is 458 and our r-squared is 0.03, a better performance than both the full model and training model.
+
+Finally, let's run our model on the test data.
+
+```{r, message=FALSE, warning=FALSE}
+# Model 4 testing
+# Using recipes and workflows
+# Complex linear model
+# Specify recipe
+ML_recipe4_test <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = test_data) %>%
+  step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
+  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+
+# Specify model
+ML_spec4_test <- linear_reg() %>%
+  set_engine("lm")
+
+# Create workflow
+ML_wf4_test <- workflow() %>%
+  add_recipe(ML_recipe4_test) %>%
+  add_model(ML_spec4_test)
+
+# Fit the workflow
+ML_fit4_test <- fit(ML_wf4_test, data = test_data)
+
+# Summarize model fit with tidiers and create a gtsummary table directly from the model
+ML_summary4_test <- summary(ML_fit4_test)
+tidy(ML_fit4_test, conf.int = TRUE) # Coefficients and confidence intervals
+glance(ML_fit4_test) # Model-level statistics
+
+# Produce predictions for R-squared
+ML_fit4_pred_test <- predict(ML_fit4_test, new_data = test_data %>% select(-Weightgrams))
+ML_fit4_pred_test
+
+# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+ML_fit4_pred_test <- bind_cols(ML_fit4_pred_test, test_data %>% select(Weightgrams))
+ML_fit4_pred_test
+
+# Plot observed versus predicted
+plot4_test <- ggplot(ML_fit4_pred_test, aes(x = Weightgrams, y = .pred)) +
+  geom_abline(lty = 2) + # Add a dashed line to represent the 1:1 line
+  geom_point(alpha = 0.5) +
+  labs(x = "Observed", y = "Predicted") + #Scale and size x- and y-axis uniformly
+  coord_obs_pred()
+plot4_test
+
+# Create metric set including RMSE and R-squared
+metrics_fit4_test <- metric_set(rmse, rsq)
+metrics_fit4_test(ML_fit4_pred_test, truth = Weightgrams, estimate = .pred)
+
+# Convert the output to a data frame and mutate the .estimate column to numeric
+metrics_fit4_test <- as.data.frame(metrics_fit4_test(ML_fit4_pred_test, truth = Weightgrams, estimate = .pred)) %>%
+  mutate(.estimate = as.numeric(.estimate))
+options(scipen = 999) # set opens to avoid scientific notation
+metrics_fit4_test
+
+# Create a gtsummary table from model
+table5_test <- tbl_regression(ML_fit4_test, exponentiate = FALSE, intercept = TRUE) %>%
+  bold_p() %>%
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
+table5_test
+
+# Save regression output into table
+saveRDS(table5_test, file = here("results", "tables", "table5_test.rds"))
+```
+Again, most of our results are not significant except the intercept and nulliparous variable given the small sample size.

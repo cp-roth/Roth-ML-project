@@ -87,7 +87,7 @@ metrics_fit1
 # Create a gtsummary table directly from the model
 table2 <-
   tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
-  bold_p() %>% 
+  bold_p() %>% # make p-values bold
   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
 
