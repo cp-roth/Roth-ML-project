@@ -1,0 +1,304 @@
+---
+title: Low Infant Birth Weight in Brazil Project Reveiw 
+author: Clarke Miller
+date: 23 April 2024
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+---
+
+# Overview
+
+Title of project: Low Infant Birth Weight in Brazil, A Historical Data Analysis Approach
+
+Name of project author(s):  Cassia Roth
+
+Name of project reviewer:  Clarke Miller
+
+
+## Background, Context and Motivation
+*
+*How well is the context of the project described?*
+
+The overall project is very well described. The public health impact is immediately apparent and the background/data sources/questions and hypothesis are all well explained and explored.
+
+*Is a comprehensive background, including summary of previous/related work given?*
+
+A good background is given. There doesn’t seem to be a comprehensive summary of prior work done, but the appropriate citations for that work are given. My impression is that this data came from some prior work, i.e. it is a historical data set, and that was described in the data description.
+
+*Is the project well placed into the context of existing work (including proper referencing of existing work).*
+
+Yes. This work is well placed in the context of the existing work.
+
+*Is it clear why the project was undertaken and what new information it hopes to provide?*
+
+Yes, it is clear why the project is important. The importance to public health is clear.
+
+### Feedback and Comments
+
+Okay, the first comment that I need to make is that when I try to open the docx file, I get an error from Microsoft word that says:
+
+“Word found unreadable content in Manuscript_Cassia. Do you want to recover the contents of this document? If you trust the source of this document, click yes.”
+
+I get this every time I try to open the document. My Microsoft Word software is able to open the document when I click “Yes” and there is no action from my antivirus software, so I am not sure what the issue here is.  Maybe it's just an issue for me?  
+
+**Okay, now the feedback for this specific section...**    
+
+The context/motivation/background part looks great.  I wouldn't change anything at this point.  Well done!  
+
+### Summary assessment (PICK ONE, DELETE THE OTHERS)
+
+* strong contextualization and motivation
+
+I chose this one because the section looked great overall.
+
+## Question description
+
+*How well and clear are the question(s)/hypotheses the project aims to address described? Is it clear how the questions relate to the data?*
+
+I think that the questions/hypothesis was answered as well as the data allowed. The questions are directly related to the data.
+
+
+### Feedback and Comments
+
+The question/hypothesis looked great!
+
+### Summary assessment
+
+* question/hypotheses fully clear
+
+It is clear what you want to do and why, your exploration of the data supports that.  That being said, I do have one suggestion.
+
+Table 1 is a bit long.  I would consider a shorter, maybe a single page, summary table of some kind then put this longer table in the supplemental material.  Of course, that is a large number of variables, so it may not be possible to make the table more compact.  (Unless you format it so that each sub-characteristic went horizontal?  Beats me.)  Maybe break this into more than one table?  Make a table that highlights the data that you want to use for your analysis?  Again, I don't know what a good solution would be.  Maybe break each characteristic into a separate table?  For example, take "Parity of Gravidity" and make that one a single table?  ¯\_(ツ)_/¯
+
+Also, why isn't the actual publication or source of the data cited in your work?  
+
+
+## Data description
+
+
+A good background is given.  There doesn't seem to be a comprehensive summary of prior work done, but the appropriate citations for that work are given.  My impression is that this data came from some prior work, i.e. it is a historical data set, and that was described in the data description.
+
+
+*Is the project well placed into the context of existing work (including proper referencing of existing work).*
+
+Yes.  This work is well placed in the context of the existing work.
+
+*Is it clear why the project was undertaken and what new information it hopes to provide?*
+
+Yes, it is clear why the project is important.  The importance to public health is clear.  Again, the data is from an older study, the data probably won't provide much new insight past the work-ups that have already been done.
+
+
+### Feedback and Comments
+
+The data set looks great.  You have narrowed it down to a workable set of variables.
+
+### Summary assessment
+
+* source and overall structure of data well explained
+
+The data is well explained in the data tables and in the supplementary materials.
+
+## Data wrangling and exploratory analysis
+
+*How well is the data cleaned/processed and explored? Are all steps reasonable and well explained?* 
+
+Very well.
+
+*Are alternatives discussed and considered?* 
+
+Yes.
+
+*Are meaningful exploratory results shown (e.g. in the supplementary materials)?*
+
+Yes.  The exploration results are shown in the paper body.
+
+### Feedback and Comments
+
+No real feedback here.  It looks good.  The data exploration looks like something that I may have done for the same data set.  You made graphs to explore the data, I would go for a visual exploration too.
+
+### Summary assessment
+
+* essentially no weaknesses in wrangling and exploratory component
+
+It looks good.
+
+## Appropriateness of Analysis
+
+*Were the analysis methods appropriate for the data? Was the analysis done properly?* 
+
+Yes.  The analysis was appropriate for the data.  The analysis seems to be done well.
+
+*Were different components of the analysis (e.g. performance measure, variable selection, data pre-processing, model evaluation) done in the best way possible and explained well?*
+
+Okay, who am I to judge the best possible way?  That is a judgement call for any individual researcher and strictly between them and reviewer #2.  The data analysis looked appropriate to me.  The data was explored several different ways to look for correlations between material features, with African/European ancestry being an important one, and the results were evaluated.    
+
+
+### Feedback and Comments
+
+I think that this section looks good.  
+
+### Summary assessment
+
+* strong and reasonable analysis
+
+## Presentation
+
+*How well are results presented? Are tables and figures easy to read and understand? Are the main figures/tables publication level quality?* 
+
+The results were presented very well.  The only issue I had with any of the tables or figures was the length of table 1.
+
+**A couple of issues to look at:**  
+
+In the word document, table 3 seems to be off the page on the left.  Same thing for Table 5.
+
+The figure captions need to be included in the figure captions.  For example, for figure 3 you have "Scatterplot of birth weight by length" in the code after "fig-cap:", then you add a completely different figure caption: "Figure 3 visualizes the relationship between infant weight and length. Unsurprisingly, birth weight and length are positively correlated."  Combine these.  Also, it is traditional to have the figure description below the figure.  Just a suggestion, but it would make the paper come together a bit better.  
+
+I would also take some of the page breaks out.  They are a bit distracting.  For example, the huge gap between the abstract and the introduction leaves quite a bit of scrolling down.  Smoother pagination makes a paper flow easier.
+
+Again, all of this is just a suggestion.  The paper looks pretty good as it is.
+
+### Feedback and Comments
+
+The paper looks pretty good as it is.  A few little details could be polished up a bit.  Really, it's just up to the author's taste and style.
+
+### Summary assessment
+
+* results are very well presented
+
+
+## Discussion/Conclusions
+
+*Are the study findings properly discussed? Are strengths and limitations acknowledged? Are findings interpreted properly?*
+
+Yes.  Absolutely.
+
+### Feedback and Comments
+
+Nothing to say, the dicussion and comments look good!
+
+### Summary assessment
+
+* strong, complete and clear discussion
+
+
+## Further comments
+
+None.
+
+
+
+# Overall project content evaluation
+Evaluate overall features of the project  by filling in the sections below.
+
+
+## Structure
+
+*Is the project well structured? Are files in well labeled folders?* 
+
+Yes.
+
+*Do files have reasonable names?*
+
+Yes.
+
+*Are all "junk" files not needed for analysis/reproduction removed?* 
+
+Yes.
+
+*By just looking at files and folders, can you get an idea of how things fit together?*
+
+Yes.
+
+### Feedback and Comments
+
+No real feedback here.  The project is looking really good.  As a matter of fact, I learned a few things from looking at this project.
+
+### Summary assessment
+
+* well structured
+
+
+## Documentation 
+
+*How well is the project documented?* 
+
+Yes.  I like the readme files.  I am going to use them as a model to revise my own readme.
+
+*Are you able to understand each step of the whole analysis, each decision that was made, and each line of code?* 
+
+Yes.
+
+*Is enough information provided as comments in code or as part of Rmd files?*
+
+Yes.
+
+
+### Feedback and Comments
+
+No real feed back here.  Everything looks great.
+
+### Summary assessment
+
+* fully and well documented
+
+
+
+## Reproducibility
+
+*Are all results fully reproducible?* 
+
+Yes.
+
+*Is documentation provided which clearly explains how to reproduce things, and does it work without the need for any manual intervention?* 
+
+Yes.
+
+*Are you able to re-run the whole analysis without having to do manual interventions/edits?*
+
+Yes.
+
+### Feedback and Comments
+
+No real feed back here.  Everything looks great.
+
+
+### Summary assessment
+
+* fully reproducible without issues
+
+
+## Thoroughness
+
+*How thorough was the overall study? Were alternatives (e.g. different ways of processing the data or different models) considered?*
+
+Yes.
+
+*Were alternatives discussed?* 
+
+Yes.
+
+*Were the questions/hypotheses fully and thoroughly addressed?*
+
+Yes.
+
+
+### Feedback and Comments
+
+No real feed back here.  Everything looks great.
+
+### Summary assessment
+
+* strong level of thorougness
+
+
+## Further comments
+
+No real feed back here.  Everything looks great.
+
+
+
+
+
