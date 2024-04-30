@@ -26,7 +26,7 @@ library(flextable) #for nice tables
 
 # Summary/Abstract
 
-This cross-sectional study uses linear regression models to understand disparities in infant birth weight in relation to maternal skin color or ancestry, age, gestational status (parity or gravidity), and nationality in Rio de Janeiro, Brazil's first public maternity hospital, the Maternidade Laranjeiras (now Maternidade Escola) in the 1920s. I hypothesize that infants born to women of color (either Black or "*preta*" or mixed-race or "*parda*") will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery, only abolished in 1888, on population health in Brazil.
+This cross-sectional study uses linear regression models to understand disparities in infant birth weight in relation to maternal skin color (ancestry), age, gestational status (parity), and nationality in Rio de Janeiro, Brazil's first public maternity hospital, the Maternidade Laranjeiras (now Maternidade Escola) in the 1920s. I hypothesize that infants born to women of color (either Black or "*preta*" or mixed-race or "*parda*") will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery, only abolished in 1888, on population health in Brazil.
 
 {{< pagebreak >}}
 
@@ -54,21 +54,17 @@ By the 1920s, at least in Brazil’s large cities, public maternity hospitals, e
 
 Laranjeiras, which was the teaching hospital for the obstetrics and gynecology program at Rio de Janeiro’s medical school, was ground zero for the intersection of these forces. Maternidade Laranjeiras provided gynecological and obstetric care free of charge; thus, its clientele came from the city’s poor and working classes [@barreto2016, @roth2020]. The majority of patients were women of color defined as either Black or mixed race, and the majority of White patients were immigrants.
 
-{{< pagebreak >}}
-
 ## Data: Description and Sources
 
 In this paper, I analyze a unique sample of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
 
-The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013]. Please see the `Supplemental_Materials` document for more information on the dataset.
+The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013]. Please see the `Supplemental_Materials` document for more information on the dataset. For full citations on the journals from which these data came, see my other publications [@roth2020, @roth2020a].
 
 ## Questions and Hypotheses
 
 I ask: Did the legacy of slavery affect the health of infants born in the first public maternity hospital in Brazil? I quantify how maternal race, nationality, age, and gestational status explain racial disparities in infant birth weight in Rio de Janeiro, Brazil’s first public maternity hospital, the Maternidade Laranjeiras, in the 1920s. I hypothesize that infants born to women of color, defined as mixed-race (*parda*) or Black (*preta*), will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery on population health in Brazil.
 
 The outcome I will measure is infant birth weight. The World Health Organization (WHO) currently classifies birth weight into the following categories: extremely low (\<999g); very low (1000-1499g); low (1500-2499g); normal (2500-3999g); and high (≥4000g) [@worldhealthorganization2022]. I employ birthweight as a continuous variable, so these categories are not relevant for the linear models but can help understand the skew of the data.
-
-{{< pagebreak >}}
 
 # Methods
 
@@ -90,13 +86,9 @@ Please see the supplemental materials (`Supplemental_Materials`) for information
 
 If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder; 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder; 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` or `fullanalysiscode.R` in the `analysis-code` folder. Please defer to all `.qmd` files as the master over any `.R` files.
 
-{{< pagebreak >}}
-
 ## Data import and cleaning
 
 The GitHub repository for this project includes all relevant materials. All discussions of data import are detailed in the files `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder. The original raw data, the codebook, and the processed data are available in the `data` folder.
-
-{{< pagebreak >}}
 
 ## Descriptive analysis
 
@@ -169,8 +161,6 @@ Finally, Figure 4 visualizes the relationship of birth weight and length, strati
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
 
-{{< pagebreak >}}
-
 ## Statistical analysis
 
 I ran four linear models to understand the relationship between maternal factors and infant birth weight. The first two models are a simple and multiple linear regression, respectively, with outcome variable as birthweight in grams. In these two models, I recoded maternal skin color as maternal ancestry (`Euro-descent` or `Afro-descent`).
@@ -179,12 +169,16 @@ The first simple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \epsilon$$ whereas `BW` is birthweight in grams, `MA` is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. Results are displayed in Table 2.
 
+{{< pagebreak >}}
+
 ```{r}
 #| label: tbl-table2
 #| tbl-cap: "Model 1 Results"
 #| echo: FALSE
 table2 <- readRDS(here::here("results", "tables", "table2_final.rds"))
 flex_table2 <- as_flex_table(table2)
+flex_table2 <- flex_table2 %>%
+  flextable::set_table_properties(width = .5, align = "center")
 flex_table2
 ```
 
@@ -196,8 +190,15 @@ $$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Gest} + \beta_3 \text{N
 #| label: tbl-table3
 #| tbl-cap: "Model 2 Results"
 #| echo: FALSE
+i = 16.5
+w = i*0.3937
+font_size <- 10
 table3 <- readRDS(here::here("results", "tables", "table3_final.rds"))
 flex_table3 <- as_flex_table(table3)
+flex_table3 <- autofit(flex_table3)
+auto_widths <- dim(flex_table3)$widths/sum(dim(flex_table3)$widths) # calculate column widths
+flex_table3 <- width(flex_table3, width=w*auto_widths) # adjust column widths
+flex_table3 <- fontsize(flex_table3, size=font_size) # set font size
 flex_table3
 ```
 
@@ -211,6 +212,8 @@ $$\text{BW} = \alpha + \beta_1 \text{MC} + \epsilon$$ whereas `BW` is birthweigh
 #| echo: FALSE
 table4 <- readRDS(here::here("results", "tables", "table4_final.rds"))
 flex_table4 <- as_flex_table(table4)
+flex_table4 <- flex_table4 %>%
+  flextable::set_table_properties(width = .5, align = "center")
 flex_table4
 ```
 
@@ -218,12 +221,21 @@ The second multiple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$ whereas `BW` is birthweight in grams, `MC` is maternal skin color (White, Black and mixed race), `Gest` is gestational status (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 5.
 
+{{< pagebreak >}}
+
 ```{r}
 #| label: tbl-table5
 #| tbl-cap: "Model 4 Results"
 #| echo: FALSE
+i = 16.5
+w = i*0.3937
+font_size <- 10
 table5 <- readRDS(here::here("results", "tables", "table5_final.rds"))
 flex_table5 <- as_flex_table(table5)
+flex_table5 <- autofit(flex_table5)
+auto_widths <- dim(flex_table5)$widths/sum(dim(flex_table5)$widths) # calculate column widths
+flex_table5 <- width(flex_table5, width=w*auto_widths) # adjust column widths
+flex_table5 <- fontsize(flex_table5, size=font_size) # set font size
 flex_table5
 ```
 

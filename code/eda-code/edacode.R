@@ -35,7 +35,6 @@ age_plot <- ML_summary %>% filter(!is.na(Age)) %>% # Filter out NAs
   ggplot(aes(x = Age)) +
   geom_histogram(binwidth = 0.5, width= 0.8, fill="#69b3a2") +
   geom_vline(xintercept = c(15, 49), linetype = "dashed", color = "red") +  # Add vertical lines that mark reproductive age
-  ggtitle("Maternal Age") +
   theme_ipsum() +
   theme(plot.title = element_text(size=15))
 plot(age_plot)
@@ -49,7 +48,6 @@ weight_plot <- ML_summary %>% filter(!is.na(Weightgrams)) %>% #filter out NAs
   ggplot(aes(x = Weightgrams)) +
   geom_histogram(binwidth = 25, fill="#69b3a2") +
   geom_vline(xintercept = c(1500, 4000), linetype = "dashed", color = "red") +  # Add vertical lines that mark normal birthweight
-  ggtitle("Infant birthweight") +
   theme_ipsum() +
   theme(plot.title = element_text(size=15))
 plot(weight_plot)
@@ -63,7 +61,6 @@ length_plot <- ML_summary %>% filter(!is.na(Lengthcentimeters)) %>% #filter out 
   ggplot(aes(x = Lengthcentimeters)) +
   geom_histogram(binwidth = 1, fill="#69b3a2") +
   geom_vline(xintercept = c(49), linetype = "dashed", color = "red") +  # Add vertical lines that mark average birth length for both sexes
-  ggtitle("Infant birth length") +
   theme_ipsum() +
   theme(plot.title = element_text(size=15))
 plot(length_plot)
