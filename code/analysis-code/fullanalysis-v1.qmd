@@ -20,7 +20,7 @@ library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(tidymodels) #for modeling
 
-#rm(list=ls()) #clear the environment
+rm(list=ls()) #clear the environment
 ```
 
 Load the data
@@ -195,7 +195,7 @@ table2_train
 # Save regression output into table
 saveRDS(table2_train, file = here::here("results", "tables", "table2_train.rds"))
 ```
-Our results here are not that different from the model run on all the data. Our adjusted R-squared is 0.007, the same as the full model. The RMSE is 495, which is slightly lower than the full model (502), which shows better performance.
+Our results here are not that different from the model run on all the data. Our adjusted R-squared is 0.01, the same as the full model. The RMSE is 488, which is slightly lower than the full model (494), which shows better performance.
 
 Now let's perform cross-validation on the training data.
 
@@ -236,7 +236,7 @@ ML_cv1_metrics
 # Save regression output into table
 saveRDS(ML_cv1_metrics, file = here::here("results", "tables", "ML_cv1_metrics.rds"))
 ```
-Performing cross-validation results in an RMSE that is the same as our training model (495), lower than our full model. The r-squared (0.02) is also higher than our training model (0.008) and our full model (0.007), demonstrating better model performance.
+Performing cross-validation results in an RMSE that is the same as our training model (488), lower than our full model. The r-squared (0.015) is also higher than our training and full models (0.01), demonstrating better model performance.
 
 Finally, let's run the model on our test data.
 
@@ -304,7 +304,7 @@ table2_test
 saveRDS(table2_test, file = here::here("results", "tables", "table2_test.rds"))
 ```
 
-When running the model on our testing dataset, our results are not significant, given the small sample size. 
+When running the model on our testing dataset, our results remain significant at the 0.05 level. The RMSE is 508 and the r-squared is 0.008. This shows a slightly worse fit than our training results. 
 
 # Model 2
 
@@ -379,7 +379,7 @@ table3
 # Save regression output into table
 saveRDS(table3, file = here::here("results", "tables", "table3_final.rds"))
 ```
-Our RMSE is 498 and our r-squared is 0.02.
+Our RMSE is 490 and our r-squared is 0.026.
 
 ## Model 2 Performance
 
@@ -450,7 +450,7 @@ table3_train
 # Save regression output into table
 saveRDS(table3_train, file = here::here("results", "tables", "table3_train.rds"))
 ```
-Our RMSE is 490 and our r-squared is 0.03, a slightly better performance than the full model.
+Our RMSE is 483 and our r-squared is 0.03, a slightly better performance than the full model.
 
 Now let's run cross-validation.
 
@@ -492,7 +492,7 @@ ML_cv2_metrics
 # Save regression output into table
 saveRDS(ML_cv2_metrics, file = here::here("results", "tables", "ML_cv2_metrics.rds"))
 ```
-Here, our RMSE is 458, an improvement from both the full model and the training model, and our r-squared is 0.03, the same as our training model.
+Here, our RMSE is 483 and our r-squared is 0.026, the same as the training model.
 
 Finally, let's run our model on the test data.
 
@@ -561,7 +561,7 @@ table3_test
 # Save regression output into table
 saveRDS(table3_test, file = here::here("results", "tables", "table3_test.rds"))
 ```
-Running the model on our test data, we see that the only significant result is for the nulliparous status. All other results are insignificant.
+Running the model on our test data, we see no significant results at any alpha level.
 
 # Model 3
 
@@ -633,7 +633,7 @@ table4
 saveRDS(table4, file = here("results", "tables", "table4_final.rds"))
 ```
 
-Our RMSE is 502 and our r-squared is 0.007.
+Our RMSE is 494 and our r-squared is 0.01.
 
 ## Model 3 Performance
 
@@ -701,7 +701,7 @@ table4_train
 saveRDS(table4_train, file = here("results", "tables", "table4_train.rds"))
 ```
 
-Our RMSE is 495 and our r-squared is 0.009, slightly better performance than the full model. Our results are not significantly different from the full model.
+Our RMSE is 489 and our r-squared is 0.01, slightly better performance than the full model. Our results are not significantly different from the full model.
 
 Now let's run cross-validation.
 
@@ -744,7 +744,7 @@ ML_cv3_metrics
 # Save regression output into table
 saveRDS(ML_cv3_metrics, file = here::here("results", "tables", "ML_cv3_metrics.rds"))
 ```
-Using cross-validation, our RMSE is 495 and our r-squared is 0.02, a similar performance to our training model.
+Using cross-validation, our RMSE is 487 and our r-squared is 0.01, a similar performance to our training model.
 
 Finally, let's run our model on the test data.
 
@@ -810,7 +810,7 @@ table4_test
 saveRDS(table4_test, file = here("results", "tables", "table4_test.rds"))
 ```
 
-Much like in the other testing models, our results are not significant (except the intercept). Our performance is also worse (RMSE of 518 and r-squared of 0.005).
+Much like in the other testing models, our results are not significant (except the intercept). Our performance is also worse (RMSE of 507 and r-squared of 0.008).
 
 # Model 4
 
@@ -885,7 +885,7 @@ table5
 # Save regression output into table
 saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
 ```
-Our RMSE is 498 and our r-squared is 0.02.
+Our RMSE is 490 and our r-squared is 0.026.
 
 ## Model 4 Performance
 
@@ -956,7 +956,7 @@ table5_train
 # Save regression output into table
 saveRDS(table5_train, file = here("results", "tables", "table5_train.rds"))
 ```
-Our RMSE is 490 and our r-squared is 0.03, a slightly better performance than the full model.
+Our RMSE is 483 and our r-squared is 0.033, a slightly better performance than the full model.
 
 Now let's run cross-validation.
 
@@ -1002,7 +1002,7 @@ ML_cv4_metrics
 # Save regression output into table
 saveRDS(ML_cv4_metrics, file = here::here("results", "tables", "ML_cv4_metrics.rds"))
 ```
-Here, our RMSE is 458 and our r-squared is 0.03, a better performance than both the full model and training model.
+Here, our RMSE is 484 and our r-squared is 0.025, a better performance than both the full model and training model.
 
 Finally, let's run our model on the test data.
 
@@ -1071,4 +1071,4 @@ table5_test
 # Save regression output into table
 saveRDS(table5_test, file = here("results", "tables", "table5_test.rds"))
 ```
-Again, most of our results are not significant except the intercept and nulliparous variable given the small sample size.
+Again, most of our results are not significant except the intercept given the small sample size.

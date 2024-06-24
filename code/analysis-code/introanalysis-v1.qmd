@@ -19,8 +19,7 @@ library(gt) #for nice tables
 library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(tidymodels) #for modeling
-
-#rm(list=ls()) #clear the environment
+rm(list=ls()) #clear the environment
 ```
 
 Load the data
@@ -31,6 +30,8 @@ data_location <- here::here("data","processed-data","ML_linear.rds")
 #load data
 ML_linear <- readRDS(data_location)
 ```
+
+## Linear Models
 
 Let's run a simple regression with the outcome variable (birth weight in grams) and the exposure variable maternal ancestry. I will use the recipe and workflow features of `tidymodels`.
 
@@ -188,7 +189,7 @@ saveRDS(table3, file = here::here("results", "tables", "table3.rds"))
 
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, we can see that older mothers are associated with giving birth to infants with higher birth weights.
 
-For all three models, the r-squared is very small (0.0073, 0.0061, and 0.027), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
+For all three models, the r-squared is very small (0.009, 0.008, and 0.026), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
 
 I am not trying to explain which general factors are trying to explain birth weight. Rather, I'm trying to understand if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro, Brazil. For example, the gestational age probably explains much of the variation in the model, yet this variable was only included in very few observations in the published clinic data from which I created this dataset.
 
@@ -241,3 +242,364 @@ table5
 # Save regression output into table
 saveRDS(table5, file = here::here("results", "tables", "table5.rds"))
 ```
+
+## Logistic models
+
+Now we will still consider `Birthweight` as the outcome of interest, but we will transform it into a categorical outcome of <=2500 (low birthweight, LBW) and >2500 (normal birthweight, NBW) and fit a logistic model, using the main predictor of interest, `ModifiedColor`.
+
+First, we will split data into training and testing sets to later calculate ROC_AUC.
+
+```{r}
+set.seed(123)
+ML_log_split <- initial_split(ML_linear, prop = 0.75, strata = BirthweightCategory)
+
+# Create training and test datasets
+ML_log_train <- training(ML_log_split)
+ML_log_test <- testing(ML_log_split)
+```
+
+Now we will run the first logistic model with `ModifiedColor` as the predictor.
+
+```{r}
+# Simple logistic regression model with ModifiedColor as the predictor
+# Check factor levels
+levels(ML_linear$BirthweightCategory) # Reference is LBW
+
+# Set the reference level explicitly to NBW
+ML_linear <- ML_linear %>%
+  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
+
+# Create recipe
+# Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
+log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_predictors())
+
+# Define model specification
+log1_spec <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+# Create workflow
+log1_wf <- workflow() %>%
+  add_recipe(log1_recipe) %>%
+  add_model(log1_spec)
+
+# Fit model
+log1_fit <- log1_wf %>%
+fit(data = ML_linear)
+
+# Extract fitted model from workflow
+log1_fitted <- extract_fit_parsnip(log1_fit)$fit
+
+# Create a gtsummary table directly from the model
+table6 <- tbl_regression(log1_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table6
+
+# Save regression output into table
+saveRDS(table6, file = here::here("results", "tables", "table6.rds"))
+
+# Calculate performance metrics using pseudo-R2
+# Extract model metrics using broom
+model_metrics1 <- glance(log1_fitted)
+
+# Calculate McFadden's R-squared
+# McFadden's R-squared = 1 - (deviance(model) / deviance(null model))
+mcfadden_r2_1 <- 1 - (model_metrics1$deviance / model_metrics1$null.deviance)
+
+# Print McFadden's R-squared
+print(mcfadden_r2_1)
+
+# Calculate performance metrics using ROC_AUC
+# Fit the model on the training data
+log1_fit <- log1_wf %>% fit(data = ML_log_train)
+
+# Predict probabilities on the test set
+prob_preds1 <- predict(log1_fit, new_data = ML_log_test, type = "prob")
+
+# Combine predictions with true values
+results1 <- bind_cols(ML_log_test, prob_preds1)
+
+# Calculate ROC-AUC
+roc_auc_result1 <- roc_auc(results1, truth = BirthweightCategory, .pred_LBW)
+
+# Print ROC-AUC
+print(roc_auc_result1)
+
+# Create and plot the ROC curve
+roc_curve_data1 <- roc_curve(results1, truth = BirthweightCategory, .pred_LBW)
+
+# Plotting the ROC curve
+roc_plot1 <- ggplot(roc_curve_data1, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 2) +
+  labs(title = "ROC Curve",
+       x = "1 - Specificity",
+       y = "Sensitivity")
+
+# Print the plot
+print(roc_plot1)
+```
+With an ROC_AUC of 0.463, our model is performing worse than random guessing. Our pseudo R-squared is 0.004.
+
+Now let's run another logistic model with `Color` as the predictor.
+
+```{r}
+# Simple logistic regression model with ModifiedColor as the predictor
+# Check factor levels
+levels(ML_linear$BirthweightCategory) # Reference is LBW
+
+# Set the reference level explicitly to NBW
+ML_linear <- ML_linear %>%
+  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
+
+# Create recipe
+# Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
+log2_recipe <- recipe(BirthweightCategory ~ Color, data = ML_linear) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_predictors())
+
+# Define model specification
+log2_spec <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+# Create workflow
+log2_wf <- workflow() %>%
+  add_recipe(log2_recipe) %>%
+  add_model(log2_spec)
+
+# Fit model
+log2_fit <- log2_wf %>%
+fit(data = ML_linear)
+
+# Extract fitted model from workflow
+log2_fitted <- extract_fit_parsnip(log2_fit)$fit
+
+# Create a gtsummary table directly from the model
+table7 <- tbl_regression(log2_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table7
+
+# Save regression output into table
+saveRDS(table7, file = here::here("results", "tables", "table7.rds"))
+
+# Calculate metrics using pseudo-R2
+# Extract model metrics using broom
+model_metrics2 <- glance(log2_fitted)
+
+# Calculate McFadden's R-squared
+# McFadden's R-squared = 1 - (deviance(model) / deviance(null model))
+mcfadden_r2_2 <- 1 - (model_metrics2$deviance / model_metrics2$null.deviance)
+
+# Print McFadden's R-squared
+print(mcfadden_r2_2)
+
+# Calculate performance metrics using ROC_AUC
+# Fit the model on the training data
+log2_fit <- log2_wf %>% fit(data = ML_log_train)
+
+# Predict probabilities on the test set
+prob_preds2 <- predict(log2_fit, new_data = ML_log_test, type = "prob")
+
+# Combine predictions with true values
+results2 <- bind_cols(ML_log_test, prob_preds2)
+
+# Calculate ROC-AUC
+roc_auc_result2 <- roc_auc(results2, truth = BirthweightCategory, .pred_LBW)
+
+# Print ROC-AUC
+print(roc_auc_result2)
+
+# Create and plot the ROC curve
+roc_curve_data2 <- roc_curve(results2, truth = BirthweightCategory, .pred_LBW)
+
+# Plotting the ROC curve
+roc_plot2 <- ggplot(roc_curve_data2, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 2) +
+  labs(title = "ROC Curve",
+       x = "1 - Specificity",
+       y = "Sensitivity")
+
+# Print the plot
+print(roc_plot2)
+```
+The ROC_AUC for our second simple logistic regression model is 0.47, or still worse than random guessing. Our pseudo R-squared is 0.006.
+
+Now, we will run two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates.
+
+```{r}
+# Multiple logistic regression model with ModifiedColor as the predictor
+# Check factor levels
+levels(ML_linear$BirthweightCategory) # Reference is LBW
+levels(ML_linear$ModifiedColor) # Reference is Euro-descent
+levels(ML_linear$ModifiedStatus) # Reference is multiparous
+levels(ML_linear$ModifiedNationality) # Reference is European
+
+# Set the reference level explicitly to NBW
+ML_linear <- ML_linear %>%
+  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"),
+         ModifiedNationality = relevel(ModifiedNationality, ref = "Brazilian"))
+
+# Create recipe
+# Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
+log3_recipe <- recipe(BirthweightCategory ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_predictors())
+
+# Define model specification
+log3_spec <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+# Create workflow
+log3_wf <- workflow() %>%
+  add_recipe(log3_recipe) %>%
+  add_model(log3_spec)
+
+# Fit model
+log3_fit <- log3_wf %>%
+fit(data = ML_linear)
+
+# Extract fitted model from workflow
+log3_fitted <- extract_fit_parsnip(log3_fit)$fit
+
+# Create a gtsummary table directly from the model
+table8 <- tbl_regression(log3_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table8 <- bold_p(table8, t = 0.05)
+table8
+
+# Save regression output into table
+saveRDS(table8, file = here::here("results", "tables", "table8.rds"))
+
+# Calculate metrics using pseudo-R2
+# Extract model metrics using broom
+model_metrics3 <- glance(log3_fitted)
+
+# Calculate McFadden's R-squared
+# McFadden's R-squared = 1 - (deviance(model) / deviance(null model))
+mcfadden_r2_3 <- 1 - (model_metrics3$deviance / model_metrics3$null.deviance)
+
+# Print McFadden's R-squared
+print(mcfadden_r2_3)
+
+# Calculate performance metrics using ROC_AUC
+# Fit the model on the training data
+log3_fit <- log3_wf %>% fit(data = ML_log_train)
+
+# Predict probabilities on the test set
+prob_preds3 <- predict(log3_fit, new_data = ML_log_test, type = "prob")
+
+# Combine predictions with true values
+results3 <- bind_cols(ML_log_test, prob_preds3)
+
+# Calculate ROC-AUC
+roc_auc_result3 <- roc_auc(results3, truth = BirthweightCategory, .pred_LBW)
+
+# Print ROC-AUC
+print(roc_auc_result3)
+
+# Create and plot the ROC curve
+roc_curve_data3 <- roc_curve(results3, truth = BirthweightCategory, .pred_LBW)
+
+# Plotting the ROC curve
+roc_plot3 <- ggplot(roc_curve_data3, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 2) +
+  labs(title = "ROC Curve",
+       x = "1 - Specificity",
+       y = "Sensitivity")
+
+# Print the plot
+print(roc_plot3)
+```
+Our ROC_AUC here is worse, at 0.46, or worse than random guessing. Our pseudo-R2 is 0.0055.
+
+```{r}
+# Multiple logistic regression model with Color as the predictor
+# Check factor levels
+levels(ML_linear$BirthweightCategory) # Reference is LBW
+levels(ML_linear$Color) # Reference is White
+levels(ML_linear$ModifiedStatus) # Reference is multiparous
+levels(ML_linear$ModifiedNationality) # Reference is European
+
+# Set the reference level explicitly to NBW
+ML_linear <- ML_linear %>%
+  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"),
+         ModifiedNationality = relevel(ModifiedNationality, ref = "Brazilian"))
+
+# Create recipe
+# Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
+log4_recipe <- recipe(BirthweightCategory ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_predictors())
+
+# Define model specification
+log4_spec <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+# Create workflow
+log4_wf <- workflow() %>%
+  add_recipe(log4_recipe) %>%
+  add_model(log4_spec)
+
+# Fit model
+log4_fit <- log4_wf %>%
+fit(data = ML_linear)
+
+# Extract fitted model from workflow
+log4_fitted <- extract_fit_parsnip(log4_fit)$fit
+
+# Create a gtsummary table directly from the model
+table9 <- tbl_regression(log4_fitted, exponentiate = TRUE) # exponentiate true for ORs
+
+#Bold significant p-values
+table9 <- bold_p(table9, t = 0.05)
+table9
+
+# Save regression output into table
+saveRDS(table9, file = here::here("results", "tables", "table9.rds"))
+
+# Calculate metrics using pseudo-R2
+# Extract model metrics using broom
+model_metrics4 <- glance(log4_fitted)
+
+# Calculate McFadden's R-squared
+# McFadden's R-squared = 1 - (deviance(model) / deviance(null model))
+mcfadden_r2_4 <- 1 - (model_metrics4$deviance / model_metrics4$null.deviance)
+
+# Print McFadden's R-squared
+print(mcfadden_r2_4)
+
+# Calculate performance metrics using ROC_AUC
+# Fit the model on the training data
+log4_fit <- log4_wf %>% fit(data = ML_log_train)
+
+# Predict probabilities on the test set
+prob_preds4 <- predict(log4_fit, new_data = ML_log_test, type = "prob")
+
+# Combine predictions with true values
+results4 <- bind_cols(ML_log_test, prob_preds4)
+
+# Calculate ROC-AUC
+roc_auc_result4 <- roc_auc(results4, truth = BirthweightCategory, .pred_LBW)
+
+# Print ROC-AUC
+print(roc_auc_result4)
+
+# Create and plot the ROC curve
+roc_curve_data4 <- roc_curve(results4, truth = BirthweightCategory, .pred_LBW)
+
+# Plotting the ROC curve
+roc_plot4 <- ggplot(roc_curve_data4, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 2) +
+  labs(title = "ROC Curve",
+       x = "1 - Specificity",
+       y = "Sensitivity")
+
+# Print the plot
+print(roc_plot4)
+```
+In our final model, our ROC_AUC is 0.477, still worse than random guessing. Our pseudo-R2 is 0.007.

@@ -1,6 +1,6 @@
 # Overview
 
-This is Cassia Roth's class project repository for a data analysis project done with R/Quarto/GitHub. This is the master README, which supersedes all others in cases of discrepancies. 
+This is Cassia Roth's project repository for a data analysis project done with R/Quarto/GitHub. This is the master README, which supersedes all others in cases of discrepancies. 
 
 If reproducing this analysis, please run code in the following order. `.Qmd` files are the master files, and I prefer you use those.
 
@@ -8,10 +8,10 @@ If reproducing this analysis, please run code in the following order. `.Qmd` fil
 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder;
 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder;
 4) `fullanalysis-v1.qmd` or `fullanalysiscode.R` in the `analysis-code` folder.
-5) `Manuscript_Cassia.qmd` in the `products`, `manuscript` folder.
-6) `Supplement_Cassia.qmd` in the `products`, `manuscript`, `supplement` folder.
+5) `Manuscript_Final.qmd1` in the `products`, `manuscript` folder.
+7) `Supplement_Cassia.qmd` in the `products`, `manuscript`, `supplement` folder.
 
-If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.
+In addition, there is a `Manuscript_Draft.qmd` in the `products`, `manuscript` folder, which was the first version of this project. If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.
 
 # Template structure
 

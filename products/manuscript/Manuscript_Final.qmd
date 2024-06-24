@@ -1,0 +1,270 @@
+---
+title: "Low Infant Birth Weight in Brazil"
+subtitle: "A Historical Data Analysis Approach"
+author: Cassia Roth
+date: "`r Sys.Date()`"
+format:
+  docx:
+    toc: false
+    number-sections: true
+    highlight-style: github
+    bibliography: ../../assets/Mada_Bib.bib
+    csl: ../../assets/vancouver.csl
+---
+
+```{r, echo=FALSE, message=FALSE}
+#Loading packages
+#install.packages("flextable")
+#install.packages("gdtools")
+library(tidyverse) #for data processing/cleaning
+library(skimr) #for nice visualization of data 
+library(here) #to set paths
+library(renv) #for package management
+library(gtsummary) #for summary tables
+library(flextable) #for nice tables
+```
+
+# Summary/Abstract
+
+This cross-sectional study uses linear regression models to understand disparities in infant birth weight in relation to maternal skin color (ancestry), age, gestational status (parity), and nationality in Rio de Janeiro, Brazil's first public maternity hospital, the Maternidade Laranjeiras (now Maternidade Escola) in the 1920s. I hypothesize that infants born to women of color (either Black or "*preta*" or mixed-race or "*parda*") will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery, only abolished in 1888, on population health in Brazil.
+
+{{< pagebreak >}}
+
+# Introduction
+
+Public health and medical research over the past twenty years has shown that while race is a biological fiction, its social consequences have far-reaching influences on public health outcomes, particularly in countries with high levels of race-based inequality [@travassos2004]. Studies in Brazil have shown that non-White mothers give birth to infants at lower birth weights than their White counterparts [@nyarko2013, @wehby2015, @vilanova2019]. Mothers with lower education levels and lower socioeconomic status also give birth to infants at lower birth weights [@wehby2015, @vilanova2019]. Understanding these patterns is important as low birth weight is associated with higher rates of infant mortality in the first year of life [@cardoso2005, @vilanova2019].
+
+These trends hold true in the United States, as well, where Black newborns have lower birth weights than White newborns, and these trends have worsened over time [@mangold1991, @pollock2021]. Racism is a major factor in these outcomes [@ifatunji2022], as studies demonstrate that U.S.-born Black women have infants with lower birth weights and higher rates of pre-term birth than Black immigrant women [@braveman2021, @clay2023, @mckenzie-sampson2021]. Other racial groups, whether U.S. or foreign-born, also face similar trends, although more research is needed to understand confounding factors [@montoya-williams2022].
+
+Scholars across disciplines have argued that health disparities in countries with histories of race-based chattel slavery are longstanding and tied to the unequal and violent social relations produced under that institution [@adamo1983, @otovo2016, @roth2020, @telles2022]. In Brazil, most historical studies remain descriptive in nature and have not tested any quantitative associations between the legacies of slavery, including racism, and maternal-infant health outcomes [@otovo2016, @roth2018a, @roth2018, @roth2020, @telles2022]. This study aims to fill that gap.
+
+It looks at infant birth weight in relation to maternal skin color or ancestry, age, gestational status (parity or gravidity), and nationality in Brazil’s first public maternity hospital, the Maternidade Laranjeiras (now Maternidade Escola), which provided free gynecological and obstetric care to the city’s poorest women. It relies on a unique sample of infant birth weight data from the country's first public maternity hospital, opened in 1904 in the then-capital city of Rio de Janeiro.
+
+## Background
+
+Brazil imported over 4 million enslaved Africans during the nearly four centuries of the existence of chattel slavery in the country [@klein2009]. It was also the last country to abolish slavery (1888) in the Western Hemisphere. It had, and still has, the largest number of African-descended peoples in the world outside of Nigeria [@michelle2023]. Around 55% of country's population today is of African-descent [@belandi2023].
+
+Healthcare outcomes under chattel slavery were poor for enslaved individuals, evidenced by the lack of endogenous growth among the enslaved population and enslavers’ continued reliance on the transatlantic slave trade (until its abolition in 1850) for new enslaved laborers as mortality rates outpaced fertility rates [@bergad1999, @klein2009, @schwartz1985].
+
+In the immediate aftermath of the abolition of slavery, which coincided with the implementation of a republican form of government in 1889, no state-run efforts to incorporate formerly enslaved, African-descended peoples into civil and political life occurred [@carvalho2004]. Scholars have shown how Black and mixed-race Brazilians were incarcerated at higher rates, had lower educational and literacy levels, and had worse health outcomes including infant mortality than their White and White immigrant counterparts [@ball2020, @fischer2008, @otovo2016, @roth2020].
+
+Yet recent studies also show an overall improvement in human welfare during this period, measured in increased height at the population level [@franken2019]. The early twentieth century was a period of advancement in both the provision of clinical care and the implementation of public health initiatives in Brazil and across the globe. Improved sanitation measures helped stem infectious disease outbreaks and improve quality of life [@anderson1986]. But the major advancements in clinical medicine, that improved maternal mortality and infant mortality rates, including blood transfusions and antibiotics, did not come about until the late 1930s and early 1940s. Worldwide, the combination of advancements in medical care and overall improvements in nutrition resulted in dramatic and sustained drops in maternal and infant mortality after World War II [@loudon1992, @woods2009].
+
+By the 1920s, at least in Brazil’s large cities, public maternity hospitals, established in the previous three decades, had grown in number and size as obstetricians and public health officials worked to hospitalize labor and delivery [@barreto2015, @barreto2016, @brenes1991, @martins2004, @mott2002, @roth2020]. Dedicated maternity hospitals such as Laranjeiras were central to this hospitalization process. In hospitals, obstetricians and gynecologists began implementing surgical advances in the realm of women’s medicine, including new cesarean section techniques [@martins2004, @rohden2009, @roth2021]. Underlying these structural and technological changes was the scientific motherhood movement, supported by both physicians and elite women, which harnessed advances in medical knowledge and public health infrastructure to support a technocratic model towards pregnancy, delivery, and motherhood. This ideology relied on essentialized notions of gender, foregrounding physicians’ scientific authority [@besse1996, @freire2009, @martins2008, @otovo2016].
+
+Laranjeiras, which was the teaching hospital for the obstetrics and gynecology program at Rio de Janeiro’s medical school, was ground zero for the intersection of these forces. Maternidade Laranjeiras provided gynecological and obstetric care free of charge; thus, its clientele came from the city’s poor and working classes [@barreto2016, @roth2020]. The majority of patients were women of color defined as either Black or mixed race, and the majority of White patients were immigrants.
+
+This study builds on an important body of work in economic history that uses hospital records to explore trends in birth weights in the past [@costa1998, @costa2004, @goldin1989, @steckel1986, @steckel1998].
+
+## Data: Description and Sources
+
+In this paper, I analyze a unique sample of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
+
+The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013]. Please see the `Supplemental_Materials` document for more information on the dataset. For full citations on the journals from which these data came, see my other publications [@roth2020, @roth2020a].
+
+## Questions and Hypotheses
+
+I ask: Did the legacy of slavery affect the health of infants born in the first public maternity hospital in Brazil? I quantify how maternal race, nationality, age, and gestational status explain racial disparities in infant birth weight in Rio de Janeiro, Brazil’s first public maternity hospital, the Maternidade Laranjeiras, in the 1920s. I hypothesize that infants born to women of color, defined as mixed-race (*parda*) or Black (*preta*), will have lower birth weights than infants born to White women, whether Brazilian or immigrant, given the historical legacies of slavery on population health in Brazil.
+
+The outcome I will measure is infant birth weight. The World Health Organization (WHO) currently classifies birth weight into the following categories: extremely low (\<999g); very low (1000-1499g); low (1500-2499g); normal (2500-3999g); and high (≥4000g) [@worldhealthorganization2022]. I employ birthweight as a continuous variable, so these categories are not relevant for the linear models but can help understand the skew of the data.
+
+# Methods
+
+I use linear models to estimate the relationship of maternal variables on infant birth weight.
+
+## Study Measures
+
+The outcome of interest, birth weight in grams, was measured as a continuous variable. Due to the lack of comprehensive information on gestational age in these data, I do not consider birth weight in reference to gestational age, as is often done in current studies [@cutland2017]. I discuss this constraint in the limitations section below. Infant length was recorded in centimeters.
+
+The covariates include maternal age (recorded as a continuous variable in years), maternal skin color, gestational status, and maternal nationality.
+
+I run two multivariate models: one in which maternal skin color is categorized into two ancestral groups: White (Euro-descent), the reference group, and non-White (Afro-descent). The second categorizes maternal skin color into the dataset's original racial groups: White (the reference group), Black, and mixed race. Racial terminology in Brazil was, and continues to be, complex and dynamic [@alberto2011, @travassos2004]. Racial categories and skin color exist on a spectrum rather than a Black-White binary as in the United States [@telles2006]. Analyzing both specific categories of skin color and more general categories of ancestry is also in line with recent studies, which look at all African-descended peoples as a group and then stratify by racial mixing [@nyarko2013, @wehby2015].
+
+Spontaneous abortion data points are included in the exploratory analysis but excluded from the statistical analysis. I also excluded any live births weighing \<500 grams to exclude any possible stillbirths not recorded as such [@nyarko2013, @wehby2015, @wehby2017].
+
+Please see the supplemental materials (`Supplemental_Materials`) for information on the data processing and exploratory analysis.
+
+## Schematic of workflow
+
+If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder; 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder; 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` or `fullanalysiscode.R` in the `analysis-code` folder. Please defer to all `.qmd` files as the master over any `.R` files.
+
+## Data import and cleaning
+
+The GitHub repository for this project includes all relevant materials. All discussions of data import are detailed in the files `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder. The original raw data, the codebook, and the processed data are available in the `data` folder.
+
+## Descriptive analysis
+
+I performed the exploratory analysis on the ML_summary dataset with n = 2845 observations and 14 variables. Table 1 demonstrates the distribution of the data.
+
+```{r}
+#| label: tbl-table1
+#| tbl-cap: "Summary Statistics"
+#| echo: FALSE
+table1 <- readRDS(here::here("results", "tables", "table1_final.rds"))
+flex_table <- as_flex_table(table1)
+flex_table
+```
+
+For maternal race (sample size n = 2695), the majority of the sample is White (*branca*), with 42.45% of the sample. Mixed-race (*parda*) comprises 29.2%, and Black (*preta*) comprises 28.32%. If comparing White patients to all patients of color by combining Black and mixed-race categories, of the clinic patients, 1551 (57.6%) were of African descent (defined as *preta* or *parda*) and 1144 (42.4%) were of European descent (*branca*).
+
+Of all reproductive outcomes (sample size n = 2761), 88% were natural deliveries. Yet, this also includes spontaneous abortions. If we exclude spontaneous abortion (sample size n = 2672), 91% of outcomes were natural deliveries. The remaining 9% were interventionist or operative deliveries.
+
+For patients who went to the clinic to deliver their infant (thus excluding those suffering from spontaneous abortions or receiving postpartum care after an at-home delivery), 23 died. The Maternal Mortality Ratio (MMR), calculated as:
+
+$$MMR = \frac{MD}{LB} \times 10,000$$
+
+where maternal deaths (MD) are divided by 10,000 live births (LB), was 94.26%. For those same years, the MMR for the city of Rio de Janeiro was 65.65% [@roth2018, @roth2020]. But differential levels of recording must be taken into account. These rates could reflect a registration effect, as all births and deaths were recorded in the hospital, whereas accurate reporting at the city level was less reliable [@loudon1992]. Rio de Janeiro’s vital statistics were still poorly defined and intermittently collected in the 1920s. Thus, the city’s rates were probably higher. Nonetheless, the difference demonstrates that delivering in the presence of licensed clinicians did not necessarily improve outcomes for the mother.
+
+The mean stillbirth rate (SBR) (excluding spontaneous abortion but including intrapartum death defined here as stillbirth) for the hospital, calculated as:
+
+$$SBR = \frac{SB}{TB} \times 1,000$$ where the total number of stillbirths (SB) is divided by 1000 total births (TB). The SBR is 84.8% in this specific clinic. We can compare this to the mean SBR for the city of Rio de Janeiro for the same period, which was 73.68% (@roth2020, @roth2018). Again, registration effects could explain the higher rates in the hospital (@loudon1992).
+
+The sex ratio at birth (SRaB) is calculated as:
+
+$$SRaB = \frac{M}{F} \times 100$$
+
+where the total number of live male births (M) is divided by by 100 live female births (F) in a given period.
+
+The sex ratio is 1.2: there were 120 male live births per 100 female live births at this specific clinic. This is much higher than the current range of between 103 and 107 male births per 100 female births [@ritchie2024]. Historically, a skewed sex ratio suggests that preferential infanticide or abortion was occurring -- parents were more likely to terminate a pregnancy or kill an infant if it was a female. Contrary to popular belief, this practice occurred in both Asian and European countries, although no evidence of it exists for the Americas [@hanlon2016]. However, this explanation does not hold for a maternity clinic in which women were seeking care to deliver their infants. The skewed sex ratio deserves further study.
+
+To better understand our outcome of interest, birth weight, the exploratory analysis includes the distribution of the data. Figure 1 is a histogram of the birth weight data, with the two dotted red lines marking the upper and lower limits of what the WHO now defines as normal birth weight [@worldhealthorganization2022].
+
+```{r}
+#| label: fig-schematic-1
+#| fig-cap: Histogram of birth weight
+#| echo: FALSE
+knitr::include_graphics(here("results","figures","weight_distribution.png"))
+```
+
+Because the data are missing gestational age, birth length is less important for our analysis. Nonetheless, Figure 2 shows a histogram of the distribution of birth lengths in the sample. The red line marks the average birth length for both male and female infants (49 centimeters), which is in line with current estimates on birth length globally [@jamshed2020].
+
+```{r}
+#| label: fig-schematic-2
+#| fig-cap: Histogram of birth length
+#| echo: FALSE
+knitr::include_graphics(here("results","figures","length_distribution.png"))
+```
+
+Figure 3 visualizes the relationship between infant weight and length. Unsurprisingly, birth weight and length are positively correlated.
+
+```{r}
+#| label: fig-schematic-3
+#| fig-cap: Scatterplot of birth weight by length
+#| echo: FALSE
+knitr::include_graphics(here("results","figures","length_weight.png"))
+```
+
+Finally, Figure 4 visualizes the relationship of birth weight and length, stratified by sex since male infants are usually slightly heavier and longer than females [@crawford1987, @marsal1996].
+
+```{r}
+#| label: fig-schematic-4
+#| fig-cap: Scatterplot of birth weight by length stratified by sex
+#| echo: FALSE
+knitr::include_graphics(here("results","figures","length_weight_sex.png"))
+```
+
+## Statistical analysis
+
+I ran four linear models to understand the relationship between maternal factors and infant birth weight. The first two models are a simple and multiple linear regression, respectively, with outcome variable as birthweight in grams. In these two models, I recoded maternal skin color as maternal ancestry (`Euro-descent` or `Afro-descent`).
+
+The first simple linear regression model is as follows:
+
+$$\text{BW} = \alpha + \beta_1 \text{MA} + \epsilon$$ whereas `BW` is birthweight in grams, `MA` is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. Results are displayed in Table 2.
+
+{{< pagebreak >}}
+
+```{r}
+#| label: tbl-table2
+#| tbl-cap: "Model 1 Results"
+#| echo: FALSE
+table2 <- readRDS(here::here("results", "tables", "table2_final.rds"))
+flex_table2 <- as_flex_table(table2)
+flex_table2 <- flex_table2 %>%
+  flextable::set_table_properties(width = .5, align = "center")
+flex_table2
+```
+
+The second multiple linear regression model is as follows:
+
+$$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$ whereas `BW` is birthweight in grams, `MA` is maternal ancestry (Euro-descent, Afro-descent), `Gest` is gestational status (nullipara, primipara, multipara, multigravida), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
+
+```{r}
+#| label: tbl-table3
+#| tbl-cap: "Model 2 Results"
+#| echo: FALSE
+i = 16.5
+w = i*0.3937
+font_size <- 10
+table3 <- readRDS(here::here("results", "tables", "table3_final.rds"))
+flex_table3 <- as_flex_table(table3)
+flex_table3 <- autofit(flex_table3)
+auto_widths <- dim(flex_table3)$widths/sum(dim(flex_table3)$widths) # calculate column widths
+flex_table3 <- width(flex_table3, width=w*auto_widths) # adjust column widths
+flex_table3 <- fontsize(flex_table3, size=font_size) # set font size
+flex_table3
+```
+
+The second two models are also simple and multiple linear regressions with outcome variable as birthweight in grams. However, in these two models, I maintained maternal skin color as three categories, White (the reference group), Black, and mixed race to see if there is differential outcomes for Black and mixed-race women. The first simple linear regression model is as follows:
+
+$$\text{BW} = \alpha + \beta_1 \text{MC} + \epsilon$$ whereas `BW` is birthweight in grams, `MC` is maternal skin color (White, Black, and mixed race), and $\epsilon$ is the error term. Results are displayed in Table 4.
+
+```{r}
+#| label: tbl-table4
+#| tbl-cap: "Model 3 Results"
+#| echo: FALSE
+table4 <- readRDS(here::here("results", "tables", "table4_final.rds"))
+flex_table4 <- as_flex_table(table4)
+flex_table4 <- flex_table4 %>%
+  flextable::set_table_properties(width = .5, align = "center")
+flex_table4
+```
+
+The second multiple linear regression model is as follows:
+
+$$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$ whereas `BW` is birthweight in grams, `MC` is maternal skin color (White, Black and mixed race), `Gest` is gestational status (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 5.
+
+{{< pagebreak >}}
+
+```{r}
+#| label: tbl-table5
+#| tbl-cap: "Model 4 Results"
+#| echo: FALSE
+i = 16.5
+w = i*0.3937
+font_size <- 10
+table5 <- readRDS(here::here("results", "tables", "table5_final.rds"))
+flex_table5 <- as_flex_table(table5)
+flex_table5 <- autofit(flex_table5)
+auto_widths <- dim(flex_table5)$widths/sum(dim(flex_table5)$widths) # calculate column widths
+flex_table5 <- width(flex_table5, width=w*auto_widths) # adjust column widths
+flex_table5 <- fontsize(flex_table5, size=font_size) # set font size
+flex_table5
+```
+
+Given that this study is an inferential, hypothesis-supporting approach that is exploring how specific maternal predictors affect the outcome of interest, birth weight, please see the `fullanalysis-v1.qmd` for all predictive metrics, where test/train and cross-validation were applied to test performance. Model performance did not significantly improve with these additional tests. When run on testing data, most results were insignificant.
+
+## Results
+
+All models demonstrate an association between maternal skin color and infant birth weight, with Euro-descended women (either as Euro-descended or as White, the reference group) having infants with higher birth weights than Afro-descended women (either as Afro-descended, Black, or mixed race). Age and nationality were not significant. Women who were nulliparous (delivering their first child) had infants with lower birth weights.
+
+# Discussion
+
+## Strengths and Limitations
+
+All models based on historical data must contend with limited sample sizes and missing data. In this study, a major limitation was the original published clinical notes' exclusion of gestational age. This means that the birthweight variable is capturing both smaller babies born at term (low weight at-term infants, or small for gestational age) and pre-term infants, or those born before 37 weeks gestation. This is a major limitation, as pre-term infants are more likely to have lower birth weights and are at higher risk for infant mortality [@cutland2017]. Given the absence of accurate technological techniques for determining gestational age in the past, this limitation is inherent to any historical inquiry into birthweights, although other historical studies have datasets that include gestational age [@costa1998, @costa2004, @goldin1989].
+
+A more complete analysis would further explore interactions between birth weight and birth length, which can be a proxy for the nutritional and health status of the mother later in pregnancy [@santana2021]. Lack of data on maternal nutrition and health status, which cannot be corrected for by using race as a proxy for overall health, is a major impediment to understanding the true relationship between maternal variables and infant birth weight in past time periods [@loudon1992, @woods2009].
+
+For all models in this study, the $\(R^2)$ is small, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by genetic, environmental, and social factors [@leimert2020]. Yet, as Claudia Goldin and Robert A. Margo have shown for nineteenth-century Philadelphia, the inclusion of gestational age greatly improved the regression fit in their studies, demonstrating that gestational age could explain much of the variance of birth weight in this study [@goldin1989].
+
+Moreover, this study is not trying to explain which general factors are influencing birth weight. Rather, it is exploring if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro, Brazil. For example, the gestational age probably explains much of the variation in the model, yet the gestational age variable was only included in very few observations in the published clinic data from which I created this dataset (please see the Codebook and the `Supplemental_materials.qmd` file for information on this variable).
+
+Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color, however, is also probably associated with premature birth, which is correlated to infant birth weight.
+
+## Conclusions
+
+Given the paucity of historical understandings of current-day health disparities in maternal-infant health, this paper demonstrates the need for more research into quantitative associations between skin color and health in the early twentieth century.
+
+{{< pagebreak >}}
+
+# References
