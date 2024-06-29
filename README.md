@@ -11,7 +11,9 @@ If reproducing this analysis, please run code in the following order. `.Qmd` fil
 5) `Manuscript_Final.qmd1` in the `products`, `manuscript` folder.
 7) `Supplement_Cassia.qmd` in the `products`, `manuscript`, `supplement` folder.
 
-In addition, there is a `Manuscript_Draft.qmd` in the `products`, `manuscript` folder, which was the first version of this project. If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.
+In addition, there is a `Manuscript_Draft.qmd` in the `products`, `manuscript` folder, which was the first version of this project.
+
+If you find any discrepancy between .qmd and .R documents, please run the .qmd documents. Please also notify me, so I can fix these mistakes.
 
 # Template structure
 

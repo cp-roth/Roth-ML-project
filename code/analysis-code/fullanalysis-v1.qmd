@@ -9,6 +9,7 @@ output: html_document
 
 ```{r, message=FALSE,  warning=FALSE}
 #load needed packages. make sure they are installed.
+#install.packages("glue")
 library(tidyverse) #for data processing/cleaning; includes ggplot2, tidyr, readr, dplyr, stringr, purr, forcats
 library(skimr) #for nice visualization of data 
 library(here) #to set paths
@@ -19,7 +20,7 @@ library(gt) #for nice tables
 library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(tidymodels) #for modeling
-
+library(glue)
 rm(list=ls()) #clear the environment
 ```
 
@@ -58,7 +59,7 @@ The first simple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \epsilon$$
 
-whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. 
+whereas BW is birth weight in grams, MA is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. 
 
 Full results are displayed in Table 2. 
 
@@ -67,8 +68,8 @@ Full results are displayed in Table 2.
 # Model using recipes and workflows
 # Define recipe for model
 ML_recipe1 <- recipe(Weightgrams ~ ModifiedColor, data = ML_linear) %>% 
-  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
-  step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") #%>% # Set reference level for ModifiedColor
+  #step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable. Cannot do this if I am merging tables
 
 # Specify model
 ML_spec1 <- linear_reg() %>% 
@@ -114,19 +115,17 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit1
 
 # Create a gtsummary table directly from the model
-table2 <-
-  tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
-  bold_p() %>% 
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
-  modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table2
+table_model1 <-
+  tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE) %>% 
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs))
+table_model1
 
 #Print table
-table2
+table_model1
 
 # Save regression output into table
-saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
+saveRDS(table_model1, file = here::here("results", "tables", "table_model1_final.rds"))
 ```
 ## Model 1 Performance
 
@@ -184,16 +183,16 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit1_train
 
 # Create a gtsummary table directly from the model
-table2_train <-
+table_model1_train <-
   tbl_regression(ML_fit1_train, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
   bold_p() %>% 
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table2_train
+table_model1_train
 
 # Save regression output into table
-saveRDS(table2_train, file = here::here("results", "tables", "table2_train.rds"))
+saveRDS(table_model1_train, file = here::here("results", "tables", "table_model1_train.rds"))
 ```
 Our results here are not that different from the model run on all the data. Our adjusted R-squared is 0.01, the same as the full model. The RMSE is 488, which is slightly lower than the full model (494), which shows better performance.
 
@@ -292,16 +291,16 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit1_test
 
 # Create a gtsummary table directly from the model
-table2_test <-
+table_model1_test <-
   tbl_regression(ML_fit1_test, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
   bold_p() %>% 
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table2_test
+table_model1_test
 
 # Save regression output into table
-saveRDS(table2_test, file = here::here("results", "tables", "table2_test.rds"))
+saveRDS(table_model1_test, file = here::here("results", "tables", "table_model1_test.rds"))
 ```
 
 When running the model on our testing dataset, our results remain significant at the 0.05 level. The RMSE is 508 and the r-squared is 0.008. This shows a slightly worse fit than our training results. 
@@ -319,9 +318,9 @@ whereas BW is birthweight in grams, MA is maternal ancestry (Euro-descent, Afro-
 # Using recipes and workflows
 # Define recipe for model
 ML_recipe2 <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>% 
-  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") #%>% # Set reference level for ModifiedColor
+  #step_dummy(ModifiedColor) #%>% # Convert all nominal variables to dummy variables. Cannot do this if I am merging tables in gtsummary
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors. Cannot do this if I am merging tables in gtsummary
 
 # Define model specification
 ML_spec2 <- linear_reg() %>% 
@@ -368,16 +367,13 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit2
 
 # Create a gtsummary table directly from the model
-table3 <- pull_workflow_fit(ML_fit2) %>%
-  tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
-  modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
-  bold_p()
-table3
+table_model2 <- tbl_regression(ML_fit2, exponentiate = FALSE, intercept = TRUE) %>%
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs))
+table_model2
 
 # Save regression output into table
-saveRDS(table3, file = here::here("results", "tables", "table3_final.rds"))
+saveRDS(table_model2, file = here::here("results", "tables", "table_model2_final.rds"))
 ```
 Our RMSE is 490 and our r-squared is 0.026.
 
@@ -439,16 +435,16 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit2_train
 
 # Create a gtsummary table directly from the model
-table3_train <- pull_workflow_fit(ML_fit2_train) %>%
+table_model2_train <- pull_workflow_fit(ML_fit2_train) %>%
   tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
   bold_p()
-table3_train
+table_model2_train
 
 # Save regression output into table
-saveRDS(table3_train, file = here::here("results", "tables", "table3_train.rds"))
+saveRDS(table_model2_train, file = here::here("results", "tables", "table_model2_train.rds"))
 ```
 Our RMSE is 483 and our r-squared is 0.03, a slightly better performance than the full model.
 
@@ -550,18 +546,30 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit2_test
 
 # Create a gtsummary table directly from the model
-table3_test <- pull_workflow_fit(ML_fit2_test) %>%
+table_model2_test <- pull_workflow_fit(ML_fit2_test) %>%
   tbl_regression(exponentiate = FALSE, intercept = TRUE) %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
   bold_p()
-table3_test
+table_model2_test
 
 # Save regression output into table
-saveRDS(table3_test, file = here::here("results", "tables", "table3_test.rds"))
+saveRDS(table_model2_test, file = here::here("results", "tables", "table_model2_test.rds"))
 ```
 Running the model on our test data, we see no significant results at any alpha level.
+
+# Merging Model 1 and 2 into Table
+
+```{r}
+# Combine the two tables using tbl_merge
+table3 <- tbl_merge(list(table_model1, table_model2), tab_spanner = c("**Model 1**", "**Model 2**")) %>%
+  modify_table_body(fun = ~.x %>% arrange(variable))
+table3
+
+# Save regression output into table
+saveRDS(table3, file = here::here("results", "tables", "table3_final.rds"))
+```
 
 # Model 3
 
@@ -576,7 +584,9 @@ whereas BW is birthweight in grams, MC is maternal skin color (White, Black, and
 # Simple linear model
 # Specify recipe
 ML_recipe3 <- recipe(Weightgrams ~ Color, data = ML_linear) %>%
-  step_relevel(Color, ref_level = "White")
+  step_relevel(Color, ref_level = "White") #%>% # Set reference level for White
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Specify model
 ML_spec3 <- linear_reg() %>%
@@ -622,15 +632,14 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit3
 
 # Create a gtsummary table from model
-table4 <- tbl_regression(ML_fit3, exponentiate = FALSE, intercept = TRUE) %>%
-  bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+table_model3 <- tbl_regression(ML_fit3, exponentiate = FALSE, intercept = TRUE) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table4
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs))
+table_model3
 
 # Save regression output into table
-saveRDS(table4, file = here("results", "tables", "table4_final.rds"))
+saveRDS(table_model3, file = here("results", "tables", "table_model3_final.rds"))
 ```
 
 Our RMSE is 494 and our r-squared is 0.01.
@@ -690,15 +699,14 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit3_train
 
 # Create a gtsummary table from model
-table4_train <- tbl_regression(ML_fit3_train, exponentiate = FALSE, intercept = TRUE) %>%
-  bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+table_model3_train <- tbl_regression(ML_fit3_train, exponentiate = FALSE, intercept = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table4_train
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE)
+table_model3_train
 
 # Save regression output into table
-saveRDS(table4_train, file = here("results", "tables", "table4_train.rds"))
+saveRDS(table_model3_train, file = here("results", "tables", "table_model3_train.rds"))
 ```
 
 Our RMSE is 489 and our r-squared is 0.01, slightly better performance than the full model. Our results are not significantly different from the full model.
@@ -799,15 +807,15 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit3_test
 
 # Create a gtsummary table from model
-table4_test <- tbl_regression(ML_fit3_test, exponentiate = FALSE, intercept = TRUE) %>%
+table_model3_test <- tbl_regression(ML_fit3_test, exponentiate = FALSE, intercept = TRUE) %>%
   bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table4_test
+table_model3_test
 
 # Save regression output into table
-saveRDS(table4_test, file = here("results", "tables", "table4_test.rds"))
+saveRDS(table_model3_test, file = here("results", "tables", "table_model3_test.rds"))
 ```
 
 Much like in the other testing models, our results are not significant (except the intercept). Our performance is also worse (RMSE of 507 and r-squared of 0.008).
@@ -827,9 +835,9 @@ whereas BW is birthweight in grams, MC is maternal skin color (White, Black and 
 # Specify recipe
 ML_recipe4 <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
-  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") #%>% # Set reference level for ModifiedStatus
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Specify model
 ML_spec4 <- linear_reg() %>%
@@ -875,15 +883,14 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit4
 
 # Create a gtsummary table from model
-table5 <- tbl_regression(ML_fit4, exponentiate = FALSE, intercept = TRUE) %>%
-  bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+table_model4 <- tbl_regression(ML_fit4, exponentiate = FALSE, intercept = TRUE) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
-  add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table5
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>% # Hide confidence intervals and p-values
+    add_glance_table(include = c(r.squared, nobs)) # Add R-squared and number of observations
+table_model4
 
 # Save regression output into table
-saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
+saveRDS(table_model4, file = here("results", "tables", "table_model4_final.rds"))
 ```
 Our RMSE is 490 and our r-squared is 0.026.
 
@@ -946,15 +953,15 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit4_train
 
 # Create a gtsummary table from model
-table5_train <- tbl_regression(ML_fit4_train, exponentiate = FALSE, intercept = TRUE) %>%
+table_model4_train <- tbl_regression(ML_fit4_train, exponentiate = FALSE, intercept = TRUE) %>%
   bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table5_train
+table_model4_train
 
 # Save regression output into table
-saveRDS(table5_train, file = here("results", "tables", "table5_train.rds"))
+saveRDS(table_model4_train, file = here("results", "tables", "table_model4_train.rds"))
 ```
 Our RMSE is 483 and our r-squared is 0.033, a slightly better performance than the full model.
 
@@ -1061,14 +1068,25 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit4_test
 
 # Create a gtsummary table from model
-table5_test <- tbl_regression(ML_fit4_test, exponentiate = FALSE, intercept = TRUE) %>%
+table_model4_test <- tbl_regression(ML_fit4_test, exponentiate = FALSE, intercept = TRUE) %>%
   bold_p() %>%
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
-table5_test
+table_model4_test
 
 # Save regression output into table
-saveRDS(table5_test, file = here("results", "tables", "table5_test.rds"))
+saveRDS(table_model4_test, file = here("results", "tables", "table_model4_test.rds"))
 ```
 Again, most of our results are not significant except the intercept given the small sample size.
+
+## Merge Models 3 and 4
+```{r}
+# Combine the two tables using tbl_merge
+table4 <- tbl_merge(list(table_model3, table_model4), tab_spanner = c("**Model 3**", "**Model 4**")) %>%
+  modify_table_body(fun = ~.x %>% arrange(variable))
+table4
+
+# Save regression output into table
+saveRDS(table4, file = here("results", "tables", "table4_final.rds"))
+```

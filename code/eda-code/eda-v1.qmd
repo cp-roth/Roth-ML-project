@@ -9,6 +9,7 @@ output: html_document
 
 ```{r, message=FALSE,  warning=FALSE}
 #load needed packages. make sure they are installed.
+#install.packages("hrbrthemes")
 library(tidyverse) #for data processing/cleaning; includes ggplot2, tidyr, readr, dplyr, stringr, purr, forcats
 library(skimr) #for nice visualization of data 
 library(here) #to set paths
@@ -77,7 +78,7 @@ Now infant birth weight.
 weight_plot <- ML_summary %>% filter(!is.na(Weightgrams)) %>% #filter out NAs
   ggplot(aes(x = Weightgrams)) +
   geom_histogram(binwidth = 25, fill="#69b3a2") +
-  geom_vline(xintercept = c(1500, 4000), linetype = "dashed", color = "red") +  # Add vertical lines that mark normal birthweight
+  geom_vline(xintercept = c(2500, 4000), linetype = "dashed", color = "red") +  # Add vertical lines that mark normal birthweight
   theme_ipsum() +
   theme(plot.title = element_text(size=15))
 plot(weight_plot)
@@ -218,15 +219,15 @@ stratified_sex <-
 stratified_sex
 
 # Combine the two tables
-table1.1 <- tbl_merge(
+table2 <- tbl_merge(
   tbls = list(stratified_color, stratified_sex),
   tab_spanner = c("**Weight by Modified Color**", "**Weight by Sex**"))
 
 # Display the modified table
-table1.1
+table2
 
 #Save table
-saveRDS(table1.1, file = here::here("results", "tables", "table1.1_final.rds"))
+saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
 ```
 
 For maternal race, we have a sample size of n = 2695. The majority of the sample is White (branca), with 42.45% of the sample. Mixed-race (parda) is 29.2% of the sample, and Black (preta) is 28.32% of the sample. Let's now compare White patients to all patients of color by combining Black and mixed-race categories. I will create a dummy variable for color, called modified_color with two categories: Afro-Descent (comprising parda and preta) and Euro-Descent (comprising branca).

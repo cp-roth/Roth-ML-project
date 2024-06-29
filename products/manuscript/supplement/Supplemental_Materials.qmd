@@ -88,42 +88,105 @@ Finally, Figure 4 visualizes the relationship of birth weight and length, strati
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
 
+## Models
+
+### Linear Models
+
 For the basic statistical analysis, I ran three linear models to understand the relationship between maternal factors and infant birth weight. The first model is a simple linear regression with outcome variable (birthweight in grams) and exposure variable maternal ancestry (`Euro-descent` or `Afro-descent`).
 
 ```{r}
-#| label: tbl-table2
-#| tbl-cap: "Supplemental Table"
+#| label: tbl-table1
+#| tbl-cap: "Model 1"
 #| echo: FALSE
-table2 <- readRDS(here::here("results", "tables", "table2_final.rds"))
-table_gt <- gtsummary::as_gt(table2)
+table1 <- readRDS(here::here("results", "tables", "table_fit1.rds"))
+table_gt <- gtsummary::as_gt(table_fit1)
 table_gt |> gt::as_raw_html()
 ```
 
 The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age.
 
 ```{r}
-#| label: tbl-table_age
-#| tbl-cap: "Supplemental Table"
+#| label: tbl-table2
+#| tbl-cap: "Model 2"
 #| echo: FALSE
-table_age <- readRDS(here::here("results", "tables", "tableage_final.rds"))
-table_gt <- gtsummary::as_gt(table_age)
+table2 <- readRDS(here::here("results", "tables", "table_fit2.rds"))
+table_gt <- gtsummary::as_gt(table_fit2)
 table_gt |> gt::as_raw_html()
 ```
 
-The third and final exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, nationality, and gestational status on infant birth weight. 
+The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, nationality, and gestational status on infant birth weight. 
 
 ```{r}
-#| label: tbl-table4
-#| tbl-cap: "Supplemental Table"
+#| label: tbl-table3
+#| tbl-cap: "Model 3"
 #| echo: FALSE
-table4 <- readRDS(here::here("results", "tables", "table4.rds"))
-table_gt <- gtsummary::as_gt(table4)
+table3 <- readRDS(here::here("results", "tables", "table_fit3.rds"))
+table_gt <- gtsummary::as_gt(table_fit3)
 table_gt |> gt::as_raw_html()
 ```
-
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
 
 For all three models, the r-squared is very small (0.007, 0.006, and 0.008), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
+
+The fourth exploratory model again runs a multivariate linear regression, this time using skin color as it was differentiated in the original data, or with three categories (White, Black, and Mixed Race). 
+
+```{r}
+#| label: tbl-table4
+#| tbl-cap: "Model 4"
+#| echo: FALSE
+table4 <- readRDS(here::here("results", "tables", "table_fit4.rds"))
+table_gt <- gtsummary::as_gt(table_fit4)
+table_gt |> gt::as_raw_html()
+```
+
+### Logistic Models
+
+Now we will still consider `Birthweight` as the outcome of interest, but we will transform it into a categorical outcome of <=2500 (low birth weight, LBW) and >2500 (normal birth weight, NBW) and fit a logistic model, using the main predictor of interest, `ModifiedColor`.
+
+The first model is a simple logistic regression, with modified maternal skin color as the predictor variable.
+
+```{r}
+#| label: tbl-table5
+#| tbl-cap: "Model 5"
+#| echo: FALSE
+table5 <- readRDS(here::here("results", "tables", "table_log1.rds"))
+table_gt <- gtsummary::as_gt(table_log1)
+table_gt |> gt::as_raw_html()
+```
+
+The second model is also a simple logistic regression, this time using `Color` as the predictor variable (so three categories, Black, mixed race, and White).
+
+```{r}
+#| label: tbl-table6
+#| tbl-cap: "Model 6"
+#| echo: FALSE
+table6 <- readRDS(here::here("results", "tables", "table_log2.rds"))
+table_gt <- gtsummary::as_gt(table_log2)
+table_gt |> gt::as_raw_html()
+```
+
+Then, I ran two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates. The results are below.
+
+```{r}
+#| label: tbl-table7
+#| tbl-cap: "Model 7"
+#| echo: FALSE
+table7 <- readRDS(here::here("results", "tables", "table_log3.rds"))
+table_gt <- gtsummary::as_gt(table_log3)
+table_gt |> gt::as_raw_html()
+```
+
+```{r}
+#| label: tbl-table8
+#| tbl-cap: "Model 8"
+#| echo: FALSE
+table8 <- readRDS(here::here("results", "tables", "table_log4.rds"))
+table_gt <- gtsummary::as_gt(table_log4)
+table_gt |> gt::as_raw_html()
+```
+In these two models, the only significant finding is the final logistic model, in which infants born to mixed-race mothers had 21% higher odds of being born with low birth weight compared to infants born to white mothers. The other models did not show significant results.
+
+Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@Senn2005]. Thus, I will not include these logistic regressions in the final analysis.
 
 ## Performance Measures
 
@@ -131,7 +194,7 @@ Given that this study is an inferential, hypothesis-supporting approach that is 
 
 Test/train (75-25 split) and cross-validation were performed on all models. Model prediction performance did not improve greatly using these tests. Model performance resulted in insignificant results when run on the testing data given the smaller sample size.
 
-Here I include the cross-validation results for each model.
+Here I include the cross-validation results for the linear models.
 
 ```{r}
 #| label: tbl-table5
@@ -164,6 +227,8 @@ ML_cv3_metrics
 ML_cv4_metrics <- readRDS(here::here("results", "tables", "ML_cv4_metrics.rds"))
 ML_cv4_metrics
 ```
+
+The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
 
 {{< pagebreak >}}
 

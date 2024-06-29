@@ -86,17 +86,17 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit1
 
 # Create a gtsummary table directly from the model
-table2 <-
+table_fit1 <-
   tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
   bold_p() %>% # make p-values bold
   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
 
 #Print table
-table2
+table_fit1
 
 # Save regression output into table
-saveRDS(table2, file = here::here("results", "tables", "table2.rds"))
+saveRDS(table_fit1, file = here::here("results", "tables", "table_fit1.rds"))
 ```
 Now let's run a second simple bivariate analysis, looking at infant birth weight as a function of maternal age. This time, when plotting weight as a function of maternal age, we can use a scatterplot.
 
@@ -149,17 +149,17 @@ options(scipen = 999) # set opens to avoid scientific notation
 metrics_fit_age
 
 # Create a gtsummary table directly from the model
-table_age <-
+table_fit2 <-
   tbl_regression(ML_fit_age, exponentiate = FALSE, intercept = TRUE, show_single_row = everything()) %>% 
   bold_p() %>% 
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
 
 #Print table
-table_age
+table_fit2
 
 # Save regression output into table
-saveRDS(table_age, file = here::here("results", "tables", "tableage_final.rds"))
+saveRDS(table_fit2, file = here::here("results", "tables", "table_fit2.rds"))
 ```
 
 Now let's run a slightly more complicated model that includes maternal skin color, age, nationality, and gestational status.
@@ -177,14 +177,14 @@ tidy(ML_lm3, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coeffici
 glance(ML_lm3) # Model-level statistics
 
 # Create a gtsummary table directly from the model
-table3 <- tbl_regression(ML_lm3, exponentiate = FALSE, intercept = TRUE) %>% 
+table_fit3 <- tbl_regression(ML_lm3, exponentiate = FALSE, intercept = TRUE) %>% 
   bold_p() %>% 
   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
-table3
+table_fit3
 
 # Save regression output into table
-saveRDS(table3, file = here::here("results", "tables", "table3.rds"))
+saveRDS(table_fit3, file = here::here("results", "tables", "table_fit3.rds"))
 ```
 
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, we can see that older mothers are associated with giving birth to infants with higher birth weights.
@@ -211,36 +211,36 @@ tidy(ML_lm4, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coeffici
 glance(ML_lm4) # Model-level statistics
 
 # Create a gtsummary table directly from the model
-table4 <- tbl_regression(ML_lm4, exponentiate = FALSE, intercept = TRUE) %>% 
+table_fit4 <- tbl_regression(ML_lm4, exponentiate = FALSE, intercept = TRUE) %>% 
   bold_p() %>% 
   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
-table4
+table_fit4
 
 # Save regression output into table
-saveRDS(table4, file = here::here("results", "tables", "table4.rds"))
+saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 
 # Complex linear model
 # Set reference level for Color
 ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
-ML_lm5 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear)
+ML_lm4 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear)
 
 # Summarize model fit with tidiers
-ML_lm5_summary <- summary(ML_lm5) # Summary of fit
-tidy(ML_lm5, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
-glance(ML_lm5) # Model-level statistics
+ML_lm4_summary <- summary(ML_lm4) # Summary of fit
+tidy(ML_lm4, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_lm4) # Model-level statistics
 
 # Create a gtsummary table directly from the model
-table5 <- tbl_regression(ML_lm5, exponentiate = FALSE, intercept = TRUE) %>% 
+table_fit4 <- tbl_regression(ML_lm4, exponentiate = FALSE, intercept = TRUE) %>% 
   bold_p() %>% 
   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
-table5
+table_fit4
 
 # Save regression output into table
-saveRDS(table5, file = here::here("results", "tables", "table5.rds"))
+saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 ```
 
 ## Logistic models
@@ -293,11 +293,11 @@ fit(data = ML_linear)
 log1_fitted <- extract_fit_parsnip(log1_fit)$fit
 
 # Create a gtsummary table directly from the model
-table6 <- tbl_regression(log1_fitted, exponentiate = TRUE) # use exponentiate true for ORs
-table6
+table_log1 <- tbl_regression(log1_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log1
 
 # Save regression output into table
-saveRDS(table6, file = here::here("results", "tables", "table6.rds"))
+saveRDS(table_log1, file = here::here("results", "tables", "table_log1.rds"))
 
 # Calculate performance metrics using pseudo-R2
 # Extract model metrics using broom
@@ -377,11 +377,11 @@ fit(data = ML_linear)
 log2_fitted <- extract_fit_parsnip(log2_fit)$fit
 
 # Create a gtsummary table directly from the model
-table7 <- tbl_regression(log2_fitted, exponentiate = TRUE) # use exponentiate true for ORs
-table7
+table_log2 <- tbl_regression(log2_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log2
 
 # Save regression output into table
-saveRDS(table7, file = here::here("results", "tables", "table7.rds"))
+saveRDS(table_log2, file = here::here("results", "tables", "table_log2.rds"))
 
 # Calculate metrics using pseudo-R2
 # Extract model metrics using broom
@@ -465,12 +465,12 @@ fit(data = ML_linear)
 log3_fitted <- extract_fit_parsnip(log3_fit)$fit
 
 # Create a gtsummary table directly from the model
-table8 <- tbl_regression(log3_fitted, exponentiate = TRUE) # use exponentiate true for ORs
-table8 <- bold_p(table8, t = 0.05)
-table8
+table_log3 <- tbl_regression(log3_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log3 <- bold_p(table_log3, t = 0.05)
+table_log3
 
 # Save regression output into table
-saveRDS(table8, file = here::here("results", "tables", "table8.rds"))
+saveRDS(table_log3, file = here::here("results", "tables", "table_log3.rds"))
 
 # Calculate metrics using pseudo-R2
 # Extract model metrics using broom
@@ -552,14 +552,14 @@ fit(data = ML_linear)
 log4_fitted <- extract_fit_parsnip(log4_fit)$fit
 
 # Create a gtsummary table directly from the model
-table9 <- tbl_regression(log4_fitted, exponentiate = TRUE) # exponentiate true for ORs
+table_log4 <- tbl_regression(log4_fitted, exponentiate = TRUE) # exponentiate true for ORs
 
 #Bold significant p-values
-table9 <- bold_p(table9, t = 0.05)
-table9
+table_log4 <- bold_p(table_log4, t = 0.05)
+table_log4
 
 # Save regression output into table
-saveRDS(table9, file = here::here("results", "tables", "table9.rds"))
+saveRDS(table_log4, file = here::here("results", "tables", "table_log4.rds"))
 
 # Calculate metrics using pseudo-R2
 # Extract model metrics using broom

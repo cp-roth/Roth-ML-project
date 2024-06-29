@@ -180,5 +180,3 @@ saveRDS(ML_summary, file = save_data_location)
 ```
 
 # Notes
-
-This script is a work in progress. I will be adding more to it as I continue to work on the data. 
