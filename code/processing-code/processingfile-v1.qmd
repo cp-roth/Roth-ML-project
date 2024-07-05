@@ -26,7 +26,6 @@ library(kableExtra) #for nice tables
 rm(list=ls()) #clear the environment
 ```
 
-
 # Data loading
 
 Note that for functions that come from specific packages (instead of base R), you can specify both package and function: `package::function()`. Although not required, specifying the package makes it clearer where the function is coming from. This text is adapted from Dr. Andreas Handel.
@@ -179,4 +178,24 @@ save_data_location <- here::here("data","processed-data","ML_summary_processed.r
 saveRDS(ML_summary, file = save_data_location)
 ```
 
+# Data loading for mean birth weights table
+```{r}
+# path to data
+# note the use of the here() package and not absolute paths
+data_location <- here::here("data","raw-data","Mean_Birthweights.csv")
+Mean_Birthweights <- read_csv(data_location)
+
+# Structure of Data
+glimpse(Mean_Birthweights)
+
+# Remove median and maternal age variables given missing data
+Mean_Birthweights <- Mean_Birthweights %>% dplyr::select(-Median, -`Maternal Age (mean)`, -"<2500gm (%)")
+
+# Structure of data
+glimpse(Mean_Birthweights)
+
+# Save Mean_Birthweight as RDS
+save_data_location <- here::here("data","processed-data","Mean_Birthweights_processed.rds")
+saveRDS(Mean_Birthweights, file = save_data_location)
+```
 # Notes

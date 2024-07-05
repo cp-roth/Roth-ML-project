@@ -1,5 +1,25 @@
 ## ---- Extracode --------
 # Don't use this code in future
+# Create summary stats for birth weight by maternal modifiedcolor
+birthweight_color <- ML_summary %>%
+  filter(!is.na(ModifiedColor) & !is.na(Weightgrams)) %>%
+  group_by(ModifiedColor) %>%
+  summarize(
+    mean_weight = mean(Weightgrams, na.rm = TRUE),
+    sd_weight = sd(Weightgrams, na.rm = TRUE)
+  )
+print(birthweight_color)
+
+# Create summary stats for birth weight by fetal sex
+birthweight_sex <- ML_summary %>%
+  filter(!is.na(Sex) & !is.na(Weightgrams)) %>%
+  group_by(Sex) %>%
+  summarize(
+    mean_weight = mean(Weightgrams, na.rm = TRUE),
+    sd_weight = sd(Weightgrams, na.rm = TRUE)
+  ) 
+print(birthweight_sex)
+
 # Summary stats of continuous variables
 summary_stats <- ML_summary %>%
   summarize(
@@ -10,8 +30,41 @@ summary_stats <- ML_summary %>%
     mean_length = mean(Lengthcentimeters, na.rm = TRUE),
     sd_length = sd(Lengthcentimeters, na.rm = TRUE)
   )
-
 print(summary_stats)
+
+#Create gtsummary table on infant birth weight stratified by sex and maternal skin color
+stratified_color <- 
+  ML_summary %>%
+  filter(!is.na(Weightgrams) & !is.na(ModifiedColor)) %>% # Exclude rows with NA in weight & MC variable
+  rename("Infant Weight (grms)" = Weightgrams) %>% # Rename Weightgrams to Infant Weight (grms)
+  tbl_summary(
+    by = ModifiedColor,  # Grouping by ModifiedColor
+    include = "Infant Weight (grms)",
+    statistic = list("Infant Weight (grms)" ~ "{mean} ({sd})")
+  )
+stratified_color
+
+stratified_sex <- 
+  ML_summary %>%
+  filter(!is.na(Weightgrams) & !is.na(Sex)) %>%
+  rename("Infant Weight (grms)" = Weightgrams) %>% # Rename Weightgrams to Infant Weight (grms)
+  tbl_summary(
+    by = Sex,  # Grouping by Sex
+    include = "Infant Weight (grms)",
+    statistic = list("Infant Weight (grms)" ~ "{mean} ({sd})")
+  )
+stratified_sex
+
+# Combine the two tables
+table2 <- tbl_merge(
+  tbls = list(stratified_color, stratified_sex),
+  tab_spanner = c("**Weight by Modified Color**", "**Weight by Sex**"))
+
+# Display the modified table
+table2
+
+#Save table
+saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
 
 # Make into a table
 # Create dataframe
@@ -38,7 +91,7 @@ summary_stats_table <- summary_stats1 %>%
 print(summary_stats_table)
 
 #Save table
-#saveRDS(summary_stats_table, file = here::here("results", "tables", "summary_stats_table.rds"))
+saveRDS(summary_stats_table, file = here::here("results", "tables", "summary_stats_table.rds"))
 
 # Summary stats of categorical variables
 # Calculate frequencies of color category (branca, parda, preta)

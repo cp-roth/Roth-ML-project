@@ -250,6 +250,7 @@ Now we will still consider `Birthweight` as the outcome of interest, but we will
 First, we will split data into training and testing sets to later calculate ROC_AUC.
 
 ```{r}
+#set seed
 set.seed(123)
 ML_log_split <- initial_split(ML_linear, prop = 0.75, strata = BirthweightCategory)
 

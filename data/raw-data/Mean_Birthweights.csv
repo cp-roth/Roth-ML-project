@@ -1,0 +1,32 @@
+﻿Sample,Year,Mean,Median,<2500gm (%),Maternal Age (mean),Source
+Antebellum US South (estimated enslaved),<1850,2320,,,,"Steckel, 1986, 174, 182"
+Rio de Janeiro (Black singletons),1922-26,3037,,,,Maternidade Laranjeiras
+Rio de Janeiro (female singletons),1922-26,3038,,,,Maternidade Laranjeiras
+Rio de Janeiro (Mixed-race singletons),1922-26,3064,,,,Maternidade Laranjeiras
+Rio de Janeiro (singletons all),1922-26,3087,,,25.3,Maternidade Laranjeiras
+"Riberão Preto, São Paulo, Brazil",1994,3115,3150,,,"Silva, 1998, 77"
+"Rio de Janeiro (Black singletons, mothers incomplete K-12)",1999-2001,3122,,,,"Leal, 2006, 469"
+Rio de Janeiro (White singletons),1922-26,3133,,,,Maternidade Laranjeiras
+Rio de Janeiro (male singletons),1922-26,3137,,,,Maternidade Laranjeiras
+"Rio de Janeiro (Mixed-race singletons, mothers incomplete K-12)",1999-2001,3154,,,,"Leal, 2006, 469"
+"São Paulo, Brazil (live)",1993-98,3155,,9,,"Monteiro, 2000, 31"
+"Pelotas, Rio Grande do Sul, Brazil (live singletons)",2004,3167,,9,,"Silveira, 2019, i48"
+"Pelotas, Rio Grande do Sul, Brazil (live singletons)",1993,3169,,9.1,,"Silveira, 2019, i48"
+Baltimore (Black singletons),1897-1935,3183,3175,11.4,,"Costa, 2004, 1065"
+"Rio de Janeiro (Black singletons, mothers complete K-12)",1999-2001,3185,,,,"Leal, 2006, 470"
+"Rio de Janeiro (White singletons, mothers incomplete K-12)",1999-2001,3186,,,,"Leal, 2006, 469"
+"Pelotas, Rio Grande do Sul, Brazil (live singletons)",2015,3198,,8.3,,"Silveira, 2019, i48"
+"Pelotas, Rio Grande do Sul, Brazil (live singletons)",1982,3201,,8.2,,"Silveira, 2019, i48"
+"Rio de Janeiro (Mixed-race singletons, mothers complete K-12)",1999-2001,3210,,,,"Leal, 2006, 470"
+"Rio de Janeiro (White singletons, mothers complete K-12)",1999-2001,3218,,,,"Leal, 2006, 470"
+"Riberão Preto, São Paulo, Brazil",1978-79,3234,3250,,,"Silva, 1998, 77"
+Boston (in hospital),1886-1900,3330,,6.9,,"Ward, 1993, 148-9"
+Philadelphia (all),1848-73,3375,3453,9.6,,"Goldin, 1989, 363-5"
+Philadelphia (live),1848-73,3403,3461,8.1,,"Goldin, 1989, 363-5"
+"Wellington, NZ (singleton live female)",1907-22,3403,,,,"Roberts, 2014, 156, 158"
+Baltimore (white singletons),1897-1935,3423,3443,6,,"Costa, 2004,  1065"
+New York (singeltons),1910-31,3463,3467,5.5,27,"Costa, 1998,  991-2"
+"Wellington, NZ (singleton live)",1907-22,3467,,4.2,27.75,"Roberts, 2014, 156, 158"
+Boston (at home),1884-1900,3479,,4.7,,"Ward, 1993, 148-9"
+Boston,1872-1900,3480,,6.5,,"Ward, 1993, 148-9"
+"Wellington, NZ (singleton live male)",1907-22,3531,,,,"Roberts, 2014, 156, 158"
