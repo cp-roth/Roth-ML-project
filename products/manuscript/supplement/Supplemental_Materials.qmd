@@ -169,7 +169,7 @@ The first model is a simple logistic regression, with modified maternal skin col
 #| tbl-cap: "Model 5"
 #| echo: FALSE
 table5 <- readRDS(here::here("results", "tables", "table_log1.rds"))
-table_gt <- gtsummary::as_gt(table_log1)
+table_gt <- gtsummary::as_gt(table5)
 table_gt |> gt::as_raw_html()
 ```
 
@@ -180,7 +180,7 @@ The second model is also a simple logistic regression, this time using `Color` a
 #| tbl-cap: "Model 6"
 #| echo: FALSE
 table6 <- readRDS(here::here("results", "tables", "table_log2.rds"))
-table_gt <- gtsummary::as_gt(table_log2)
+table_gt <- gtsummary::as_gt(table6)
 table_gt |> gt::as_raw_html()
 ```
 
@@ -191,7 +191,7 @@ Then, I ran two more logistic models, one with `ModifiedColor` and the other cov
 #| tbl-cap: "Model 7"
 #| echo: FALSE
 table7 <- readRDS(here::here("results", "tables", "table_log3.rds"))
-table_gt <- gtsummary::as_gt(table_log3)
+table_gt <- gtsummary::as_gt(table7)
 table_gt |> gt::as_raw_html()
 ```
 
@@ -200,7 +200,7 @@ table_gt |> gt::as_raw_html()
 #| tbl-cap: "Model 8"
 #| echo: FALSE
 table8 <- readRDS(here::here("results", "tables", "table_log4.rds"))
-table_gt <- gtsummary::as_gt(table_log4)
+table_gt <- gtsummary::as_gt(table8)
 table_gt |> gt::as_raw_html()
 ```
 In these two models, the only significant finding is the final logistic model, in which infants born to mixed-race mothers had 21% higher odds of being born with low birth weight compared to infants born to white mothers. The other models did not show significant results.
@@ -216,7 +216,7 @@ Test/train (75-25 split) and cross-validation were performed on all models. Mode
 Here I include the cross-validation results for the linear models.
 
 ```{r}
-#| label: tbl-table5
+#| label: tbl-table9
 #| tbl-cap: "Cross-Validation Model 1"
 #| echo: FALSE
 ML_cv1_metrics <- readRDS(here::here("results", "tables", "ML_cv1_metrics.rds"))
@@ -224,7 +224,7 @@ ML_cv1_metrics
 ```
 
 ```{r}
-#| label: tbl-table6
+#| label: tbl-table10
 #| tbl-cap: "Cross-Validation Model 2"
 #| echo: FALSE
 ML_cv2_metrics <- readRDS(here::here("results", "tables", "ML_cv2_metrics.rds"))
@@ -232,7 +232,7 @@ ML_cv2_metrics
 ```
 
 ```{r}
-#| label: tbl-table7
+#| label: tbl-table11
 #| tbl-cap: "Cross-Validation Model 3"
 #| echo: FALSE
 ML_cv3_metrics <- readRDS(here::here("results", "tables", "ML_cv3_metrics.rds"))
@@ -240,7 +240,7 @@ ML_cv3_metrics
 ```
 
 ```{r}
-#| label: tbl-table8
+#| label: tbl-table12
 #| tbl-cap: "Cross-Validation Model 4"
 #| echo: FALSE
 ML_cv4_metrics <- readRDS(here::here("results", "tables", "ML_cv4_metrics.rds"))
