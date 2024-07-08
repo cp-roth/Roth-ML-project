@@ -9,9 +9,19 @@ format:
     highlight-style: github
     bibliography: ../../../assets/Mada_Bib.bib
     csl: ../../../assets/chicago-fullnote-bibliography.csl
+    suppress-bibliography: true
 ---
 # Supplemental Materials
 
+```{r, echo=FALSE, message=FALSE}
+#load packages
+library(tidyverse) #for data processing/cleaning
+library(skimr) #for nice visualization of data 
+library(here) #to set paths
+library(renv) #for package management
+library(gtsummary) #for summary tables
+library(flextable) #for nice tables
+```
 ## Schematic of workflow
 
 If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder; 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder; 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` or `fullanalysiscode.R` in the `analysis-code` folder. Please defer to all `.qmd` files as the master over any `.R` files.
@@ -34,7 +44,7 @@ The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio
 
 There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity or gravidity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex. 
 
-In the exploratory analysis, I included recorded spontaneous abortions and all recorded live births. For the statistical models, I excluded both spontaneous abortions and any recorded live births weighing \<500 grams to avoid the inclusion of any possible stillbirths that were misrecorded as live births [@nyarko2013; @wehby2015; @wehby2017].
+In the exploratory analysis, I included recorded spontaneous abortions and all recorded live births. For the statistical models, I excluded both spontaneous abortions and any recorded live births weighing \<500 grams to avoid the inclusion of any possible stillbirths that were misrecorded as live births [@nyarko2013; @wehby2015a; @wehby2017a].
 
 A more complete analysis would further explore interactions between birth weight and birth length, which can be a proxy for the nutritional and health status of the mother later in pregnancy [@santana2021]. The third trimester is when most fetal weight gain occurs, and maternal malnutrition during this period can have a dramatic effect on infant birth weight [@jasienska2009]. But other health problems related to maternal undernutrition during pregnancy depend on gestational period. Research on the Dutch famine during World War II has shown that the adult health problems of infants born to mothers who were pregnant during the famine depended on the gestational period during which maternal undernutrition occurred [@roseboom2006; @painter2005].
 
@@ -63,8 +73,8 @@ Here is the code for the full summary table of all variables.
 #| tbl-cap: "Supplemental Table"
 #| echo: FALSE
 table_supplemental <- readRDS(here::here("results", "tables", "table_supplemental_final.rds"))
-table_gt <- gtsummary::as_gt(table_supplemental)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table_supplemental)
+flex_table
 ```
 
 ## Basic Statistical Analysis
@@ -116,8 +126,8 @@ For the basic statistical analysis, I ran three linear models to understand the 
 #| tbl-cap: "Model 1"
 #| echo: FALSE
 table1 <- readRDS(here::here("results", "tables", "table_fit1.rds"))
-table_gt <- gtsummary::as_gt(table_fit1)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table1)
+flex_table
 ```
 
 The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age.
@@ -127,8 +137,8 @@ The second simple bivariate linear analysis, looks at infant birth weight as a f
 #| tbl-cap: "Model 2"
 #| echo: FALSE
 table2 <- readRDS(here::here("results", "tables", "table_fit2.rds"))
-table_gt <- gtsummary::as_gt(table_fit2)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table2)
+flex_table
 ```
 
 The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, nationality, and gestational status on infant birth weight. 
@@ -138,8 +148,8 @@ The third exploratory statistical model is a multilinear regression, looking at 
 #| tbl-cap: "Model 3"
 #| echo: FALSE
 table3 <- readRDS(here::here("results", "tables", "table_fit3.rds"))
-table_gt <- gtsummary::as_gt(table_fit3)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table3)
+flex_table
 ```
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
 
@@ -152,8 +162,8 @@ The fourth exploratory model again runs a multivariate linear regression, this t
 #| tbl-cap: "Model 4"
 #| echo: FALSE
 table4 <- readRDS(here::here("results", "tables", "table_fit4.rds"))
-table_gt <- gtsummary::as_gt(table_fit4)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table4)
+flex_table
 ```
 
 For all models in this study, the $(R^2)$ is small, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by genetic (not related to skin color), environmental, and social factors [@leimert2020]. Yet, as Claudia Goldin and Robert A. Margo have shown for nineteenth-century Philadelphia, the inclusion of gestational age greatly improved the regression fit in their studies, demonstrating that gestational age could explain much of the variance of birth weight in this study [@goldin1989]. Nonetheless, other scholars have shown that even though differential rates of PTB explain some of the variance in birth weight according to maternal skin color in the United States, up to 91 percent of influenced birth weight, as the lack of historical data precludes this line of inquiry. Rather, it is exploring if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro. Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color is also probably associated with premature birth, which is correlated to infant birth weight.
@@ -169,8 +179,8 @@ The first model is a simple logistic regression, with modified maternal skin col
 #| tbl-cap: "Model 5"
 #| echo: FALSE
 table5 <- readRDS(here::here("results", "tables", "table_log1.rds"))
-table_gt <- gtsummary::as_gt(table5)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table5)
+flex_table
 ```
 
 The second model is also a simple logistic regression, this time using `Color` as the predictor variable (so three categories, Black, mixed race, and White).
@@ -180,8 +190,8 @@ The second model is also a simple logistic regression, this time using `Color` a
 #| tbl-cap: "Model 6"
 #| echo: FALSE
 table6 <- readRDS(here::here("results", "tables", "table_log2.rds"))
-table_gt <- gtsummary::as_gt(table6)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table6)
+flex_table
 ```
 
 Then, I ran two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates. The results are below.
@@ -191,8 +201,8 @@ Then, I ran two more logistic models, one with `ModifiedColor` and the other cov
 #| tbl-cap: "Model 7"
 #| echo: FALSE
 table7 <- readRDS(here::here("results", "tables", "table_log3.rds"))
-table_gt <- gtsummary::as_gt(table7)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table7)
+flex_table
 ```
 
 ```{r}
@@ -200,12 +210,12 @@ table_gt |> gt::as_raw_html()
 #| tbl-cap: "Model 8"
 #| echo: FALSE
 table8 <- readRDS(here::here("results", "tables", "table_log4.rds"))
-table_gt <- gtsummary::as_gt(table8)
-table_gt |> gt::as_raw_html()
+flex_table <- as_flex_table(table8)
+flex_table
 ```
 In these two models, the only significant finding is the final logistic model, in which infants born to mixed-race mothers had 21% higher odds of being born with low birth weight compared to infants born to white mothers. The other models did not show significant results.
 
-Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@Senn2005]. Thus, I will not include these logistic regressions in the final analysis.
+Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@senn2005]. Thus, I will not include these logistic regressions in the final analysis.
 
 ## Performance Measures
 
@@ -248,7 +258,3 @@ ML_cv4_metrics
 ```
 
 The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
-
-{{< pagebreak >}}
-
-# References
