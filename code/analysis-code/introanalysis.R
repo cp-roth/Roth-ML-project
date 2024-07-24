@@ -187,9 +187,9 @@ ML_linear <- ML_linear %>%
   mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) #%>%
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  #step_normalize(all_predictors())
 # Define model specification
 log1_spec <- logistic_reg() %>%
   set_engine("glm") %>%
@@ -204,7 +204,8 @@ log1_fit <- log1_wf %>%
 # Extract fitted model from workflow
 log1_fitted <- extract_fit_parsnip(log1_fit)$fit
 # Create a gtsummary table directly from the model
-table_log1 <- tbl_regression(log1_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log1 <- tbl_regression(log1_fitted, exponentiate = TRUE) %>% # use exponentiate true for ORs
+  bold_p(t = 0.05)
 table_log1
 # Save regression output into table
 saveRDS(table_log1, file = here::here("results", "tables", "table_log1.rds"))
@@ -240,7 +241,7 @@ roc_plot1 <- ggplot(roc_curve_data1, aes(x = 1 - specificity, y = sensitivity)) 
 print(roc_plot1)
 
 ## ---- log2 --------
-# Simple logistic regression model with ModifiedColor as the predictor
+# Simple logistic regression model with Color as the predictor
 # Check factor levels
 levels(ML_linear$BirthweightCategory) # Reference is LBW
 # Set the reference level explicitly to NBW
@@ -248,9 +249,9 @@ ML_linear <- ML_linear %>%
   mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log2_recipe <- recipe(BirthweightCategory ~ Color, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log2_recipe <- recipe(BirthweightCategory ~ Color, data = ML_linear) #%>%
+#step_dummy(all_nominal(), -all_outcomes()) %>%
+#step_normalize(all_predictors())
 # Define model specification
 log2_spec <- logistic_reg() %>%
   set_engine("glm") %>%
@@ -265,7 +266,8 @@ log2_fit <- log2_wf %>%
 # Extract fitted model from workflow
 log2_fitted <- extract_fit_parsnip(log2_fit)$fit
 # Create a gtsummary table directly from the model
-table_log2 <- tbl_regression(log2_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log2 <- tbl_regression(log2_fitted, exponentiate = TRUE) %>% # use exponentiate true for ORs
+  bold_p(t = 0.05)
 table_log2
 # Save regression output into table
 saveRDS(table_log2, file = here::here("results", "tables", "table_log2.rds"))
@@ -433,3 +435,13 @@ roc_plot4 <- ggplot(roc_curve_data4, aes(x = 1 - specificity, y = sensitivity)) 
        y = "Sensitivity")
 # Print the plot
 print(roc_plot4)
+
+## ---- Stacklogs --------
+# Combine the two tables using tbl_stack for unadjusted ORs
+table5 <- tbl_stack(list(table_log1, table_log2), group_header = c()) %>%
+  as_gt() %>%
+  gt::tab_style(style = gt::cell_text(weight = "bold"),
+                locations = gt::cells_row_groups(groups = everything()))
+table5
+# Save regression output into table
+saveRDS(table5, file = here("results", "tables", "table5_final.rds"))

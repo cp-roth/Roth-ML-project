@@ -197,6 +197,10 @@ ML_summary <- ML_summary %>%
 
 # Save new summary data with recoded factor variables
 saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
+
+#Summarize missing data using dplyr
+missing_data_summary <- ML_summary %>% dplyr::summarise_all(list(~sum(is.na(.))))
+missing_data_summary
 ```
 
 I have now learned that `gtsummary` is a very easy way to create summary statistics (Table 1). In the note section at the end of this document, I also include the code I worked on to create the tables manually to show my learning process.
@@ -231,20 +235,22 @@ table1 <-
     include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale),
     missing = "no",
     label = list(
-      ModifiedColor ~ "Ancestry", 
-      ModifiedStatus ~ "Parity", 
-      Age ~ "Maternal Age", 
-      ModifiedNationality ~ "Combined Nationality", 
-      Birth ~ "Birth Outcome", 
-      MaternalOutcome ~ "Maternal Outcome", 
-      FetalOutcome ~ "Fetal Outcome", 
-      Lengthcentimeters ~ "Birth Length (cms)", 
-      Weightgrams ~ "Birth Weight (grms)",
-      WeightgramsBlack ~ "Black (grms)",
-      WeightgramsMixed ~ "Mixed-Race (grms)",
-      WeightgramsWhite ~ "White (grms)",
-      WeightgramsFemale ~ "Female (grms)",
-      WeightgramsMale ~ "Male (grms)"
+      Color ~ "Color (n = 2,695)",
+      ModifiedColor ~ "Ancestry (n = 2,695)", 
+      ModifiedStatus ~ "Parity (n = 2,836)", 
+      Age ~ "Maternal Age (n = 2,783)", 
+      ModifiedNationality ~ "Combined Nationality (n = 2,773)", 
+      Birth ~ "Birth Outcome (n = 2,761)", 
+      MaternalOutcome ~ "Maternal Outcome (n = 2,829)", 
+      FetalOutcome ~ "Fetal Outcome (n = 2,666)", 
+      Sex ~ "Sex (n = 2,534)",
+      Lengthcentimeters ~ "Birth Length (cm) (n = 2,405)", 
+      Weightgrams ~ "Birth Weight (g) (n = 2,384)",
+      WeightgramsBlack ~ "Black (g) (n = 643)",
+      WeightgramsMixed ~ "Mixed-Race (g) (n = 675)",
+      WeightgramsWhite ~ "White (g) (n = 950)",
+      WeightgramsFemale ~ "Female (g) (n = 1,074)",
+      WeightgramsMale ~ "Male (g) (n = 1,270)"
     ),
     statistic = list(
        all_continuous() ~ "{mean} ({sd})",
@@ -256,7 +262,7 @@ table1 <-
     ),
     digits = list(WeightgramsBlack ~ 0, WeightgramsMixed ~ 0, WeightgramsWhite ~ 0, WeightgramsFemale ~ 0, WeightgramsMale ~ 0)
   ) %>%
-  add_n() %>%
+  #add_n() #%>%
   modify_table_body( #indent these three rows
     ~.x %>%
       mutate(label = case_when(

@@ -272,9 +272,9 @@ ML_linear <- ML_linear %>%
 
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) #%>%
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  #step_normalize(all_predictors())
 
 # Define model specification
 log1_spec <- logistic_reg() %>%
@@ -294,7 +294,13 @@ fit(data = ML_linear)
 log1_fitted <- extract_fit_parsnip(log1_fit)$fit
 
 # Create a gtsummary table directly from the model
-table_log1 <- tbl_regression(log1_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log1 <- tbl_regression(log1_fitted, exponentiate = TRUE) %>% # use exponentiate true for ORs
+  bold_p(t = 0.05) %>%
+  modify_table_styling(
+    columns = label,
+    rows = label == "ModifiedColor",
+    text_format = "bold"
+  )
 table_log1
 
 # Save regression output into table
@@ -346,7 +352,7 @@ With an ROC_AUC of 0.463, our model is performing worse than random guessing. Ou
 Now let's run another logistic model with `Color` as the predictor.
 
 ```{r}
-# Simple logistic regression model with ModifiedColor as the predictor
+# Simple logistic regression model with Color as the predictor
 # Check factor levels
 levels(ML_linear$BirthweightCategory) # Reference is LBW
 
@@ -356,9 +362,9 @@ ML_linear <- ML_linear %>%
 
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log2_recipe <- recipe(BirthweightCategory ~ Color, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log2_recipe <- recipe(BirthweightCategory ~ Color, data = ML_linear) #%>%
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  #step_normalize(all_predictors())
 
 # Define model specification
 log2_spec <- logistic_reg() %>%
@@ -378,7 +384,13 @@ fit(data = ML_linear)
 log2_fitted <- extract_fit_parsnip(log2_fit)$fit
 
 # Create a gtsummary table directly from the model
-table_log2 <- tbl_regression(log2_fitted, exponentiate = TRUE) # use exponentiate true for ORs
+table_log2 <- tbl_regression(log2_fitted, exponentiate = TRUE) %>% # use exponentiate true for ORs
+  bold_p(t = 0.05) %>%
+  modify_table_styling(
+    columns = label,
+    rows = label == "Color",
+    text_format = "bold"
+  )
 table_log2
 
 # Save regression output into table
@@ -444,9 +456,9 @@ ML_linear <- ML_linear %>%
 
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log3_recipe <- recipe(BirthweightCategory ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log3_recipe <- recipe(BirthweightCategory ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) #%>%
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  #step_normalize(all_predictors())
 
 # Define model specification
 log3_spec <- logistic_reg() %>%
@@ -604,3 +616,18 @@ roc_plot4 <- ggplot(roc_curve_data4, aes(x = 1 - specificity, y = sensitivity)) 
 print(roc_plot4)
 ```
 In our final model, our ROC_AUC is 0.477, still worse than random guessing. Our pseudo-R2 is 0.007.
+
+# Merge unadjusted log models 1 and 2
+
+```{r}
+# Combine the two tables using tbl_stack for unadjusted ORs
+table5 <- tbl_stack(list(table_log1, table_log2), group_header = c()) %>%
+  as_gt() %>%
+  gt::tab_style(style = gt::cell_text(weight = "bold"),
+  locations = gt::cells_row_groups(groups = everything()))
+table5
+
+# Save regression output into table
+saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
+```
+```

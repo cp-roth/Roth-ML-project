@@ -42,27 +42,7 @@ The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio
 
 ## Study Measures
 
-There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity or gravidity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex. 
-
-In the exploratory analysis, I included recorded spontaneous abortions and all recorded live births. For the statistical models, I excluded both spontaneous abortions and any recorded live births weighing \<500 grams to avoid the inclusion of any possible stillbirths that were misrecorded as live births [@nyarko2013; @wehby2015a; @wehby2017a].
-
-A more complete analysis would further explore interactions between birth weight and birth length, which can be a proxy for the nutritional and health status of the mother later in pregnancy [@santana2021]. The third trimester is when most fetal weight gain occurs, and maternal malnutrition during this period can have a dramatic effect on infant birth weight [@jasienska2009]. But other health problems related to maternal undernutrition during pregnancy depend on gestational period. Research on the Dutch famine during World War II has shown that the adult health problems of infants born to mothers who were pregnant during the famine depended on the gestational period during which maternal undernutrition occurred [@roseboom2006; @painter2005].
-
-### Maternal Skin Color
-
-The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and Mixed-Race patients into one category, `Afro-Descent` and all White patients into a `Euro-Descent` category. Please see the `eda-v1.qmd` file for more information on the variable manipulation process.
-
-### Gestational Status
-
-Gestational status was divided into parity and gravidity. Originally, the data had eight categories: nullipara, primipara, secundipara, multipara; and primigravida, secundigravida, trigravida, and multigravida. I combined categories into four final categories: 1) nullipara and primigravida into `nullipara` (or any woman who has never given birth to a viable fetus); 2) primipara into `primipara` (or any woman who has given birth to one viable fetus); 3) secundipara and multipara into `multipara` (or any woman who has given birth to more than one viable fetus); and 4) secundigravida, trigravida, and multigravida into `multigravida` (or any woman who has been pregnant more than one but never given birth to a viable fetus).
-
-### Maternal Nationality
-
-For maternal nationality, I created categories based on individual country (`nationality`) and categories based on region (`modifiednationality`). Recategorization occurred as follows: `Brazilian`; `Latin American` (Argentine, Paraguayan, Uruguayan); `European` (Austrian, French, German, Italian, Polish, Portuguese, Romanian, Russian, Spanish, and Swiss); and `Middle Eastern` (Syrian).
-
-### Clinical Outcomes
-
-The clinical notes upon which I based this dataset only sporadically included infant demographic information for spontaneous abortions or stillbirths. For spontaneous abortions, stillbirths, and live births, I recorded, when available, infant sex, weight, length. I followed the original clinical categorizations for type of delivery in the following cases: natural, indicating minimal medical intervention; interventionist, indicating medium medical intervention through the use of forceps; and operatory, indicating a cesarean section or embryotomy. However, I recategorized external manipulations including version and Mauriceau (used during breech deliveries) (@eyraud1997), coded as operatory or natural by physicians, as interventionist. I classified clinical outcomes as spontaneous abortion, natural (normal delivery), interventionist (interventionist delivery), and operative (surgical delivery). 
+There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex. 
 
 ### Full Summary Table
 
@@ -151,6 +131,7 @@ table3 <- readRDS(here::here("results", "tables", "table_fit3.rds"))
 flex_table <- as_flex_table(table3)
 flex_table
 ```
+
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
 
 For all three models, the r-squared is very small (0.007, 0.006, and 0.008), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.

@@ -117,6 +117,7 @@ metrics_fit1
 # Create a gtsummary table directly from the model
 table_model1 <-
   tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE) %>% 
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
   add_glance_table(include = c(r.squared, nobs))
 table_model1
@@ -368,6 +369,7 @@ metrics_fit2
 
 # Create a gtsummary table directly from the model
 table_model2 <- tbl_regression(ML_fit2, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
   add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
   add_glance_table(include = c(r.squared, nobs))
 table_model2
