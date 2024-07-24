@@ -68,7 +68,11 @@ missing_data_summary <- ML_3 %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
 # Create new variable of NBW and LBW for future logistic regression
 ML_4 <- ML_3 %>%
-  mutate(BirthweightCategory = if_else(Weightgrams <= 2500, "LBW", "NBW"))
+  mutate(BirthweightCategory = case_when(
+    Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams <= 2500 ~ "LBW",
+    Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams > 2500 ~ "NBW",
+    TRUE ~ NA_character_
+  ))
 ML_4
 # Transform character variables into factors
 ML_5 <- ML_4 %>%

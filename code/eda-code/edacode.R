@@ -108,8 +108,28 @@ ML_summary <- ML_summary %>%
     WeightgramsMixed = if_else(Weightmixed == "Yes", Weightgrams, NA_real_),
     WeightgramsFemale = if_else(Weightfemale == "Yes", Weightgrams, NA_real_),
     WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_))
+# Create dummy variables for birth weight category by maternal skin color for summary table
+ML_summary <- ML_summary %>%
+  mutate(
+    Afro_LBW = ifelse(BirthweightCategory == "LBW" & (!is.na(WeightgramsBlack) | !is.na(WeightgramsMixed)), 1, 0),
+    Afro_NBW = ifelse(BirthweightCategory == "NBW" & (!is.na(WeightgramsBlack) | !is.na(WeightgramsMixed)), 1, 0),
+    Euro_LBW = ifelse(BirthweightCategory == "LBW" & !is.na(WeightgramsWhite), 1, 0),
+    Euro_NBW = ifelse(BirthweightCategory == "NBW" & !is.na(WeightgramsWhite), 1, 0),
+  )
+# Change value to missing for opposite skin color infants for summary statistics
+ML_summary <- ML_summary %>%
+  mutate(
+    Afro_LBW = case_when(
+      ModifiedColor == "EuroDescent" ~ NA_real_,
+      TRUE ~ Afro_LBW
+    ),
+    Euro_LBW = case_when(
+      ModifiedColor == "AfroDescent" ~ NA_real_,
+      TRUE ~ Euro_LBW
+    )
+  )
 # Verify new variables
-str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale")])
+str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale", "Afro_LBW", "Afro_NBW", "Euro_LBW", "Euro_NBW")])
 # View the updated dataframe
 print(head(ML_summary))
 
@@ -157,7 +177,7 @@ table1 <-
     WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_)
   ) %>%
   tbl_summary(
-    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale),
+    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale, BirthweightCategory, Afro_LBW, Euro_LBW),
     missing = "no",
     label = list(
       Color ~ "Color (n = 2,695)",
@@ -175,7 +195,10 @@ table1 <-
       WeightgramsMixed ~ "Mixed-Race (g) (n = 675)",
       WeightgramsWhite ~ "White (g) (n = 950)",
       WeightgramsFemale ~ "Female (g) (n = 1,074)",
-      WeightgramsMale ~ "Male (g) (n = 1,270)"
+      WeightgramsMale ~ "Male (g) (n = 1,270)",
+      BirthweightCategory ~ "Birth Weight Category (n = 2,231)",
+      Afro_LBW ~ "LBW Afro-Descent",
+      Euro_LBW ~ "LBW Euro-Race"
     ),
     statistic = list(
       all_continuous() ~ "{mean} ({sd})",
@@ -187,7 +210,7 @@ table1 <-
     ),
     digits = list(WeightgramsBlack ~ 0, WeightgramsMixed ~ 0, WeightgramsWhite ~ 0, WeightgramsFemale ~ 0, WeightgramsMale ~ 0)
   ) %>%
-  add_n() %>%
+  #add_n() #%>%
   modify_table_body( #indent these three rows
     ~.x %>%
       mutate(label = case_when(

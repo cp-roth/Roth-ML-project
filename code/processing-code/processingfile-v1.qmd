@@ -118,7 +118,11 @@ Now, I will create a new categorical variable of Normal Birthweight (NBW) for al
 ```{r}
 # Create new variable of NBW and LBW for future logistic regression
 ML_4 <- ML_3 %>%
-  mutate(BirthweightCategory = if_else(Weightgrams <= 2500, "LBW", "NBW"))
+  mutate(BirthweightCategory = case_when(
+    Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams <= 2500 ~ "LBW",
+    Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams > 2500 ~ "NBW",
+    TRUE ~ NA_character_
+  ))
 ML_4
 ```
 
