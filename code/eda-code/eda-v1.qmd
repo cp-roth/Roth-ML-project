@@ -181,24 +181,32 @@ ML_summary <- ML_summary %>%
    Euro_NBW = ifelse(BirthweightCategory == "NBW" & !is.na(WeightgramsWhite), 1, 0),
  )
   
-# Change value to missing for opposite skin color infants for summary statistics
-ML_summary <- ML_summary %>%
-  mutate(
-    Afro_LBW = case_when(
-      ModifiedColor == "EuroDescent" ~ NA_real_,
-      TRUE ~ Afro_LBW
-    ),
-    Euro_LBW = case_when(
-      ModifiedColor == "AfroDescent" ~ NA_real_,
-      TRUE ~ Euro_LBW
-    )
-  )
+# Change value to missing for opposite skin color infants for summary statistics. This uses the wrong denominator (all mothers regardless of whether we have their infants' birth weights, so I will use code below.)
+#ML_summary <- ML_summary %>%
+  #mutate(Afro_LBW = case_when(ModifiedColor == "EuroDescent" ~ NA_real_, TRUE ~ Afro_LBW),
+    #Euro_LBW = case_when(ModifiedColor == "AfroDescent" ~ NA_real_,TRUE ~ Euro_LBW))
 
 # Verify new variables
-str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale", "Afro_LBW", "Euro_LBW")])
+str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale")])
 
 # View the updated dataframe
 print(head(ML_summary))
+
+# See LBW and NBW with true denominator
+LBW_percentage <- ML_summary %>%
+# Remove NAs from both variables
+filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>%
+# Group by ModifiedColor
+group_by(ModifiedColor) %>%
+# Calculate the percentage for each group
+summarise(
+  total_count = n(),
+  lbw_count = sum(BirthweightCategory == "LBW"),
+  lbw_percentage = (lbw_count / total_count) * 100
+  )
+
+# Print the result
+print(LBW_percentage)
 ```
 
 Let's also change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
@@ -254,7 +262,7 @@ table1 <-
     WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_)
   ) %>%
   tbl_summary(
-    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale, BirthweightCategory, Afro_LBW, Euro_LBW),
+    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale, BirthweightCategory),
     missing = "no",
     label = list(
       Color ~ "Color (n = 2,695)",
@@ -273,9 +281,7 @@ table1 <-
       WeightgramsWhite ~ "White (g) (n = 950)",
       WeightgramsFemale ~ "Female (g) (n = 1,074)",
       WeightgramsMale ~ "Male (g) (n = 1,270)",
-      BirthweightCategory ~ "Birth Weight Category (n = 2,231)",
-      Afro_LBW ~ "LBW Afro-Descent",
-      Euro_LBW ~ "LBW Euro-Descent"
+      BirthweightCategory ~ "Birth Weight Category (n = 2,231)"
     ),
     statistic = list(
        all_continuous() ~ "{mean} ({sd})",
