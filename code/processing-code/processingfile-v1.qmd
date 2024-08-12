@@ -77,11 +77,13 @@ skimr::skim(ML_raw)
 
 # Clean data
 
-I created this dataset from published clinical notes from a specific maternity hospital in Rio de Janeiro, Brazil for multiple projects, mostly of a qualitative nature. Thus, I was interested in the notes clinicians included on difficult deliveries and their outcomes. These variables include qualitative information that can be excluded from our processed data, since we are not looking at qualitative notes on cases. We also don't need the citation information to run regressions. So we will be removing the following variables as we process our data: `VolN`, `Page`, `Number`, `Nationality_Notes`, `Maternal_Notes`, `Fetal_Notes`, `CauseofDeath`, `PreviousHistory`, and `Notes`. Further, we will exclude `Birth_Notes`, but first I will need to extract information on gestation (twin versus singleton birth).
+I created this dataset from published clinical notes from a specific maternity hospital in Rio de Janeiro, Brazil for multiple projects, mostly of a qualitative nature. Thus, I was interested in the notes clinicians included on difficult deliveries and their outcomes. These variables include qualitative information that can be excluded from our processed data, since we are not looking at qualitative notes on cases. Nonetheless, for `Fetal_Notes`, we need to keep the Fetal_Notes variable at the moment as it qualifies the `FetalOutcome` variable.
+
+We also don't need the citation information to run regressions. So we will be removing the following variables as we process our data: `VolN`, `Page`, `Number`, `Nationality_Notes`, `Maternal_Notes`, `CauseofDeath`, `PreviousHistory`, and `Notes`. Further, we will exclude `Birth_Notes`, but first I will need to extract information on gestation (twin versus singleton birth).
 
 ```{r}
 # Remove unnecessary variables
-ML_1 <- ML_raw %>% dplyr::select(-VolN, -Page, -Number, -Nationality_Notes, -Maternal_Notes, -Fetal_Notes, -CauseofDeath, -PreviousHistory, -Notes)
+ML_1 <- ML_raw %>% dplyr::select(-VolN, -Page, -Number, -Nationality_Notes, -Maternal_Notes, -CauseofDeath, -PreviousHistory, -Notes)
 ```
 
 Despite removing variables we won't use because of their qualitative nature, we still have many missing observations for some of the variables. Let's check for missing data.
@@ -92,58 +94,89 @@ missing_data_summary <- ML_1 %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
 ```
 
-We can see that `CivilStatus` has 2834 missing observations and `GestationalAge_Months` has 2789 missing observations. This is a lot. Since I am not interested in understanding the relationship between marital status and infant birth weight and since gestational age in months refers to spontaneous abortions that occurred in the clinic, we can also exclude both these variables, the latter because an abortion precludes the existence of a birth. `Birth_Notes` also has 2330 missing values, but first I need to extract information on gestation (twin versus singleton birth) from this variable before I exclude it.
+We can see that `CivilStatus` has 2834 missing observations, `GestationalAge_Months` has 2789 missing observations, `Fetal_Notes` has 2823 missing observations, and `Birth_Notes` also has 2330 missing values. This is a lot. Although civil status can serve as a proxy for income and class, I have too many missing values here for the variable to be meaningful, so I will exclude `CivilStatus`. Gestational age in months is also a valuable insight in relation to LBW and PTB, but my data set has too many missing values to be of use here, we can also exclude `GestationalAge_Months`. Some gestational age entries were also in relation to spontaneous abortions. `Birth_Notes` helped me initially decided on how to code the `Birth` variable, which was done when I engaged in manual data entry, so I will exclude here.
+
+Before I exclude any variables, I need to make sure that the original hospital records did not misrecord stillbirths as neonatal deaths and vice versa before I exclude them. First, we will look at the values for `FetalOutcome` and `Fetal_Notes` that are not missing any values for both variables. This gives us 22 entries. Most values in the `Fetal_Notes` variable refer to either a macerated (*macerado*) stillbirth, perhaps implying maternal syphilis or a neonatal death (*faleceu*) with a given time frame. We can see that the `FetalOutcome` variable is not always consistent with the `Fetal_Notes` variable. For example, a live birth and subsequent neonatal death is marked as a stillbirth in the `FetalOutcome` variable. I will mark all live births as live, even if death occurred immediately after birth and I will mark all stillbirths as stillbirths. There were 20 recorded neonatal deaths.
+
+```{r}
+# See values for `FetalOutcome` and `Fetal_Notes` that are not missing any values for both variables
+ML_1 %>% filter(!is.na(FetalOutcome) & !is.na(Fetal_Notes))
+
+# Change 'FetalOutcome' to vivo if 'Fetal_Notes' indicates neonatal death (via Faleceu or faleceu in 'Fetal_Notes' column)
+ML_2 <- ML_1 %>%
+  mutate(FetalOutcome = case_when(
+    FetalOutcome == "morto" & 
+      str_detect(tolower(Fetal_Notes), "faleceu") ~ "vivo",
+    TRUE ~ FetalOutcome
+  ))
+ML_2
+
+# Check values
+ML_2 %>% filter(!is.na(FetalOutcome) & !is.na(Fetal_Notes))
+
+# See how many neonatal deaths were recorded
+ML_neonatal <- ML_2 %>%
+  filter(
+    FetalOutcome == "vivo" &
+    str_detect(tolower(Fetal_Notes), "faleceu")
+  )
+
+# View the filtered data
+print(ML_neonatal)
+```
+
+I also need to extract information on gestation (twin versus singleton birth) from this `GestationalAge_Months` before I exclude it. My data set will only include singleton births for the statistical analysis.
 
 ```{r}
 # Extract information on gestation from Birth_Notes and create new variable gestation with singleton and twin births
-ML_2 <- ML_1 %>%
-  mutate(Birth_Notes = str_trim(Birth_Notes)) %>% # removes any leading or trailing whitespace from Birth_Notes column
+ML_3 <- ML_2 %>%
+  mutate(Birth_Notes = str_trim(Birth_Notes)) %>% # removes any leading or trailing white space from Birth_Notes column
   mutate(Gestation = if_else(is.na(Birth_Notes) | Birth_Notes == "", "singleton", # checks if Birth_Notes is NA or empty strings and assigns singleton to Gestation column
                              if_else(str_detect(tolower(Birth_Notes), "gemelar"), "twin", "singleton"))) # checks for gemelar in case-insensitive manner and assigns twin accordingly or singleton otherwise
-ML_2
+ML_3
 
 # Remove variables with missing data not relevant to hypothesis
-ML_3 <- ML_2 %>% dplyr::select(-CivilStatus, -GestationalAge_Months, -Birth_Notes)
+ML_4 <- ML_3 %>% dplyr::select(-CivilStatus, -GestationalAge_Months, -Birth_Notes, -Fetal_Notes)
 ```
 
 Now we can check for missing data again.
 
 ```{r}
 #Summarize missing data using dplyr
-missing_data_summary <- ML_3 %>% dplyr::summarise_all(list(~sum(is.na(.))))
+missing_data_summary <- ML_4 %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
 ```
 Now, I will create a new categorical variable of Normal Birthweight (NBW) for all birth weights greater than 2500 grams and Low Birthweight (LBW) for all birth weights equal to or less than 2500 grams for a future logistic regression. This will come from the `Weightgrams` variable.
 
 ```{r}
 # Create new variable of NBW and LBW for future logistic regression
-ML_4 <- ML_3 %>%
+ML_5 <- ML_4 %>%
   mutate(BirthweightCategory = case_when(
     Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams <= 2500 ~ "LBW",
     Weightgrams >= 500 & FetalOutcome != "morto" & Gestation != "twin" & Weightgrams > 2500 ~ "NBW",
     TRUE ~ NA_character_
   ))
-ML_4
+ML_5
 ```
 
 Now I will work on transforming character variables into factors.
 
 ```{r}
 # Transform character variables into factors
-ML_5 <- ML_4 %>%
+ML_6 <- ML_5 %>%
   mutate(across(c(Color, Status, Nationality, Birth, MaternalOutcome, FetalOutcome, Sex, Gestation, BirthweightCategory), as.factor))
 
 # Check variables
-glimpse(ML_5)
+glimpse(ML_6)
 
 # Check levels of factor variables
-map(ML_5[c('Color', 'Status', 'Nationality', 'Birth', 'MaternalOutcome', 'FetalOutcome', 'Sex', 'Gestation', 'BirthweightCategory')], levels)
+map(ML_6[c('Color', 'Status', 'Nationality', 'Birth', 'MaternalOutcome', 'FetalOutcome', 'Sex', 'Gestation', 'BirthweightCategory')], levels)
 
 # Define factor variables to check frequencies
 factor_variables <- c('Color', 'Status', 'Nationality', 'Birth', 'MaternalOutcome', 'FetalOutcome', 'Sex', 'Gestation', 'BirthweightCategory')
 
 # Check frequencies of factor variables
-frequency_table <- ML_5 %>%
+frequency_table <- ML_6 %>%
   count(across(all_of(factor_variables)))
 
 print(frequency_table)
@@ -155,10 +188,10 @@ There are still missing observations for all the remaining variables except `Dat
 
 ```{r} 
 # Create dataset for summary statistics (includes missing values)
-ML_summary <- ML_5
+ML_summary <- ML_6
 
 # Creating dataset for linear regression
-ML_linear <- ML_5 %>% tidyr::drop_na() %>%
+ML_linear <- ML_6 %>% tidyr::drop_na() %>%
   filter(Weightgrams >= 500, FetalOutcome != "morto", Gestation != "twin") # Drop observations of < 500 grams, all non-live births, and all twin births for regression dataset
 
 # Check for no missing data in linear model

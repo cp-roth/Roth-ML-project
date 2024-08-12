@@ -221,7 +221,7 @@ ML_summary <- ML_summary %>%
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
     MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
-    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death"),
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth"),
     Status = recode_factor(Status, "Multigesta" = "Multigravida", "Trigesta" = "Trigravida", "Secundigesta" = "Secundigravida", "Secundipara" = "Secundiparous", "Multipara" = "Multiparous", "Primigesta" = "Primigravida", "Nulipara" = "Nulliparous", "Primipara" = "Primiparous")
     )
 
@@ -371,19 +371,19 @@ Now let's look at some common reproductive and perinatal health statistics: mate
 ```{r}
 #MMR Maternal mortality ratio
 maternal_deaths <-23
-live_births <- 2440
+live_births <- 2445
 MMR <- (maternal_deaths / live_births) * 10000
 MMR
 
 #Stillbirth rate SBR
-still_births <- 226
+still_births <- 221
 total_births <- 2666
 SBR <- (still_births / total_births) * 1000
 SBR
 
 #Sex ratio at birth (live male births/live female births)*100
 sex_ratio <- ML_summary %>%
-  filter(!Birth %in% c("Abortion") & !FetalOutcome %in% c("Stillbirth or Neonatal Death")) %>% # Exclude rows with abortion and stillbirth
+  filter(!Birth %in% c("Abortion") & !FetalOutcome %in% c("Stillbirth")) %>% # Exclude rows with abortion and stillbirth
  filter(!is.na(Sex) & !is.na(Birth) & !is.na(FetalOutcome)) %>%
   group_by(Sex) %>%
   summarise(count = n()) %>%
@@ -391,7 +391,7 @@ sex_ratio <- ML_summary %>%
   mutate(SexRatio = M / F) * 100
 sex_ratio
 ```
-The MMR is 94.3% in this specific clinic. The SBR is 84.8% in this specific clinic. The sex ratio is 1.2 or there were 120 male live births per 100 female live births at this specific clinic. This is much higher than the current range of between 103 and 107 male births per 100 female births.
+The MMR is 94.1% in this specific clinic. The SBR is 82.9% in this specific clinic. The sex ratio is 1.2 or there were 120 male live births per 100 female live births at this specific clinic. This is much higher than the current range of between 103 and 107 male births per 100 female births.
 
 Because I am working on a different subset of the data, `ML_linear` for the statistical analysis, I will also need to recategorize variables here.
 
@@ -429,7 +429,7 @@ ML_linear <- ML_linear %>%
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
     MaternalOutcome = recode_factor(MaternalOutcome, "alta" = "Discharged", "morta" = "Death", "transferência" = "Hospital transferal"),
-    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth or Neonatal Death")
+    FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth")
     )
 
 str(ML_linear)
