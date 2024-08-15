@@ -189,43 +189,21 @@ saveRDS(table_fit3, file = here::here("results", "tables", "table_fit3.rds"))
 
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, we can see that older mothers are associated with giving birth to infants with higher birth weights.
 
-For all three models, the r-squared is very small (0.009, 0.008, and 0.026), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
+For all three models, the r-squared is very small (0.009, 0.008, and 0.027), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
 
 I am not trying to explain which general factors are trying to explain birth weight. Rather, I'm trying to understand if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro, Brazil. For example, the gestational age probably explains much of the variation in the model, yet this variable was only included in very few observations in the published clinic data from which I created this dataset.
 
 Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color, however, is also probably associated with premature birth, which is correlated to infant birth weight.
 
-Now let's try to run a model where skin color is differentiated according to the original data, or with three categories (White, Black, and Mixed Race). We'll start with a simple model of infant birth weight as a function of maternal skin color. Then we will run a model with all the predictors.
+There is potentially a (partial) multi-collinearity problem with maternal skin color and maternal nationality. So let's run a regression with just maternal nationality as the covariate.
 
 ```{r}
 # Simple linear model
 # Set reference level for Color
-ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
+ML_linear$ModifiedNationality <- relevel(ML_linear$ModifiedNationality, ref = "Brazilian")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
-ML_lm4 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color, data = ML_linear)
-
-# Summarize model fit with tidiers
-ML_lm4_summary <- summary(ML_lm4) # Summary of fit
-tidy(ML_lm4, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
-glance(ML_lm4) # Model-level statistics
-
-# Create a gtsummary table directly from the model
-table_fit4 <- tbl_regression(ML_lm4, exponentiate = FALSE, intercept = TRUE) %>% 
-  bold_p() %>% 
-  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
-  modify_column_unhide(columns = c(statistic, std.error))
-table_fit4
-
-# Save regression output into table
-saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
-
-# Complex linear model
-# Set reference level for Color
-ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
-
-# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
-ML_lm4 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear)
+ML_lm4 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedNationality, data = ML_linear)
 
 # Summarize model fit with tidiers
 ML_lm4_summary <- summary(ML_lm4) # Summary of fit
@@ -242,6 +220,117 @@ table_fit4
 # Save regression output into table
 saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 ```
+From our results, we can see that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, we have a problem with multicollinearity. So let's try a couple things to understand this issue. We will create a `Brazilian` (yes, no) variable and then run a regression with this variable. Then, we will drop all non-Brazilians from the study and run the original regression with the covariates.
+
+```{r}
+# Create dummy variables for new category of Brazilian or not
+# Create dummy variables for status and change to English
+ML_linear$Brazilian <- recode_factor(ML_linear$ModifiedNationality, "European" = "Non-Brazilian", "Middle Eastern" = "Non-Brazilian", "Latin American" = "Non-Brazilian", "Brazilian" = "Brazilian")
+
+str(ML_linear)
+```
+Now, we will run a regression with only this new variable. 
+
+```{r}
+# Simple linear model
+# Set reference level for Brazilian
+ML_linear$Brazilian <- relevel(ML_linear$Brazilian, ref = "Brazilian")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm5 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Brazilian, data = ML_linear)
+
+# Summarize model fit with tidiers
+ML_lm5_summary <- summary(ML_lm5) # Summary of fit
+tidy(ML_lm5, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_lm5) # Model-level statistics
+
+# Create a gtsummary table directly from the model
+table_fit5 <- tbl_regression(ML_lm5, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit5
+
+# Save regression output into table
+saveRDS(table_fit5, file = here::here("results", "tables", "table_fit5.rds"))
+```
+Here, we can see that non-Brazilians have babies on average weighing 100 grams more than Brazilians (p-value 0.001). So we will now run a regression of only Brazilian women using Afro-Descent and Euro-descent categories.
+
+```{r}
+# Filter data based on desired conditions
+filtered_data <- ML_linear %>%
+  filter(Brazilian == "Brazilian")
+
+# Simple linear model
+# Set reference level for Brazilian
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm6 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor, data = filtered_data)
+
+# Summarize model fit with tidiers
+ML_lm6_summary <- summary(ML_lm6) # Summary of fit
+tidy(ML_lm6, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_lm6) # Model-level statistics
+
+# Create a gtsummary table directly from the model
+table_fit6 <- tbl_regression(ML_lm6, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit6
+
+# Save regression output into table
+saveRDS(table_fit6, file = here::here("results", "tables", "table_fit6.rds"))
+```
+
+Moving on from issues of collinearity, let's try to run a model where skin color is differentiated according to the original data, or with three categories (White, Black, and Mixed Race). We'll start with a simple model of infant birth weight as a function of maternal skin color. Then we will run a model with all the predictors.
+
+```{r}
+# Simple linear model
+# Set reference level for Color
+ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm5 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color, data = ML_linear)
+
+# Summarize model fit with tidiers
+ML_lm5_summary <- summary(ML_lm5) # Summary of fit
+tidy(ML_lm5, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_lm5) # Model-level statistics
+
+# Create a gtsummary table directly from the model
+table_fit5 <- tbl_regression(ML_lm4, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit5
+
+# Save regression output into table
+saveRDS(table_fit5, file = here::here("results", "tables", "table_fit5.rds"))
+
+# Complex linear model
+# Set reference level for Color
+ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm6 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear)
+
+# Summarize model fit with tidiers
+ML_lm6_summary <- summary(ML_lm6) # Summary of fit
+tidy(ML_lm6, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+glance(ML_lm6) # Model-level statistics
+
+# Create a gtsummary table directly from the model
+table_fit6 <- tbl_regression(ML_lm6, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit6
+
+# Save regression output into table
+saveRDS(table_fit6, file = here::here("results", "tables", "table_fit6.rds"))
+```
 
 ## Logistic models
 
@@ -250,6 +339,13 @@ Now we will still consider `Birthweight` as the outcome of interest, but we will
 First, we will split data into training and testing sets to later calculate ROC_AUC.
 
 ```{r}
+# Check factor levels
+levels(ML_linear$BirthweightCategory) # Reference is LBW, so need to change
+
+# Set the reference level explicitly to NBW
+ML_linear <- ML_linear %>%
+  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
+
 #set seed
 set.seed(123)
 ML_log_split <- initial_split(ML_linear, prop = 0.75, strata = BirthweightCategory)
@@ -262,14 +358,6 @@ ML_log_test <- testing(ML_log_split)
 Now we will run the first logistic model with `ModifiedColor` as the predictor.
 
 ```{r}
-# Simple logistic regression model with ModifiedColor as the predictor
-# Check factor levels
-levels(ML_linear$BirthweightCategory) # Reference is LBW
-
-# Set the reference level explicitly to NBW
-ML_linear <- ML_linear %>%
-  mutate(BirthweightCategory = relevel(BirthweightCategory, ref = "NBW"))
-
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
 log1_recipe <- recipe(BirthweightCategory ~ ModifiedColor, data = ML_linear) #%>%

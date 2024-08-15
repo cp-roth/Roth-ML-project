@@ -18,7 +18,7 @@ library(knitr) #for nice tables
 library(kableExtra) #for nice tables
 library(gt) #for nice tables
 library(gtsummary) #for summary tables
-library(ggplot2) #for plotting
+library(ggplot2) #for plotting 
 library(hrbrthemes) #for nice themes
 library(flextable) #for nice tables
 hrbrthemes::import_roboto_condensed() #import needed fonts for hrbrthemes
@@ -149,13 +149,13 @@ Finally, for the summary table, in which I want to include infant birth weight s
 # Create dummy variables
 
 # Recode factor using dplyr
-ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "AfroDescent", "Preta" = "AfroDescent", "Branca" = "EuroDescent")
+ML_summary$ModifiedColor <- recode_factor(ML_summary$Color, "Parda" = "Afro-Descent", "Preta" = "Afro-Descent", "Branca" = "Euro-Descent")
 
 # Create dummy variables for status and change to English
 ML_summary$ModifiedStatus <- recode_factor(ML_summary$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
-ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
+ML_summary$ModifiedNationality <- recode_factor(ML_summary$Nationality, "Alema" = "European", "Argentina" = "Latin American", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "Latin American", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "Middle Eastern", "Uruguaya" = "Latin American")
 
 # Create dummy variables for birth weight for infants born to Black, mixed-race, and White mothers for summary table. Create dummy variables for birth weight according to fetal sex.
 ML_summary <- ML_summary %>%
@@ -183,8 +183,8 @@ ML_summary <- ML_summary %>%
   
 # Change value to missing for opposite skin color infants for summary statistics. This uses the wrong denominator (all mothers regardless of whether we have their infants' birth weights, so I will use code below.)
 #ML_summary <- ML_summary %>%
-  #mutate(Afro_LBW = case_when(ModifiedColor == "EuroDescent" ~ NA_real_, TRUE ~ Afro_LBW),
-    #Euro_LBW = case_when(ModifiedColor == "AfroDescent" ~ NA_real_,TRUE ~ Euro_LBW))
+  #mutate(Afro_LBW = case_when(ModifiedColor == "Euro-Descent" ~ NA_real_, TRUE ~ Afro_LBW),
+    #Euro_LBW = case_when(ModifiedColor == "Afro-Descent" ~ NA_real_,TRUE ~ Euro_LBW))
 
 # Verify new variables
 str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale")])
@@ -207,16 +207,29 @@ summarise(
 
 # Print the result
 print(LBW_percentage)
+
+# Perform difference in means test (t-test) for birth weight category
+# Modify code to create dataset for t-test
+LBW_data <- ML_summary %>%
+  filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>%
+  mutate(is_LBW = as.numeric(BirthweightCategory == "LBW"))  # 1 if LBW, 0 if not
+
+# Print the first few rows to check the structure
+print(head(LBW_data))
+
+# Perform t-test
+t_test_result <- t.test(is_LBW ~ ModifiedColor, data = LBW_data, subset = ModifiedColor %in% c("Euro-Descent", "Afro-Descent"))
+
+# Print the result
+print(t_test_result)
 ```
 
 Let's also change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
 
 ```{r}
-# Change observations from Portuguese to English
+# Change rest of observations from Portuguese to English
 ML_summary <- ML_summary %>%
   mutate(
-    ModifiedColor = recode_factor(ModifiedColor, "AfroDescent" = "Afro-Descent", "EuroDescent" = "Euro-Descent"),
-    ModifiedNationality = recode_factor(ModifiedNationality, "European" = "European", "LatinAmerican" = "Latin American", "MiddleEastern" = "Middle Eastern", "Brazilian" = "Brazilian"),
     Color = recode_factor(Color, "Preta" = "Black", "Parda" = "Mixed Race", "Branca" = "White"),
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),
@@ -243,7 +256,7 @@ table_supplemental <-
     include = c(Color, ModifiedColor, Status, ModifiedStatus, Age, Nationality, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams),
     missing = "no",
     label = list(ModifiedColor ~ "Ancestry", Status ~ "Parity or Gravidity", ModifiedStatus ~ "Parity", Age ~ "Maternal Age", ModifiedNationality ~ "Combined Nationality", Birth ~ "Birth Outcome", MaternalOutcome ~ "Maternal Outcome", FetalOutcome ~ "Fetal Outcome", Lengthcentimeters ~ "Birth Length (cms)", Weightgrams ~ "Birth Weight (grms)"),
-    statistic = list(all_continuous() ~ "{mean} ({sd})")
+    statistic = list(all_continuous() ~ "{mean} ({p25}, {p75})")
   ) %>%
   add_n()
 table_supplemental
@@ -284,12 +297,12 @@ table1 <-
       BirthweightCategory ~ "Birth Weight Category (n = 2,231)"
     ),
     statistic = list(
-       all_continuous() ~ "{mean} ({sd})",
-      WeightgramsBlack ~ "{mean} ({sd})",
-      WeightgramsMixed ~ "{mean} ({sd})",
-      WeightgramsWhite ~ "{mean} ({sd})",
-      WeightgramsFemale ~ "{mean} ({sd})",
-      WeightgramsMale ~ "{mean} ({sd})"
+       all_continuous() ~ "{mean} ({p25}, {p75})",
+      WeightgramsBlack ~ "{mean} ({p25}, {p75})",
+      WeightgramsMixed ~ "{mean} ({p25}, {p75})",
+      WeightgramsWhite ~ "{mean} ({p25}, {p75})",
+      WeightgramsFemale ~ "{mean} ({p25}, {p75})",
+      WeightgramsMale ~ "{mean} ({p25}, {p75})"
     ),
     digits = list(WeightgramsBlack ~ 0, WeightgramsMixed ~ 0, WeightgramsWhite ~ 0, WeightgramsFemale ~ 0, WeightgramsMale ~ 0)
   ) %>%
@@ -412,19 +425,18 @@ Now I will create dummy variables.
 #Check pre-structure
 str(ML_linear)
 
-# Create dummy variables using recode factor from dplyr
+# Create dummy variables for color and change to English using recode factor from dplyr
 ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Preta" = "Afro-Descent", "Parda" = "Afro-Descent", "Branca" = "Euro-Descent")
 
 # Create dummy variables for status and change to English
 ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
-ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "LatinAmerican", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "LatinAmerican", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "MiddleEastern", "Uruguaya" = "LatinAmerican")
+ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "Latin American", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "Latin American", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "Middle Eastern", "Uruguaya" = "Latin American")
 
-# Change observations from Portuguese to English
+# Change remaining observations from Portuguese to English
 ML_linear <- ML_linear %>%
   mutate(
-    ModifiedNationality = recode_factor(ModifiedNationality, "European" = "European", "LatinAmerican" = "Latin American", "MiddleEastern" = "Middle Eastern", "Brazilian" = "Brazilian"),
     Color = recode_factor(Color, "Preta" = "Black", "Parda" = "Mixed Race", "Branca" = "White"),
     Nationality = recode_factor(Nationality, "Alema" = "German", "Argentina" = "Argentine", "Austriaca" = "Austrian", "Brasileira" = "Brazilian", "Espanhola" = "Spanish", "Francesa" = "French", "Italiana" = "Italian", "Paraguaya" = "Paraguayan", "Polaca" = "Polish", "Portuguesa" = "Portuguese", "Rumania" = "Romanian", "Russa" = "Russian", "Suiça" = "Swiss", "Siria" = "Syrian", "Uruguaya" = "Uruguayan"),
     Birth = recode_factor(Birth, "aborto" = "Abortion", "intervencionista" = "Interventionist", "natural" = "Natural", "operatório" = "Operative"),

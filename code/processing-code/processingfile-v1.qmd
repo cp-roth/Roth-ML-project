@@ -226,7 +226,7 @@ Mean_Birthweights <- read_csv(data_location)
 glimpse(Mean_Birthweights)
 
 # Remove median and maternal age variables given missing data
-Mean_Birthweights <- Mean_Birthweights %>% dplyr::select(-Median, -`Maternal Age (mean)`, -"<2500gm (%)")
+Mean_Birthweights <- Mean_Birthweights %>% dplyr::select(-Median, -`Maternal Age (mean)`, -"<2500gm (%)", -`Page #`)
 
 # Structure of data
 glimpse(Mean_Birthweights)
