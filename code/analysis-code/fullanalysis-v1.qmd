@@ -1089,6 +1089,7 @@ saveRDS(table_model4_test, file = here("results", "tables", "table_model4_test.r
 Again, most of our results are not significant except the intercept given the small sample size.
 
 ## Merge Models 3 and 4
+
 ```{r}
 # Combine the two tables using tbl_merge
 table4 <- tbl_merge(list(table_model3, table_model4), tab_spanner = c("**Model 3**", "**Model 4**")) %>%

@@ -7,9 +7,9 @@ format:
     toc: false
     number-sections: true
     highlight-style: github
-    bibliography: ../../../assets/Mada_Bib.bib
-    csl: ../../../assets/chicago-fullnote-bibliography.csl
-    suppress-bibliography: true
+    bibliography: ../../assets/Mada_Bib.bib
+    csl: ../../assets/vancouver.csl
+    suppress-bibliography: false
 ---
 # Supplemental Materials
 
@@ -24,11 +24,11 @@ library(flextable) #for nice tables
 ```
 ## Schematic of workflow
 
-If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder; 2) `eda-v1.qmd` or `edacode.R` in the `eda-code` folder; 3) `introanalyis-v1.qmd` or `introanalysis.R` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` or `fullanalysiscode.R` in the `analysis-code` folder. Please defer to all `.qmd` files as the master over any `.R` files.
+If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalyis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder. This is not updated since 15 August 2024.
 
 ## Data import and cleaning
 
-The GitHub repository for this project includes all relevant materials. All discussions of data import are detailed in the files `processingfile-v1.qmd` or `processingcode.R` in the `processing-code` folder. The original raw data, the codebook, and the processed data are available in the `data` folder.
+The GitHub repository for this project includes all relevant materials. All discussions of data import are detailed in `processingfile-v1.qmd` in the `processing-code` folder. The original raw data, the codebook, and the processed data are available in the `data` folder.
 
 ## Data Source
 
@@ -134,8 +134,6 @@ flex_table
 
 In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
 
-For all three models, the r-squared is very small (0.007, 0.006, and 0.008), indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
-
 The fourth exploratory model again runs a multivariate linear regression, this time using skin color as it was differentiated in the original data, or with three categories (White, Black, and Mixed Race). 
 
 ```{r}
@@ -147,11 +145,15 @@ flex_table <- as_flex_table(table4)
 flex_table
 ```
 
-For all models in this study, the $(R^2)$ is small, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by genetic (not related to skin color), environmental, and social factors [@leimert2020]. Yet, as Claudia Goldin and Robert A. Margo have shown for nineteenth-century Philadelphia, the inclusion of gestational age greatly improved the regression fit in their studies, demonstrating that gestational age could explain much of the variance of birth weight in this study [@goldin1989]. Nonetheless, other scholars have shown that even though differential rates of PTB explain some of the variance in birth weight according to maternal skin color in the United States, up to 91 percent of influenced birth weight, as the lack of historical data precludes this line of inquiry. Rather, it is exploring if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro. Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color is also probably associated with premature birth, which is correlated to infant birth weight.
+For all models in this study, the $(R^2)$ is small, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by genetic (not related to skin color), environmental, and social factors [@leimert2020]. Yet, as Claudia Goldin and Robert A. Margo have shown for nineteenth-century Philadelphia, the inclusion of gestational age greatly improved the regression fit in their studies, demonstrating that gestational age could explain much of the variance of birth weight [@goldin1989]. Nonetheless, other scholars have shown that even though differential rates of PTB explain some of the variance in birth weight according to maternal skin color in the United States, up to 91 percent of the Black-White gap in full-term birth weight remained unexplained [@costa2004]. 
+
+Here, I am exploring if maternal skin color is associated with lower infant birth weight during a historical time period in Rio de Janeiro, Brazil. Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color is also probably associated with premature birth, which is correlated to infant birth weight.
 
 ### Logistic Models
 
-Now we will still consider `Birthweight` as the outcome of interest, but we will transform it into a categorical outcome of <=2500 (low birth weight, LBW) and >2500 (normal birth weight, NBW) and fit a logistic model, using the main predictor of interest, `ModifiedColor`.
+In my introductory analysis, I further ran logistic models that estimated the relationship of maternal variables on infant birth weight as a categorical variable, in line with some studies on birth weight [@falcao2020; @nyarko2013; @paixao2021; @silva1998; @wehby2015a; @wehby2017a].
+
+I consider `Birthweight` as the outcome of interest, but I transformed it into a categorical outcome of NBW $>2500$ g or LBW $\leq2500$ g) and fit a logistic model, using the main predictor of interest, `ModifiedColor`. These cutoffs are according to the WHO [@worldhealthorganization2022].
 
 The first model is a simple logistic regression, with modified maternal skin color as the predictor variable.
 
@@ -164,7 +166,9 @@ flex_table <- as_flex_table(table5)
 flex_table
 ```
 
-The second model is also a simple logistic regression, this time using `Color` as the predictor variable (so three categories, Black, mixed race, and White).
+Model 5 demonstrates that women of African-descent had higher odds of giving birth to infants with lower birth weight than Euro-descended women (OR 1.43, 95% CI 1.07, 1.95, p-value 0.019).
+
+The second model is also a simple logistic regression, this time using `Color` as the predictor variable (Black, mixed race, and White).
 
 ```{r}
 #| label: tbl-table6
@@ -174,6 +178,8 @@ table6 <- readRDS(here::here("results", "tables", "table_log2.rds"))
 flex_table <- as_flex_table(table6)
 flex_table
 ```
+
+When using the hospital records' original skin color categories, mixed-race women had higher odds of giving birth to infants of lower birth weight (OR 1.64, 95% CI	1.17, 2.30, p-value 0.004), but results for the infants of Black women were not significant (OR 1.23, 95% CI 0.85, 1.77, p-value 0.3).
 
 Then, I ran two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates. The results are below.
 
@@ -194,15 +200,14 @@ table8 <- readRDS(here::here("results", "tables", "table_log4.rds"))
 flex_table <- as_flex_table(table8)
 flex_table
 ```
-In these two models, the only significant finding is the final logistic model, in which infants born to mixed-race mothers had 21% higher odds of being born with low birth weight compared to infants born to white mothers. The other models did not show significant results.
+
+In these two models, the only significant finding is from the final logistic model, in which infants born to mixed-race mothers had 21% higher odds of being born with low birth weight compared to infants born to white mothers. The other models did not show significant results.
 
 Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@senn2005]. Thus, I will not include these logistic regressions in the final analysis.
 
 ## Performance Measures
 
-Given that this study is an inferential, hypothesis-supporting approach that is exploring how specific maternal predictors affect the outcome of interest, birth weight, please see the `fullanalysis-v1.qmd` for all predictive metrics, where test/train and cross-validation were applied to test performance. Model performance did not significantly improve with these additional tests. When run on testing data, most results were insignificant.
-
-Test/train (75-25 split) and cross-validation were performed on all models. Model prediction performance did not improve greatly using these tests. Model performance resulted in insignificant results when run on the testing data given the smaller sample size.
+Given that this study is an inferential, hypothesis-supporting approach that is exploring how specific maternal predictors affect the outcome of interest, birth weight, please see the `fullanalysis-v1.qmd` for all predictive metrics, where I applied test/train (75-25 split) and cross-validation to test performance. Model performance did not significantly improve with these additional tests. When run on testing data, most results were insignificant, given the smaller sample size.
 
 Here I include the cross-validation results for the linear models.
 
@@ -239,3 +244,6 @@ ML_cv4_metrics
 ```
 
 The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
+
+# Appendix
+Immigrant low birth weight [@clay2023]

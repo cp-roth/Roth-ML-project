@@ -146,7 +146,7 @@ Now we can check for missing data again.
 missing_data_summary <- ML_4 %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
 ```
-Now, I will create a new categorical variable of Normal Birthweight (NBW) for all birth weights greater than 2500 grams and Low Birthweight (LBW) for all birth weights equal to or less than 2500 grams for a future logistic regression. This will come from the `Weightgrams` variable.
+Now, I will create a new categorical variable of normal birth weight (NBW) for all birth weights $>2500$ g and low birth weight (LBW) for all birth weights $\leq2500$ g for a future logistic regression. This will come from the `Weightgrams` variable.
 
 ```{r}
 # Create new variable of NBW and LBW for future logistic regression

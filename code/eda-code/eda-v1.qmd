@@ -133,17 +133,17 @@ ggsave(filename = figure_file, plot=length_weight_sex, bg="white") #background i
 ```
 # Feature Engineering
 
-Now let's make some tables about the data to get a better idea of the overall numbers.
+Before we create a summary table, lets clean up our variables for easier analysis. First, we need to create dummy variables for categories. We will start with the `Color` variable, which is maternal skin color. We will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and mixed-Race patients into one category, `Afro-Descent`, and all White patients into a `Euro-Descent` category. 
 
-Before we create a summary table, lets clean up our variables for easier analysis. First, we need to create dummy variables for categories. We will start with the `Color` variable, which is maternal skin color. We will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and Mixed-Race patients into one category, `Afro-Descent` and all White patients into a `Euro-Descent` category. 
+For the `Status` variable, the Supplementary Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the summary table for both the final paper and the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data if the physicians were categorizing the women before the delivery or after. With this, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
 
-For the `Status` variable, Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data published in the clinical notes if the physicians were categorizing the women before the delivery or after. With this, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
+For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta in Portuguese meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
 
-For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
+For the `Nationality` variable, we will combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there are very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
 
-For the `Nationality` variable, we will combine all European nationalities into one category, "European", all Latin American nationalities into "LatinAmerican", and all Middle Eastern nationalities into "MiddleEastern". I am combining categories because for many of the `European` and `Latin American` categories, there are very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
+Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose. For maternal skin color, these variables are `Weightblack`, `Weightmixed`, and `Weightwhite`. These are categorical variables (yes/no). From these, I create new continuous dummy variables for birth weight according to maternal skin color: `WeightgramsBlack`, `WeightgramsMixed`, and `WeightgramsWhite`. I do the same process for fetal sex: `Weightfemale`, `Weightmale`, `WeightgramsFemale`, and `WeightgramsMale`.
 
-Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose.
+Using these new dummy variables, I create new dummy variables defining if the infants were normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) for all infants and then stratified by maternal skin color. These are `Afro_NBW` and `Afro_LBW`; and `Euro_NBW` and `Euro_LBW`. I will use these to see how many infants were low birth weight or normal birth weight for each maternal skin category in the `introanalysis-v1.qmd` file.
 
 ```{r}
 # Create dummy variables
@@ -187,43 +187,11 @@ ML_summary <- ML_summary %>%
     #Euro_LBW = case_when(ModifiedColor == "Afro-Descent" ~ NA_real_,TRUE ~ Euro_LBW))
 
 # Verify new variables
-str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale")])
+str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", "Weightmale", "WeightgramsBlack", "WeightgramsMixed", "WeightgramsWhite", "WeightgramsFemale", "WeightgramsMale", "Afro_LBW", "Afro_NBW", "Euro_LBW", "Euro_NBW")])
 
 # View the updated dataframe
 print(head(ML_summary))
-
-# See LBW and NBW with true denominator
-LBW_percentage <- ML_summary %>%
-# Remove NAs from both variables
-filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>%
-# Group by ModifiedColor
-group_by(ModifiedColor) %>%
-# Calculate the percentage for each group
-summarise(
-  total_count = n(),
-  lbw_count = sum(BirthweightCategory == "LBW"),
-  lbw_percentage = (lbw_count / total_count) * 100
-  )
-
-# Print the result
-print(LBW_percentage)
-
-# Perform difference in means test (t-test) for birth weight category
-# Modify code to create dataset for t-test
-LBW_data <- ML_summary %>%
-  filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>%
-  mutate(is_LBW = as.numeric(BirthweightCategory == "LBW"))  # 1 if LBW, 0 if not
-
-# Print the first few rows to check the structure
-print(head(LBW_data))
-
-# Perform t-test
-t_test_result <- t.test(is_LBW ~ ModifiedColor, data = LBW_data, subset = ModifiedColor %in% c("Euro-Descent", "Afro-Descent"))
-
-# Print the result
-print(t_test_result)
 ```
-
 Let's also change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
 
 ```{r}
@@ -238,12 +206,12 @@ ML_summary <- ML_summary %>%
     Status = recode_factor(Status, "Multigesta" = "Multigravida", "Trigesta" = "Trigravida", "Secundigesta" = "Secundigravida", "Secundipara" = "Secundiparous", "Multipara" = "Multiparous", "Primigesta" = "Primigravida", "Nulipara" = "Nulliparous", "Primipara" = "Primiparous")
     )
 
-# Save new summary data with recoded factor variables
-saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
-
 #Summarize missing data using dplyr
 missing_data_summary <- ML_summary %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
+
+# Save new summary data with recoded factor variables
+saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
 ```
 
 I have now learned that `gtsummary` is a very easy way to create summary statistics (Table 1). In the note section at the end of this document, I also include the code I worked on to create the tables manually to show my learning process.
@@ -324,40 +292,6 @@ table1
 saveRDS(table1, file = here::here("results", "tables", "table1_final.rds"))
 ```
 
-Now we will create the summary table for mean birth weights across time and place.
-
-```{r}
-#Path to summary data. Note the use of the here() package and not absolute paths
-data_location <- here::here("data","processed-data","Mean_Birthweights_processed.rds")
-
-#load data
-Mean_Birthweights <- readRDS(data_location)
-
-# Replace NA with a dash for each column
-Mean_Birthweights <- Mean_Birthweights %>%
-  mutate(across(where(is.numeric), ~ ifelse(is.na(.), "-", as.character(.)))) %>%
-  mutate(across(where(is.character), ~ replace_na(., "-")))
-
-# Display the table using flextable
-table2 <- flextable(Mean_Birthweights) %>%
-  set_caption("Mean Birth Weight Comparison") %>%
-  align(j = 2, align = "left", part = "all") %>%
-  align(j = 4, align = "right", part = "all") %>%
-  set_header_labels(
-    Sample = "Sample",
-    Year = "Year", 
-    Mean = "Mean (grams)",
-    Source = "Source"
-  ) %>%
-  bold(part = "header") %>%
-  #autofit() %>%
-  set_table_properties(layout = "autofit", width = 1, align = "center")
-table2
-
-#Save table
-saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
-```
-
 For maternal race, we have a sample size of n = 2695. The majority of the sample is White (branca), with 42.45% of the sample. Mixed-race (parda) is 29.2% of the sample, and Black (preta) is 28.32% of the sample. Let's now compare White patients to all patients of color by combining Black and mixed-race categories. I will create a dummy variable for color, called modified_color with two categories: Afro-Descent (comprising parda and preta) and Euro-Descent (comprising branca).
 
 We can see that of the clinic patients, 1551 (57.6%) were of African descent (defined as preta or parda) and 1144 (42.4%) were of European descent (branca).
@@ -406,6 +340,40 @@ sex_ratio
 ```
 The MMR is 94.1% in this specific clinic. The SBR is 82.9% in this specific clinic. The sex ratio is 1.2 or there were 120 male live births per 100 female live births at this specific clinic. This is much higher than the current range of between 103 and 107 male births per 100 female births.
 
+Now we will create the summary table for mean birth weights across time and place.
+
+```{r}
+#Path to summary data. Note the use of the here() package and not absolute paths
+data_location <- here::here("data","processed-data","Mean_Birthweights_processed.rds")
+
+#load data
+Mean_Birthweights <- readRDS(data_location)
+
+# Replace NA with a dash for each column
+Mean_Birthweights <- Mean_Birthweights %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), "-", as.character(.)))) %>%
+  mutate(across(where(is.character), ~ replace_na(., "-")))
+
+# Display the table using flextable
+table2 <- flextable(Mean_Birthweights) %>%
+  set_caption("Mean Birth Weight Comparison") %>%
+  align(j = 2, align = "left", part = "all") %>%
+  align(j = 4, align = "right", part = "all") %>%
+  set_header_labels(
+    Sample = "Sample",
+    Year = "Year", 
+    Mean = "Mean (grams)",
+    Source = "Source"
+  ) %>%
+  bold(part = "header") %>%
+  #autofit() %>%
+  set_table_properties(layout = "autofit", width = 1, align = "center")
+table2
+
+#Save table
+saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
+```
+
 Because I am working on a different subset of the data, `ML_linear` for the statistical analysis, I will also need to recategorize variables here.
 
 Load the data. 
@@ -446,7 +414,7 @@ ML_linear <- ML_linear %>%
 
 str(ML_linear)
 
-# Save new summary data with recoded factor variables
+# Save new linear data with recoded factor variables
 saveRDS(ML_linear, file = here("data", "processed-data", "ML_linear.rds"))
 ```
 # Notes
