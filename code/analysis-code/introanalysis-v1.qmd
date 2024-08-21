@@ -307,13 +307,19 @@ table_fit4
 saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 ```
 
-These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some subsample modeling to understand this issue. We will create a `Brazilian` (yes, no) variable and then run a regression with this variable. Then, I will drop all non-Brazilians from the study and run the original regression with the covariates.
+These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some subsample modeling to understand this issue. We will create a `Brazilian` (yes, no) variable, drop all non-Brazilians from the study, and run the original regression with the covariates.
 
 ```{r}
 # Create dummy variables for new category of Brazilian or not
 # Create dummy variables for status and change to English
-ML_linear$Brazilian <- recode_factor(ML_linear$ModifiedNationality, "European" = "Non-Brazilian", "Middle Eastern" = "Non-Brazilian", "Latin American" = "Non-Brazilian", "Brazilian" = "Brazilian")
+ML_linear <- mutate(ML_linear, 
+                    Brazilian = recode_factor(ModifiedNationality, 
+                                              "European" = "Non-Brazilian",
+                                              "Middle Eastern" = "Non-Brazilian",
+                                              "Latin American" = "Non-Brazilian",
+                                              "Brazilian" = "Brazilian"))
 
+# Check the structure of the updated data frame
 str(ML_linear)
 ```
 
@@ -354,7 +360,7 @@ filtered_data <- ML_linear %>%
   filter(Brazilian == "Brazilian")
 
 # Model 6 sub-sample simple linear model
-# Set reference level for Brazilian
+# Set reference level for "Euro-descent"
 ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels

@@ -31,6 +31,7 @@ Load the data
 data_location <- here::here("data","processed-data","ML_linear.rds")
 #load data
 ML_linear <- readRDS(data_location)
+str(ML_linear)
 ```
 
 # Preparation for Model Assessment
@@ -237,7 +238,7 @@ ML_cv1_metrics
 # Save regression output into table
 saveRDS(ML_cv1_metrics, file = here::here("results", "tables", "ML_cv1_metrics.rds"))
 ```
-Performing cross-validation results in an RMSE that is the same as our training model (488), lower than our full model. The r-squared (0.015) is also higher than our training and full models (0.01), demonstrating better model performance.
+Performing cross-validation results in an RMSE that is the same as our training model (488), lower than our full model. The r-squared (0.017) is also higher than our training and full models (0.01), demonstrating better model performance.
 
 Finally, let's run the model on our test data.
 
@@ -563,13 +564,83 @@ saveRDS(table_model2_test, file = here::here("results", "tables", "table_model2_
 ```
 Running the model on our test data, we see no significant results at any alpha level.
 
-# Merging Model 1 and 2 into Table
+## Models 1 and 2 Sub-Samples
 
 ```{r}
-# Combine the two tables using tbl_merge
+# Model 1: Sub-sample simple model (ML_lm1_sub)
+# Create a list to store R-squared values
+r_squared_values_sub <- list()
+
+# Filter data based on desired conditions
+filtered_data <- ML_linear %>%
+  filter(Brazilian == "Brazilian")
+
+# Set reference level for "Euro-descent"
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm1_sub <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor, data = filtered_data)
+
+# Summarize model fit with tidiers
+ML_lm1_sub_summary <- summary(ML_lm1_sub) # Summary of fit
+tidy(ML_lm1_sub, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+ML_lm1_sub_stat <- glance(ML_lm1_sub) # Extract model-level statistics
+
+# Extract R-squared value
+r_squared_values_sub$ML_lm1_sub <- ML_lm1_sub_stat$r.squared
+
+# Create a gtsummary table directly from the model
+ML_lm1_sub_table <- 
+  tbl_regression(ML_lm1_sub, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
+  modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
+ML_lm1_sub_table
+
+# Save regression output into table
+saveRDS(ML_lm1_sub_table, file = here::here("results", "tables", "ML_lm1_sub_table.rds"))
+```
+```{r}
+# Model 2: Sub-sample multivariate model (ML_lm2_sub)
+# Filter data based on desired conditions
+filtered_data <- ML_linear %>%
+  filter(Brazilian == "Brazilian")
+
+# Set reference level for "Euro-descent"
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm2_sub <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + + ModifiedStatus, data = filtered_data)
+
+# Summarize model fit with tidiers
+ML_lm2_sub_summary <- summary(ML_lm2_sub) # Summary of fit
+tidy(ML_lm2_sub, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+ML_lm2_sub_stat <- glance(ML_lm2_sub) # Extract model-level statistics
+
+# Extract R-squared value
+r_squared_values_sub$ML_lm2_sub <- ML_lm2_sub_stat$r.squared
+
+# Create a gtsummary table directly from the model
+ML_lm2_sub_table <- 
+  tbl_regression(ML_lm2_sub, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = TRUE, hide_p = TRUE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
+  modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
+ML_lm2_sub_table
+
+# Save regression output into table
+saveRDS(ML_lm2_sub_table, file = here::here("results", "tables", "ML_lm2_sub_table.rds"))
+```
+
+# Merging Model 1 and 2 and sub-sample 1 and 2 into Table
+
+```{r}
+# Combine the four tables using tbl_merge
 table3 <- tbl_merge(
-  list(table_model1, table_model2),
-  tab_spanner = c("**Model 1**", "**Model 2**")) %>%
+  list(table_model1, ML_lm1_sub_table, table_model2, ML_lm2_sub_table),
+  tab_spanner = c("**Model 1**", "**Sub-Model 1**", "**Model 2**", "**Sub-Model 2**")) %>%
   modify_table_body(fun = ~.x %>% arrange(variable))
 table3
 

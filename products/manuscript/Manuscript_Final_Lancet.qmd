@@ -25,20 +25,27 @@ library(gtsummary) #for summary tables
 library(flextable) #for nice tables
 library(gt) #for nice tables
 ```
+
 # Abstract
+
 ## Background
+
 In 1888 Brazil became the last country in the Western Hemisphere to abolish slavery after nearly four centuries of its existence. After abolition, the state did not create programs to incorporate people formerly enslaved and their descendants into economic, civil, or political life. Qualitative historical research has outlined the gendered and racialized health disparities of people of African descent at the turn-of-the-twentieth century. Public health studies have shown that health disparities continue to mirror patterns from over a century ago. The goal of this study is to quantify health disparities in infant birth weights by maternal characteristics in the post-abolition period in one of Brazil's first public maternity hospitals.
 
 ## Methods
-This cross-sectional analysis uses hospital records on infants delivered between 1922-1926 at the Maternidade Laranjeiras (now Maternidade Escola) in Rio de Janeiro, Brazil, the city's first public maternity hospital. I used linear models to assess differences in infant birth weight by maternal skin color, age, number of pregnancies, and nationality.
+
+This cross-sectional analysis used hospital records on infants delivered between 1922-1926 at the Maternidade Laranjeiras (now Maternidade Escola) in Rio de Janeiro, Brazil, the city's first public maternity hospital. I used linear models to assess differences in infant birth weight by maternal skin color, age, number of pregnancies, and nationality.
 
 ## Findings
+
 African ancestry was correlated with lower birth weights. Infants born to Afro-descendant women had birth weights estimated to be 85 grams lighter (p-value <0.01) than infants born to Euro-descendant women, whether Brazilian or immigrant. Among Afro-descendant women, infants born to Black (*preta*) women had birth weights estimated to be 100 grams lighter (p-value <0.01) than infants born to White women, and infants born to mixed-race (*parda*) women had birth weights estimated to be 72 grams lighter (p-value <0.05) than infants born to White women.
 
 ## Interpretations
+
 The findings were likely the consequence of the historical legacies of slavery, particularly race-based socioeconomic inequality -- including more strenuous work schedules, poorer nutrition, and less sanitary living environments for women of color -- and possible epigenetic effects from the lived experience of racism. The findings are consistent with current-day research on racialized health disparities in Brazil, demonstrating the need to address the root causes of racism and its effects on health.
 
 ## Funding
+
 This archival research for this project was funded by the National Science Foundation (NSF) and the Fulbright IIE Student Program.
 {{< pagebreak >}}
 
@@ -87,15 +94,16 @@ The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio
 The project's Github repository, particularly the `Supplemental_Materials` file, includes summary information on data processing, exploratory analysis, and model fitting. All materials, including the data set, are open access and reproducible, with instructions on the schematic of the workflow available online.
 
 ## Variables
+
 ### Outcome
 
-*Birth weight*. The outcome was birth weight measured as a continuous variable in grams for live births only. In a secondary analysis available in the supplement, I also evaluated birth weight as a binary variable (either normal birth weight, NBW $>2500$ g or low birth weight, LBW $\leq2500$ g), according to current WHO classifications) [@worldhealthorganization2022]. The use of this cutoff in historical studies can be questionable as it was not even an established category in the 1920s. A Finnish pediatrician first proposed the 2500 g cutoff in 1919 without any specific justification. This was a period in which it was difficult for physicians to accurately calculate gestational age, and many physicians used birth weight as a proxy for prematurity. The WHO adopted this cutoff in 1948, and it has remained as the standard ever since [@hughes2017].
+*Birth weight*. The outcome was birth weight measured as a continuous variable in grams for live births only. In a secondary analysis available in the supplement, I also evaluated birth weight as a binary variable (either normal birth weight, NBW $>2500$ g or low birth weight, LBW $\leq2500$ g), according to current WHO classifications) [@worldhealthorganization2022]. We can question the use of this cutoff in historical studies, as it was not an established category until the mid-twentieth century. A Finnish pediatrician first proposed the 2500 g cutoff in 1919 without any specific justification. This was a period in which it was difficult for physicians to accurately calculate gestational age, and thus many physicians used birth weight as a proxy for prematurity [@wilcox CITE CORRECTLY]. The WHO adopted this cutoff in 1948, and it has remained the standard since [@hughes2017].
 
 ### Key Independent Variables
 
 *Maternal skin color*. The original records categorized maternal racial categories as White (*branca*), the reference group; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and mixed-race patients into one category, `Afro-Descent`, and White patients into a `Euro-Descent` category.
 
-Except at the extremes, racial classification in Brazil was, and continues to be, imprecise as racial categories and skin color classifications in Brazil exist on a spectrum rather than as a Black-White binary as in the United States [@travassos2004]. Using more general categories addresses imprecision by grouping all possible mothers of any African descent into one category. This method is in line with recent studies, which look at all African-descended peoples as a group and then stratify by racial mixing [@nyarko2013; @wehby2015a].
+Except at the extremes, racial classification in Brazil was, and continues to be, imprecise, as racial categories and skin color exist on a spectrum rather than as a Black-White binary as in the United States [@travassos2004]. Using more general categories addresses imprecision by grouping all possible mothers of any African descent into one category. This method is in line with recent studies, which look at all African-descended peoples as a group and then stratify by racial mixing [@nyarko2013; @wehby2015a].
 
 *Maternal age*. I maintained the original data of maternal age in years.
 
@@ -117,7 +125,7 @@ Except at the extremes, racial classification in Brazil was, and continues to be
 
 ## Descriptive statistics
 
-I calculated summary statistics for the sample, including sample proportions for maternal skin color, maternal ancestry, parity, maternal nationality, birth outcome, maternal outcome, fetal outcome, and fetal sex. I also calculated mean maternal age, infant birth length, and infant birth weight, as a whole and stratified by fetal sex and maternal skin color.
+I calculated summary statistics, including sample proportions for maternal skin color, maternal ancestry, parity, maternal nationality, birth outcome, maternal outcome, fetal outcome, and fetal sex. I also calculated mean maternal age, infant birth length, and infant birth weight, unadjusted and then stratified by first fetal sex and then maternal skin color.
 
 I also calculated the maternal mortality ratio (MMR), the mean stillbirth rate (SBR), and the sex ratio at birth (SRaB). 
 
@@ -141,7 +149,7 @@ where the total number of live male births (M) is divided by 100 live female bir
 
 ## Statistical analysis
 
-I used Ordinary Least Squares (OLS) to establish a relationship of maternal variables and infant birth weight. I employ birth weight as a continuous variable in line with both current and historical studies [@andrasfay2020a; @costa1998; @costa2004; @david1997; @leal2006; @silveira2019]. Due to the lack of comprehensive information on gestational age in these data, I did not consider birth weight in reference to gestational age, as is best practice for disentangling PTB from LBW [@cutland2017]. I discuss this constraint in the discussion below.
+I used Ordinary Least Squares (OLS) to establish a relationship of maternal variables and infant birth weight. I employ birth weight as a continuous variable in line with both current and historical studies [@andrasfay2020a; @costa1998; @costa2004; @david1997; @leal2006; @silveira2019]. Due to the lack of comprehensive information on gestational age in these data, I did not consider birth weight in reference to gestational age. I discuss this constraint in the discussion below.
 
 I ran four linear models: two in which I categorized maternal skin color into two ancestral groups: White (Euro-descent), the reference group, and non-White (Afro-descent), and two in which I categorized maternal skin color according to the hospital records' original racial classifications: White (the reference group), Black, and mixed race to see if there were differential outcomes for Black and mixed-race women. The independent variables include maternal age, maternal skin color, gestational status, and maternal nationality.
 
@@ -161,17 +169,21 @@ The multiple linear regression model for original color is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$ whereas $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), `Gest` is gestational status (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, and $\epsilon$ is the error term. Results for both models are displayed in Table 3.
 
+Scholars have shown that immigrants to Brazil during this historical period were healthier and better off socio-economically than their Brazilian counterparts, both of color and White [@franken2019; @ball2020]. Given the possibility for collinearity between maternal nationality and maternal skin color, I ran a sub-sample analysis for Models 1 and 2 in two steps. First, I created a new variable `Brazilian` (yes/no) and ran a simple linear analysis with birth weight as the dependent variable and maternal nationality as the independent variable. Non-Brazilian women birthed infants that weighed on average 100 g more than Brazilian women (the reference group) (p-value <0.001). Given that all women of color in the data set were Brazilian, there is collinearity occurring. Thus, second, I dropped all non-Brazilians from the study, and ran the original regressions from Models 1 and 2.
+
 # Results
 
 Table 1 provides summary statistics for the sample. In the hospital records, 58% were of African descent (defined as *preta* or *parda*) and 42% were of European descent (*branca*). First-time mothers ("nulliparous") were 41% of the sample. Of the total sample, 84% were Brazilian. Of the nearly 16% immigrant patients, 15% were from Europe.
 
 Of all reproductive outcomes, excluding spontaneous abortion, 91% were natural deliveries. The remaining 9% were interventionist or operative deliveries. For patients who went to the clinic to deliver their infant (excluding spontaneous abortion), 23 died, for an MMR of 94.1%. The SBR was 82.9%. The sex ratio was 1.2: there were 120 male live births per 100 female live births. This is much higher than the current range of between 103 and 107 male births per 100 female births [@ritchie2024].
 
-The overall rate of LBW for infants born to Afro-descended mothers was 12.4%, compared to 9.7% for Euro-descended mothers. A difference in means test showed borderline significance (t-statistic = 1.9119, df. 2008.2, p-value 0.056, [95% CI -0.0007, 0.0532]).
+The overall rate of LBW for infants born to Afro-descended mothers was 12.4%, compared to 9.7% for Euro-descended mothers. A difference in means test showed borderline significance (t-statistic = 1.9119, df. 2008.2, p-value 0.056, [95% CI -0.0007, 0.0532]). Regardless of a difference between infants born to mothers of different skin colors, all LBW infants in the past, the probability of surviving the neonatal period was lower than today given higher neonatal and infant mortality rates [@costa1998; @roth2020].
 
 Results for all linear models are displayed in Tables 2 and 3. All models demonstrate an association between maternal skin color and infant birth weight, with Euro-descended women (either as Euro-descended or as White, the reference groups) having infants with higher birth weights than Afro-descended women (either as Afro-descended, Black, or mixed race). When recategorizing maternal skin color into two categories (Afro- and Euro-descended) and running the full model, Afro-descended women had infants who weighed on average 85 grams lighter than their Euro-descended counterparts (Table 2). In Table 3, which shows the models run using the hospital records' original skin color categories, Black mothers gave birth to infants weighing on average 100 grams less than White mothers, while mixed-race mothers gave birth to infants weighing on average 72 grams lighter than White mothers. Infants born to women of African descent were both lighter and more likely to be LBW than infants born to women of only European descent. AT THIS POINT I NEED TO SEE A LITERATURE THAT TELLS ME 100 GRAMS MATTERS FOR SOMETHING, HEALTH-WISE, IS 100 GRAMS MORE THAN 2 STANDARD DEVIATIONS?
 
-In models 1 and 2 (Table 2), women who were nulliparous (delivering their first child) had infants weighing on average 113 grams less than multiparous women. In models 3 and 4 (Table 3), the average was 114 grams lighter. This is an association found both in other historical studies and today [@costa1998; @souza2020]. Age and nationality were not significant.
+UPDATE FOR CORRELATION STUFF
+
+In models 1 and 2 (Table 2), women who were nulliparous (delivering their first child) had infants weighing on average 113 grams less than multiparous women. In models 3 and 4 (Table 3), the average was 114 grams lighter. This is an association found both in other historical studies and today [@costa1998; @souza2020]. Age and nationality were not significant. UPDATE
 
 # Discussion
 
@@ -187,6 +199,16 @@ Black infants born at Laranjeiras had the lowest mean birth weight (3037 grams) 
 
 What can explain the differences in birth weight both historically and today? The intrauterine environment is a critical determinant of infant birth weight. Infectious disease, alcohol or drug use, smoking, heavy physical work, and inadequate prenatal care can all influence birth weight. Maternal nutrition can as well, although the relationship is nonlinear in that the pregnant body protects the fetus at the expense of the mother, and a threshold of malnutrition must be met before there is an adverse effect on fetal growth [@costa1998; @steckel1986]. Other factors include maternal age, parity, birth spacing, and gestational age. We can imagine that poorer women in early twentieth-century Rio de Janeiro performed physically taxing jobs that required them to stand for long periods of time, including as washerwomen, domestic help, and street vendors [@graham1992]. These same women might have lived in crowded housing arrangements with lack of access to running water [@graham1992; @fischer2008; @roth2020]. Generalized poverty might have influenced both maternal nutrition and the ability to access prenatal care.
 
+WHO: birth weight "is strongly conditioned by the health and nutritional status of the mother"
+
+WARD: "In addition, because birth weight is sensitive to environmental factors during the nine months of gestation (especially the final three months) as well as the long-range effects of changes in living conditions, it reflects both short- and long-term trends." (5)
+
+WARD: "By and large, the most privileged social groups bear the heaviest babies while the most disadvantaged have the lightest. These differences, in turn, reflect the fact that fetal growth and weight at birth are influenced by a wide range of biological, social, and economic factors, not all of which are fully understood." (10)
+
+WARD: From the standpoint of neonatal mortality the optimum weight of a newborn child lies between 3500 and 3900 grams. Infants bom outside this range have higher mortality levels than do those within it. The riSks are especially great among those weighing considerably less than the optimum. Estimates suggest that the chance of death during the first week of life increases by 40 percent, and the risk of fetal death by 25 percent, for every 100-gram decrease below the optimum level of weight. (10)
+
+Optimal birth weight is the weight at which birth weight-specific mortality is lowest
+
 Because the hospital records excluded information on maternal health factors, we don't know which contributed to racial disparities in infant birth weight. One possible cause that we do have some data for is syphilis. Like Costa found for early twentieth-century Baltimore, higher syphilis rates among African-descended women in Rio de Janeiro might have explained lower birth weights. Studies demonstrate that syphilis increases adverse birth outcomes including increased risk of LBW and PTB [@dasilva2024]. The clinical records that comprise this dataset did not consistently record syphilis rates. Scholars have shown how medical and public health professionals viewed it as an important cause of adverse health outcomes and even a possible "scourge" on the future of the Brazilian race during this historical period [@carrara1996a]. Although I don't have accurate rates for Laranjeiras, city-wide rates from the 1930s can provide some context for the prevalence of infection among pregnant women. Of all prenatal syphilis exams performed between 1935 and 1938 at public clinics or hospitals across the city, unadjusted for maternal skin color, 7.92% came back positive [@fontenelle, p. 275].
 
 Discussions of epigenetic markers associated with the lived experience of racism might also be applicable here. Studies have connected racial disparities in pregnancy outcomes, including PTB and LBW, with the accumulation of stress over the pregnant person’s life course (and the life courses of their ancestors) understood as allostatic load measured by a variety of biomarkers such as cortisol and blood pressure, mediated through epigenetic mechanisms. Although there is no genetic basis for race, experiences of racism can result in the accumulation of stressors that can be expressed epigenetically and lead to adverse pregnancy and health outcomes across generations through transgenerational epigenetic inheritance [@leimert2020]. Yet, it is crucial to remember that these are not deterministic processes but can be counteracted by social and political interventions that address the root causes of racism and its effects on health [@meloni2022].
@@ -195,9 +217,11 @@ Discussions of epigenetic markers associated with the lived experience of racism
 
 This study provides heretofore unpublished hospital records on one of Brazil's most important public maternity hospitals in the early twentieth century, a hospital that remains in operation. It provides quantitative evidence of racialized disparities in maternal-infant health in early twentieth-century Brazil. These findings are thus useful to compare to present-day research to assess the extent of progress in improved outcomes over time. They also complement descriptive historical studies and provide a base for qualitative research to analyze individual experience in the past.
 
-All models based on historical data must contend with limited sample sizes, missing data, and imprecise measures of health and nutrition [@franken2019; @steckel1998; @roberts2014]. In this study, a major limitation was the original published clinical notes' exclusion of gestational age. Thus, the birth weight variable captured both smaller babies born at term (low weight at-term infants, or small for gestational age, SGA) and pre-term infants, or those born before 37 weeks' gestation. We are thus unable to know how many of these infants were low birth weight at term [@falcao2020]. This limits our ability to understand the relationship between maternal variables and infant birth weight as pre-term infants are more likely to have lower birth weights [@cutland2017]. Given the absence of accurate technological techniques for determining gestational age in the past, this limitation is inherent to any historical inquiry into birth weights, although other historical studies have datasets that include gestational age [@costa1998; @costa2004; @goldin1989]. I assume that infants at risk for PTB were also at-risk for LBW. WE CANNOT MEASURE THE VARIABLE THAT IS REALLY DRIVING THINGS.
+All models based on historical data must contend with limited sample sizes, missing data, and imprecise measures of health and nutrition [@franken2019; @steckel1998; @roberts2014; @ward1993]. In this study, a major limitation was the original published clinical notes' exclusion of gestational age. Thus, the birth weight variable captured both smaller babies born at term (low weight at-term infants, or small for gestational age, SGA) and pre-term infants, or those born before 37 weeks' gestation. We are thus unable to know how many of these infants were low birth weight at term [@falcao2020]. This limits our ability to understand the relationship between maternal variables and infant birth weight as pre-term infants are more likely to have lower birth weights [@cutland2017]. Given the absence of accurate technological techniques for determining gestational age in the past, this limitation is inherent to any historical inquiry into birth weights, although other historical studies have datasets that include gestational age [@costa1998; @costa2004; @goldin1989]. I assume that infants at risk for PTB were also at-risk for LBW.
 
-Lack of data on maternal nutrition and health status, which cannot be corrected for by using maternal skin color as a proxy for overall health, is a major impediment to understanding the true relationship between maternal variables and infant birth weight in this study. Given the paucity of historical understandings of current-day health disparities in maternal-infant health, this paper demonstrates the need for more research into quantitative associations between socio-demographic categories and health in the past.
+Lack of data on maternal nutrition and health status or maternal work routine and income, all of which cannot be corrected for by using maternal skin color as a proxy, is a major impediment to understanding the true relationship between maternal variables and infant birth weight in this study. Maternal skin color may serve as a partial index of the unobservable variables that are acting upon infant birth weight [@costa2004; @ward1993]. Given the paucity of historical understandings of current-day health disparities in maternal-infant health, this paper demonstrates the need for more research into quantitative associations between socio-demographic categories and health in the past.
+
+HOW INFANTS WERE WEIGHED AND ACCURACY OF SCALE
 
 *Conclusion*
 
