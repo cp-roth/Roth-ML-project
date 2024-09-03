@@ -22,6 +22,7 @@ library(gt) #for nice tables
 library(gtsummary) #for summary tables
 library(ggplot2) #for plotting
 library(tidymodels) #for modeling
+library(gtExtras) # for easy summary visualization
 rm(list=ls()) #clear the environment
 ```
 
@@ -83,7 +84,7 @@ ci_lower <- t_test_result$conf.int[1]
 ci_upper <- t_test_result$conf.int[2]
 ```
 
-After performing a Welch Two Sample t-test to compare the rates of LBW between Euro- and Afro-descent mothers, the results were as follows: t = `r round(t_statistic, 2)`, df = `r round(df, 1)`, p-value = `r round(p_value, digits = 3)`, mean difference = `r round(mean_diff, 4)`, 95% CI = [`r round(ci_lower, 4)`, `r round(ci_upper, 4)`].
+After performing a Welch Two Sample t-test to compare the rates of LBW between Euro- and Afro-descent mothers, the results were as follows: t = `r round(t_statistic, 2)`, df = `r round(df, 1)`, p-value = `r round(p_value, digits = 3)`, mean difference = `r round(mean_diff, 4)`, 95% CI = \[`r round(ci_lower, 4)`, `r round(ci_upper, 4)`\].
 
 # Linear Models
 
@@ -321,6 +322,10 @@ ML_linear <- mutate(ML_linear,
 
 # Check the structure of the updated data frame
 str(ML_linear)
+
+# Save ML_Linear as RDS
+save_data_location <- here::here("data","processed-data","ML_linear.rds")
+saveRDS(ML_linear, file = save_data_location)
 ```
 
 Now, I will run a regression with only this new variable.
@@ -873,4 +878,144 @@ table5
 
 # Save regression output into table
 saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
+```
+
+# Predominant and residual distributions
+
+```{r}
+# Calculate the mean and standard deviation of the predominant distribution
+predominant_stats <- ML_summary %>% 
+   filter(!is.na(Weightgrams)) %>% #filter out NAs
+  summarize(
+    mean_weight = mean(Weightgrams),
+    sd_weight = sd(Weightgrams)
+  )
+
+# Determine the range of the predominant distribution
+predominant_lower <- predominant_stats$mean_weight - 2 * predominant_stats$sd_weight
+predominant_upper <- predominant_stats$mean_weight + 2 * predominant_stats$sd_weight
+
+# Calculate the proportion of observations in the predominant distribution
+predominant_proportion <- ML_summary %>%
+  filter(Weightgrams >= predominant_lower & Weightgrams <= predominant_upper) %>%
+  nrow() / nrow(ML_summary)
+
+# Calculate the proportion of observations in the residual distribution
+residual_proportion <- 1 - predominant_proportion
+
+# Print the results
+cat("Predominant distribution:\n")
+cat("Mean:", predominant_stats$mean_weight, "grams\n")
+cat("Standard deviation:", predominant_stats$sd_weight, "grams\n")
+cat("Proportion:", predominant_proportion, "\n\n")
+
+cat("Residual distribution:\n")
+cat("Proportion:", residual_proportion, "\n")
+
+# Plot the distribution
+residual_plot_all <- ML_summary %>% filter(!is.na(Weightgrams)) %>% #filter out NAs
+  ggplot(aes(x = Weightgrams)) +
+  geom_density(fill="#69b3a2", color="#e9ecef") +
+  stat_function(fun = dnorm, args = list(mean = predominant_stats$mean_weight, sd = predominant_stats$sd_weight), color = "black", linewidth = 0.5) +
+  labs(
+    title = "Birth Weight Distribution for All Births, Maternidade Laranjeiras, 1922-1926",
+    x = "Birth Weight (g)"
+  ) +
+  theme_ipsum() +
+  theme(plot.title = element_text(size=12))
+plot(residual_plot_all)
+
+# Save plot to file
+figure_file = here("results","figures","residual_plot_all.png")
+ggsave(filename = figure_file, plot=residual_plot_all, bg="white") #background is white
+
+# Calculate two distributions: Afro and Euro
+# Calculate the mean and standard deviation of the predominant distribution Afro
+predominant_stats_afro <- ML_summary %>% 
+   filter(!is.na(WeightgramsAfro)) %>% #filter out NAs
+  summarize(
+    mean_weight_afro = mean(WeightgramsAfro),
+    sd_weight_afro = sd(WeightgramsAfro)
+  )
+
+# Determine the range of the predominant distribution
+predominant_lower_afro <- predominant_stats_afro$mean_weight_afro - 2 * predominant_stats_afro$sd_weight_afro
+predominant_upper_afro <- predominant_stats_afro$mean_weight_afro + 2 * predominant_stats_afro$sd_weight_afro
+
+# Calculate the proportion of observations in the predominant distribution
+predominant_proportion_afro <- ML_summary %>%
+  filter(WeightgramsAfro >= predominant_lower_afro & WeightgramsAfro <= predominant_upper_afro) %>%
+  nrow() / nrow(ML_summary)
+
+# Calculate the proportion of observations in the residual distribution
+residual_proportion_afro <- 1 - predominant_proportion_afro
+
+# Print the results
+cat("Predominant distribution:\n")
+cat("Mean:", predominant_stats_afro$mean_weight_afro, "grams\n")
+cat("Standard deviation:", predominant_stats_afro$sd_weight_afro, "grams\n")
+cat("Proportion:", predominant_proportion_afro, "\n\n")
+
+cat("Residual distribution:\n")
+cat("Proportion:", residual_proportion_afro, "\n")
+
+# Calculate the mean and standard deviation of the predominant distribution Euro
+predominant_stats_euro <- ML_summary %>% 
+   filter(!is.na(WeightgramsEuro)) %>% #filter out NAs
+  summarize(
+    mean_weight_euro = mean(WeightgramsEuro),
+    sd_weight_euro = sd(WeightgramsEuro)
+  )
+
+# Determine the range of the predominant distribution
+predominant_lower_euro <- predominant_stats_euro$mean_weight_euro - 2 * predominant_stats_euro$sd_weight_euro
+predominant_upper_euro <- predominant_stats_euro$mean_weight_euro + 2 * predominant_stats_euro$sd_weight_euro
+
+# Calculate the proportion of observations in the predominant distribution
+predominant_proportion_euro <- ML_summary %>%
+  filter(WeightgramsEuro >= predominant_lower_euro & WeightgramsEuro <= predominant_upper_euro) %>%
+  nrow() / nrow(ML_summary)
+
+# Calculate the proportion of observations in the residual distribution
+residual_proportion_euro <- 1 - predominant_proportion_euro
+
+# Print the results
+cat("Predominant distribution:\n")
+cat("Mean:", predominant_stats_euro$mean_weight_euro, "grams\n")
+cat("Standard deviation:", predominant_stats_euro$sd_weight_euro, "grams\n")
+cat("Proportion:", predominant_proportion_euro, "\n\n")
+
+cat("Residual distribution:\n")
+cat("Proportion:", residual_proportion_euro, "\n")
+
+# Plot both distributions
+residual_plot_divided <- ML_summary %>% 
+  filter(!is.na(WeightgramsAfro) | !is.na(WeightgramsEuro)) %>% #filter out NAs
+  ggplot() +
+  geom_density(aes(x = WeightgramsAfro), fill = "#69b3a2", alpha = 0.5, color = NA) +
+  geom_density(aes(x = WeightgramsEuro), fill = "#404080", alpha = 0.5, color = NA) +
+  stat_function(fun = dnorm, 
+        args = list(mean = predominant_stats_afro$mean_weight_afro,
+                sd = predominant_stats_afro$sd_weight_afro),
+                color = "black", linewidth = 0.5) +
+  stat_function(fun = dnorm, 
+                args = list(mean = predominant_stats_euro$mean_weight_euro, 
+                            sd = predominant_stats_euro$sd_weight_euro), 
+                color = "black", linewidth = 0.5) +
+  labs(
+    title = "Birth Weight Distribution for Afro- and Euro-Descended Infants",
+    subtitle = "Maternidade Laranjeiras, 1922-1926",
+    x = "Birth Weight (g)",
+    fill = "Infant Descent"
+  ) +
+  scale_x_continuous(limits = c(1000, 5000), breaks = seq(1000, 5000, by = 1000)) +
+  theme_ipsum() +
+  theme(plot.title = element_text(size=12),
+        plot.subtitle = element_text(size=10),
+        legend.position = "bottom")
+plot(residual_plot_divided)
+
+# Save plot to file
+figure_file = here("results","figures","residual_plot_divided.png")
+ggsave(filename = figure_file, plot=residual_plot_divided, bg="white") #background is white
 ```

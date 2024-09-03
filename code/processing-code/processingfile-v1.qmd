@@ -207,11 +207,11 @@ Finally, I will save the clean data both the `ML_Linear` dataset and the `ML_sum
 
 ```{r}
 # Save ML_Linear as RDS
-save_data_location <- here::here("data","processed-data","ML_linear_processed.rds")
+save_data_location <- here::here("data","processed-data","ML_linear.rds")
 saveRDS(ML_linear, file = save_data_location)
 
 # Save ML_summary as RDS
-save_data_location <- here::here("data","processed-data","ML_summary_processed.rds")
+save_data_location <- here::here("data","processed-data","ML_summary.rds")
 saveRDS(ML_summary, file = save_data_location)
 ```
 

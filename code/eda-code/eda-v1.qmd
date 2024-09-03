@@ -29,7 +29,7 @@ Load the data. First we will load the ML_summary set for summary statistics.
 
 ```{r}
 #Path to summary data. Note the use of the here() package and not absolute paths
-data_location <- here::here("data","processed-data","ML_summary_processed.rds")
+data_location <- here::here("data","processed-data","ML_summary.rds")
 
 #load data
 ML_summary <- readRDS(data_location)
@@ -143,7 +143,7 @@ For the `Nationality` variable, we will combine all European nationalities into 
 
 Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose. For maternal skin color, these variables are `Weightblack`, `Weightmixed`, and `Weightwhite`. These are categorical variables (yes/no). From these, I create new continuous dummy variables for birth weight according to maternal skin color: `WeightgramsBlack`, `WeightgramsMixed`, and `WeightgramsWhite`. I do the same process for fetal sex: `Weightfemale`, `Weightmale`, `WeightgramsFemale`, and `WeightgramsMale`.
 
-Using these new dummy variables, I create new dummy variables defining if the infants were normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) for all infants and then stratified by maternal skin color. These are `Afro_NBW` and `Afro_LBW`; and `Euro_NBW` and `Euro_LBW`. I will use these to see how many infants were low birth weight or normal birth weight for each maternal skin category in the `introanalysis-v1.qmd` file.
+Using these new dummy variables, I created new dummy variables defining if the infants were normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) for all infants and then stratified by maternal skin color. These are `Afro_NBW` and `Afro_LBW`; and `Euro_NBW` and `Euro_LBW`. I will use these to see how many infants were low birth weight or normal birth weight for each maternal skin category in the `introanalysis-v1.qmd` file.
 
 ```{r}
 # Create dummy variables
@@ -169,7 +169,9 @@ ML_summary <- ML_summary %>%
     WeightgramsWhite = if_else(Weightwhite == "Yes", Weightgrams, NA_real_),
     WeightgramsMixed = if_else(Weightmixed == "Yes", Weightgrams, NA_real_),
     WeightgramsFemale = if_else(Weightfemale == "Yes", Weightgrams, NA_real_),
-    WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_)
+    WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_),
+    WeightgramsAfro = if_else(ModifiedColor == "Afro-Descent", Weightgrams, NA_real_),
+    WeightgramsEuro = if_else(ModifiedColor == "Euro-Descent", Weightgrams, NA_real_)
   )
 
 # Create dummy variables for birth weight category by maternal skin color for summary table
@@ -192,7 +194,7 @@ str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", 
 # View the updated dataframe
 print(head(ML_summary))
 ```
-Let's also change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
+I will now change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
 
 ```{r}
 # Change rest of observations from Portuguese to English
@@ -214,7 +216,7 @@ missing_data_summary
 saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
 ```
 
-I have now learned that `gtsummary` is a very easy way to create summary statistics (Table 1). In the note section at the end of this document, I also include the code I worked on to create the tables manually to show my learning process.
+`Gtsummary` is a very easy way to create summary statistics (Table 1). In the note section at the end of this document, I also include the code I worked on to create the tables manually to show my learning process.
 
 ```{r, output="html"}
 # Create gtsummary table full table for supplemental analysis
@@ -239,30 +241,34 @@ table1 <-
     WeightgramsBlack = if_else(Weightblack == "Yes", Weightgrams, NA_real_),
     WeightgramsWhite = if_else(Weightwhite == "Yes", Weightgrams, NA_real_),
     WeightgramsMixed = if_else(Weightmixed == "Yes", Weightgrams, NA_real_),
+    WeightgramsAfro = if_else(ModifiedColor == "Afro-Descent", Weightgrams, NA_real_),
+    WeightgramsEuro = if_else(ModifiedColor == "Euro-Descent", Weightgrams, NA_real_),
     WeightgramsFemale = if_else(Weightfemale == "Yes", Weightgrams, NA_real_),
     WeightgramsMale = if_else(Weightmale == "Yes", Weightgrams, NA_real_)
   ) %>%
   tbl_summary(
-    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsFemale, WeightgramsMale, BirthweightCategory),
+    include = c(Color, ModifiedColor, ModifiedStatus, Age, ModifiedNationality, Birth, MaternalOutcome, FetalOutcome, Sex, Lengthcentimeters, Weightgrams, WeightgramsBlack, WeightgramsMixed, WeightgramsWhite, WeightgramsAfro, WeightgramsEuro, WeightgramsFemale, WeightgramsMale, BirthweightCategory),
     missing = "no",
     label = list(
-      Color ~ "Color (n = 2,695)",
-      ModifiedColor ~ "Ancestry (n = 2,695)", 
-      ModifiedStatus ~ "Parity (n = 2,836)", 
-      Age ~ "Maternal Age (n = 2,783)", 
-      ModifiedNationality ~ "Combined Nationality (n = 2,773)", 
-      Birth ~ "Birth Outcome (n = 2,761)", 
-      MaternalOutcome ~ "Maternal Outcome (n = 2,829)", 
-      FetalOutcome ~ "Fetal Outcome (n = 2,666)", 
-      Sex ~ "Sex (n = 2,534)",
-      Lengthcentimeters ~ "Birth Length (cm) (n = 2,405)", 
-      Weightgrams ~ "Birth Weight (g) (n = 2,384)",
-      WeightgramsBlack ~ "Black (g) (n = 643)",
-      WeightgramsMixed ~ "Mixed-Race (g) (n = 675)",
-      WeightgramsWhite ~ "White (g) (n = 950)",
-      WeightgramsFemale ~ "Female (g) (n = 1,074)",
-      WeightgramsMale ~ "Male (g) (n = 1,270)",
-      BirthweightCategory ~ "Birth Weight Category (n = 2,231)"
+      Color ~ "Color",
+      ModifiedColor ~ "Ancestry", 
+      ModifiedStatus ~ "Parity", 
+      Age ~ "Maternal Age", 
+      ModifiedNationality ~ "Combined Nationality", 
+      Birth ~ "Birth Outcome", 
+      MaternalOutcome ~ "Maternal Outcome", 
+      FetalOutcome ~ "Fetal Outcome", 
+      Sex ~ "Sex",
+      Lengthcentimeters ~ "Birth Length (cm)", 
+      Weightgrams ~ "Birth Weight (g)",
+      WeightgramsBlack ~ "Black",
+      WeightgramsMixed ~ "Mixed-Race",
+      WeightgramsWhite ~ "White",
+      WeightgramsAfro ~ "Afro-Descent",
+      WeightgramsEuro ~ "Euro-Descent",
+      WeightgramsFemale ~ "Female",
+      WeightgramsMale ~ "Male",
+      BirthweightCategory ~ "Birth Weight Category"
     ),
     statistic = list(
        all_continuous() ~ "{mean} ({p25}, {p75})",
@@ -274,13 +280,15 @@ table1 <-
     ),
     digits = list(WeightgramsBlack ~ 0, WeightgramsMixed ~ 0, WeightgramsWhite ~ 0, WeightgramsFemale ~ 0, WeightgramsMale ~ 0)
   ) %>%
-  #add_n() #%>%
+  add_n() %>%
   modify_table_body( #indent these three rows
     ~.x %>%
       mutate(label = case_when(
         variable == "WeightgramsBlack" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
         variable == "WeightgramsWhite" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
         variable == "WeightgramsMixed" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
+        variable == "WeightgramsAfro" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
+        variable == "WeightgramsEuro" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
         variable == "WeightgramsFemale" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
         variable == "WeightgramsMale" ~ paste0("\u00A0\u00A0\u00A0\u00A0", label),
         TRUE ~ label
@@ -344,7 +352,7 @@ Now we will create the summary table for mean birth weights across time and plac
 
 ```{r}
 #Path to summary data. Note the use of the here() package and not absolute paths
-data_location <- here::here("data","processed-data","Mean_Birthweights_processed.rds")
+data_location <- here::here("data","processed-data","Mean_Birthweights.rds")
 
 #load data
 Mean_Birthweights <- readRDS(data_location)
@@ -374,13 +382,15 @@ table2
 saveRDS(table2, file = here::here("results", "tables", "table2_final.rds"))
 ```
 
+# ML Linear Data
+
 Because I am working on a different subset of the data, `ML_linear` for the statistical analysis, I will also need to recategorize variables here.
 
 Load the data. 
 
 ```{r}
 #Path to summary data. Note the use of the here() package and not absolute paths
-data_location <- here::here("data","processed-data","ML_linear_processed.rds")
+data_location <- here::here("data","processed-data","ML_linear.rds")
 #load data
 ML_linear <- readRDS(data_location)
 ```
@@ -394,13 +404,18 @@ Now I will create dummy variables.
 str(ML_linear)
 
 # Create dummy variables for color and change to English using recode factor from dplyr
-ML_linear$ModifiedColor <- recode_factor(ML_linear$Color, "Preta" = "Afro-Descent", "Parda" = "Afro-Descent", "Branca" = "Euro-Descent")
+ML_linear$ModifiedColor <- factor(ifelse(ML_linear$Color %in% c("Black", "Mixed Race"), "Afro-Descent", "Euro-Descent"))
 
 # Create dummy variables for status and change to English
 ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
 
 # Create dummy variables for nationality and change to English
-ML_linear$ModifiedNationality <- recode_factor(ML_linear$Nationality, "Alema" = "European", "Argentina" = "Latin American", "Austriaca" = "European", "Brasileira" = "Brazilian", "Espanhola" = "European", "Francesa" = "European", "Italiana" = "European", "Paraguaya" = "Latin American", "Polaca" = "European", "Portuguesa" = "European", "Rumania" = "European", "Russa" = "European", "Suiça" = "European", "Siria" = "Middle Eastern", "Uruguaya" = "Latin American")
+ML_linear$ModifiedNationality <- factor(case_when(
+  ML_linear$Nationality %in% c("German", "Austrian", "Spanish", "French", "Italian", "Polish", "Portuguese", "Romanian", "Russian", "Swiss") ~ "European",
+  ML_linear$Nationality %in% c("Argentine", "Paraguayan", "Uruguayan") ~ "Latin American",
+  ML_linear$Nationality == "Brazilian" ~ "Brazilian",
+  ML_linear$Nationality == "Syrian" ~ "Middle Eastern"
+))
 
 # Change remaining observations from Portuguese to English
 ML_linear <- ML_linear %>%
