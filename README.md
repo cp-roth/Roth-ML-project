@@ -1,6 +1,6 @@
 # Overview
 
-This is Cassia Roth's project repository for a data analysis project done with R/Quarto/GitHub. This is the master README, which supersedes all others in cases of discrepancies. 
+This is Cassia Roth's project repository for the paper `Infant Birth Weight in Brazil: A Cross-Sectional Historical Approach` done with R/Quarto/GitHub. This is the master README, which supersedes all others in cases of discrepancies. 
 
 If reproducing this analysis, please run code in the following order. `.Qmd` files are the master files.
 
@@ -26,4 +26,5 @@ Old `.R` documents with non-updated code are available in the `old-code` folder.
 
 You can read about keeping track of projects with `renv`
 [here](https://rstudio.github.io/renv/articles/renv.html).
+
 Whenever you install new packages or update old packages, please run `renv::snapshot()` to update the `renv.lock` file, which is a list of packages and versions that the package uses. When you open the R project on a new computer, you can run `renv::restore()` to reinstall all the packages that you recorded in the `renv.lock` file.

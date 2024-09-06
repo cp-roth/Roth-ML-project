@@ -7,14 +7,14 @@ format:
     toc: false
     number-sections: true
     highlight-style: github
-    bibliography: ../../assets/Mada_Bib.bib
-    csl: ../../assets/vancouver.csl
+    bibliography: ../../../assets/Mada_Bib.bib
+    csl: ../../../assets/vancouver.csl
     suppress-bibliography: false
 ---
 # Supplemental Materials
 
 ```{r, echo=FALSE, message=FALSE}
-#load packages
+# Load packages
 library(tidyverse) #for data processing/cleaning
 library(skimr) #for nice visualization of data 
 library(here) #to set paths
@@ -22,6 +22,7 @@ library(renv) #for package management
 library(gtsummary) #for summary tables
 library(flextable) #for nice tables
 ```
+
 ## Schematic of workflow
 
 If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalyis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder. This is not updated since 15 August 2024.
@@ -36,13 +37,27 @@ In this paper, I analyze a unique sample of 2845 recorded clinical visits to Mat
 
 The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013].
 
-In the initial months of publication, the reports included more complete information, including labor time or detailed descriptions of surgical procedures. Over time, clinical notes became streamlined. When physicians intervened in birth, the notes included the type of intervention, the indication, and the obstetrician. For more information on this as a source, see my other publications [@roth2020; @roth2020a].
+In the initial months of publication, the reports included more complete information, including labor time or detailed descriptions of surgical procedures. Over time, clinical notes became streamlined. When physicians intervened in birth, the notes included the type of intervention, the indication, and the obstetrician. Ohter publications have more detailed information on this source [@roth2020; @roth2020a]. Because most clinical notes were short – only those that described surgical births such as cesarean sections included details – they do not show if racist thought affected how physicians, all male and mostly White, practiced medicine [@roth2021]. Although the notes show no direct evidence of racist medical practice, the hospital space was one of gender and racial hierarchy – not separate from Brazilian society but its microcosm.
 
-The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca de Biomedicina-A, Universidade Estadual do Rio de Janeiro (BBA-UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions. I then converted this into a .csv file for upload into R.
+The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca CB/A-Biomédica A, Universidade Estadual do Rio de Janeiro (UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions. I then converted this into a .csv file for upload into R.
 
 ## Study Measures
 
 There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex. 
+
+## Introductory Information
+
+Please note the excluded information from the manuscript draft.
+
+Fetal programming: Warrington et al [@warrington2019] argue that genetic effects and not intrauterine programming are associated with later life high blood pressure. Maruyama and Heinesen [@maruyama2020] have found that lower birth weight is associated with both infant mortality and other health issues in the neonatal period, but its association with long-term health issues declines over time.
+
+Racist policy and birth weight: Differences in birth weight and childhood growth patterns among differently racialized groups in South Africa since the end of Apartheid also show a gap between White and Black and "colored" children that starts at birth and increases over time even as all children have gotten larger [@cameron2003].
+
+Slave population size: Brazil imported over five million enslaved Africans during the nearly four centuries of the existence of chattel slavery [@slavevoyagesconsortium2021], compared to around 300,000 for the United States [@slavevoyagesconsortium2021]. Mortality rates that outstripped fertility rates in Brazil, in addition to higher rates of individual manumission -- the freeing of an enslaved person, can help explain Brazil reliance on the transatlantic slave trade in comparison with the United States, where endogenous growth among the enslaved population occurred by the early nineteenth century [@hacker2020].
+
+Growth rates during pregnancy: But other health problems related to maternal undernutrition during pregnancy depend on gestational period. Research on the Dutch famine during World War II has shown that the adult health problems of infants born to mothers who were pregnant during the famine depended on the gestational period during which maternal undernutrition occurred [@roseboom2006; @painter2005].
+
+Rounding error: Any systematic bias in any direction for any group of infants would have been at the hospital level since multiple physicians and medical students weighed babies over the five-year period.
 
 ### Full Summary Table
 
@@ -86,7 +101,7 @@ Figure 3 visualizes the relationship between infant weight and length. Unsurpris
 knitr::include_graphics(here("results","figures","length_weight.png"))
 ```
 
-Finally, Figure 4 visualizes the relationship of birth weight and length, stratified by sex since male infants are usually slightly heavier and longer than females [@crawford1987, @marsal1996].
+Figure 4 visualizes the relationship of birth weight and length, stratified by sex since male infants are usually slightly heavier and longer than females [@crawford1987, @marsal1996].
 
 ```{r}
 #| label: fig-schematic-4
@@ -94,6 +109,16 @@ Finally, Figure 4 visualizes the relationship of birth weight and length, strati
 #| echo: FALSE
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
+
+Finally, I calculated the sex ratio at birth (SRaB).
+
+The SRaB is:
+
+$$SRaB = \frac{M}{F} \times 100$$
+
+where the total number of live male births (M) is divided by 100 live female births (F) in a given period.
+
+The sex ratio was 1.2: there were 120 male live births per 100 female live births. This is much higher than the current range of between 103 and 107 male births per 100 female births [@ritchie2024]. Historically, a skewed sex ratio suggests that preferential infanticide or abortion was occurring -- parents were more likely to terminate a pregnancy or kill an infant if it was female. Contrary to popular belief, this practice occurred in both Asian and European countries, although no evidence of it exists for the Americas [@hanlon2016]. However, this explanation does not hold for a maternity clinic in which women were seeking care to deliver their infants. The skewed sex ratio deserves further study.
 
 ## Models
 
@@ -166,7 +191,7 @@ flex_table <- as_flex_table(table5)
 flex_table
 ```
 
-Model 5 demonstrates that women of African-descent had higher odds of giving birth to infants with lower birth weight than Euro-descended women (OR 1.43, 95% CI 1.07, 1.95, p-value 0.019).
+Model 5 demonstrates that women of African-descent had higher odds of giving birth to infants with lower birth weight than Euro-descended women (OR 1.45 [95% CI 1.07, 1.96, p-value = 0.016).
 
 The second model is also a simple logistic regression, this time using `Color` as the predictor variable (Black, mixed race, and White).
 
@@ -179,7 +204,7 @@ flex_table <- as_flex_table(table6)
 flex_table
 ```
 
-When using the hospital records' original skin color categories, mixed-race women had higher odds of giving birth to infants of lower birth weight (OR 1.64, 95% CI	1.17, 2.30, p-value 0.004), but results for the infants of Black women were not significant (OR 1.23, 95% CI 0.85, 1.77, p-value 0.3).
+When using the hospital records' original skin color categories, mixed-race women had higher odds of giving birth to infants of lower birth weight (OR 1.64 [95% CI	1.17, 2.30], p-value = 0.004), but results for the infants of Black women were not significant at the alpha 0.05 level (OR 1.25 [95% CI 0.87, 1.79], p-value = 0.2).
 
 Then, I ran two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates. The results are below.
 
@@ -246,4 +271,3 @@ ML_cv4_metrics
 The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
 
 # Appendix
-Immigrant low birth weight [@clay2023]

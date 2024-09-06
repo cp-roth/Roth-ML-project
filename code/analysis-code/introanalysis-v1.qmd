@@ -29,14 +29,16 @@ rm(list=ls()) #clear the environment
 Load the data
 
 ```{r}
-#Path to linear data. Note the use of the here() package and not absolute paths
+# Path to linear data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_linear.rds")
-#load data
+
+# Load data
 ML_linear <- readRDS(data_location)
 
-#Path to summary data. Note the use of the here() package and not absolute paths
+# Path to summary data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_summary.rds")
-#load data
+
+# Load data
 ML_summary <- readRDS(data_location)
 ```
 
@@ -48,16 +50,16 @@ First, I will see how many infants were LBW or NBW for each maternal descendant 
 # See LBW and NBW with true denominator
 LBW_percentage <- ML_summary %>%
   filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>% # Remove NAs from both variables
-
 group_by(ModifiedColor) %>% # Group by ModifiedColor
-# Calculate the percentage for each group
+
+  # Calculate the percentage for each group
 summarise(
   total_count = n(),
   lbw_count = sum(BirthweightCategory == "LBW"),
   lbw_percentage = (lbw_count / total_count) * 100
   )
 
-# Print the result
+# Print result
 print(LBW_percentage)
 
 # Perform difference in means test (t-test) for birth weight category
@@ -228,7 +230,7 @@ table_fit2 <-
   add_glance_table(include = c(r.squared, nobs)) %>%
   modify_column_unhide(columns = c(statistic, std.error))
 
-#Print table
+# Print table
 table_fit2
 
 # Save regression output into table
@@ -268,7 +270,7 @@ In the first and third models, there appears to be an association between matern
 
 For all three models, the r-squared is small `r round(r_squared_values$model1, 3)`, `r round(r_squared_values$model2, 3)`, and `r round(r_squared_values$model3, 3)`, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
 
-I am not trying to explain which general factors are trying to explain birth weight. Rather, I'm trying to understand if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro, Brazil. For example, the gestational age probably explains much of the variation in the model, yet this variable was only included in very few observations in the published clinic data from which I created this dataset.
+I am not trying to pinpoint which general factors are trying to explain birth weight. Rather, I'm trying to understand if maternal skin color is associated with lower infant birth weight during this specific time period in Rio de Janeiro, Brazil. For example, the gestational age probably explains much of the variation in the model, yet this variable was only included in very few observations in the published clinic data from which I created this dataset.
 
 Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color, however, is also probably associated with premature birth, which is correlated to infant birth weight.
 
@@ -308,7 +310,7 @@ table_fit4
 saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 ```
 
-These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some subsample modeling to understand this issue. We will create a `Brazilian` (yes, no) variable, drop all non-Brazilians from the study, and run the original regression with the covariates.
+These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some sub-sample modeling to understand this issue. We will create a `Brazilian` (yes, no) variable, drop all non-Brazilians from the study, and run the original regression with the covariates.
 
 ```{r}
 # Create dummy variables for new category of Brazilian or not
@@ -357,7 +359,7 @@ table_fit5
 saveRDS(table_fit5, file = here::here("results", "tables", "table_fit5.rds"))
 ```
 
-Here, non-Brazilians had babies on average weighing 100 grams more than Brazilians (p-value 0.001). So I will now run a regression of only Brazilian women using `Afro-Descent` and `Euro-descent` categories.
+Here, non-Brazilians had babies on average weighing 100 grams more than Brazilians (p-value = 0.001). So I will now run a regression of only Brazilian women using `Afro-Descent` and `Euro-descent` categories.
 
 ```{r}
 # Filter data based on desired conditions
@@ -881,6 +883,8 @@ saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
 ```
 
 # Predominant and residual distributions
+
+Here, I have created a plot of the distribution of birth weights at Laranjeiras, following Wilcox's discussion of the residual and predominant birth weight distributions [@wilcox2001].
 
 ```{r}
 # Calculate the mean and standard deviation of the predominant distribution

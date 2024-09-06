@@ -1,13 +1,11 @@
 This folder contains code for analysis on the processed/cleaned data.
 
-The code produces a few tables and figures, which are saved in the `results` folder. All final files will have a _final in the name
+The code produces tables and figures, which are saved in the `results` folder. All final files will have a _final in the name
 
 There are two septs of analysis code.
 
-`Introanalysis-v1`
+`introanalysis-v1`
 1. There is a Quarto file which contains exactly the same code as the R script. `introanalyis-v1.qmd`
 
-`Fullanalysis-v1`
+`fullanalysis-v1`
 1. There is a Quarto file which contains exactly the same code as the R script. `fullanalyis-v1.qmd`
-
-The quarto files are the master files.

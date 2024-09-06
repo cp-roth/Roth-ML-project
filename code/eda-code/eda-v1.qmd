@@ -25,13 +25,13 @@ hrbrthemes::import_roboto_condensed() #import needed fonts for hrbrthemes
 rm(list=ls()) #clear the environment
 ```
 
-Load the data. First we will load the ML_summary set for summary statistics.
+Load the data. First, I will load the ML_summary set for summary statistics.
 
 ```{r}
-#Path to summary data. Note the use of the here() package and not absolute paths
+# Path to summary data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_summary.rds")
 
-#load data
+# Load data
 ML_summary <- readRDS(data_location)
 ```
 
@@ -44,16 +44,16 @@ Showing a bit of code to produce and save a summary table.
 summary = skimr::skim(ML_summary)
 print(summary)
 
-# save to file
+# Save to file
 summarytable_file = here("results", "tables", "summarytable.rds")
 saveRDS(summary, file = summarytable_file)
 ```
 
-We are saving the results to the `results` folder. All final table/figures will have `_final` in the name. This is to make sure we don't overwrite anything we might want to keep. All supplemental table/figures will have a `suppl` in the name.
+I am the results to the `results` folder. All final table/figures will have `_final` in the name. This is to make sure we don't overwrite anything we might want to keep. All supplemental table/figures will have a `suppl` in the name.
 
 # Data exploration through figures
 
-Histogram plots for the continuous outcomes. 
+Histogram plots for continuous outcomes. 
 
 I will explore maternal age first.
 
@@ -89,6 +89,7 @@ figure_file = here("results","figures", "weight_distribution.png")
 ggsave(filename = figure_file, plot=weight_plot, bg="white") #background is white
 ```
 Now infant birth length.
+
 ```{r}
 # Create histogram plot
 length_plot <- ML_summary %>% filter(!is.na(Lengthcentimeters)) %>% #filter out NAs
@@ -105,7 +106,7 @@ ggsave(filename = figure_file, plot=length_plot, bg="white") #background is whit
 ```
 It appears there are some outliers, so I will need to go back and look at the data.
 
-For now, let's look at height as function of weight. We can see that length is positively correlated with weight, which is unsurprising.
+For now, let's look at height as function of weight. Length is positively correlated with weight, which is unsurprising.
 
 ```{r}
 #Create plot
@@ -133,13 +134,13 @@ ggsave(filename = figure_file, plot=length_weight_sex, bg="white") #background i
 ```
 # Feature Engineering
 
-Before we create a summary table, lets clean up our variables for easier analysis. First, we need to create dummy variables for categories. We will start with the `Color` variable, which is maternal skin color. We will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and mixed-Race patients into one category, `Afro-Descent`, and all White patients into a `Euro-Descent` category. 
+Before we create a summary table, I will engage in another round of data cleaning for easier analysis. First, I need to create dummy variables for categories. I will start with the `Color` variable, which is maternal skin color. I will also create dummy variables for the `Status` and `Nationality` variables for ease of interpretation. The original data categorized maternal racial categories as White (*branca*), the reference group here; mixed-race (*parda*); and Black (*preta*). I maintained this categorization. However, I also created a new dummy variable for skin color, combining Black and mixed-race patients into one category, `Afro-Descent`, and all White patients into a `Euro-Descent` category. 
 
-For the `Status` variable, the Supplementary Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the summary table for both the final paper and the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data if the physicians were categorizing the women before the delivery or after. With this, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
+For the `Status` variable, the Supplementary Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the summary table for both the final paper and the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data if the physicians were categorizing the women before the delivery or after. Thus, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
 
 For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta in Portuguese meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
 
-For the `Nationality` variable, we will combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there are very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
+For the `Nationality` variable, I combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there were very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
 
 Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose. For maternal skin color, these variables are `Weightblack`, `Weightmixed`, and `Weightwhite`. These are categorical variables (yes/no). From these, I create new continuous dummy variables for birth weight according to maternal skin color: `WeightgramsBlack`, `WeightgramsMixed`, and `WeightgramsWhite`. I do the same process for fetal sex: `Weightfemale`, `Weightmale`, `WeightgramsFemale`, and `WeightgramsMale`.
 
@@ -194,7 +195,7 @@ str(ML_summary[, c("Weightblack", "Weightmixed", "Weightwhite", "Weightfemale", 
 # View the updated dataframe
 print(head(ML_summary))
 ```
-I will now change the observations from Portuguese to English for the remaining observations to clean up things for the summary table.
+I will now change the observations from Portuguese to English for the remaining observations to clean up things for the summary table. In the future, I should perform this step in the processing script.
 
 ```{r}
 # Change rest of observations from Portuguese to English
@@ -208,7 +209,7 @@ ML_summary <- ML_summary %>%
     Status = recode_factor(Status, "Multigesta" = "Multigravida", "Trigesta" = "Trigravida", "Secundigesta" = "Secundigravida", "Secundipara" = "Secundiparous", "Multipara" = "Multiparous", "Primigesta" = "Primigravida", "Nulipara" = "Nulliparous", "Primipara" = "Primiparous")
     )
 
-#Summarize missing data using dplyr
+# Summarize missing data using dplyr
 missing_data_summary <- ML_summary %>% dplyr::summarise_all(list(~sum(is.na(.))))
 missing_data_summary
 
@@ -216,7 +217,7 @@ missing_data_summary
 saveRDS(ML_summary, file = here("data", "processed-data", "ML_summary.rds"))
 ```
 
-`Gtsummary` is a very easy way to create summary statistics (Table 1). In the note section at the end of this document, I also include the code I worked on to create the tables manually to show my learning process.
+`Gtsummary` is a very easy way to create summary statistics (Table 1). For previous code I worked on in relation to summary stats, see the `edacode-extra.R` file.
 
 ```{r, output="html"}
 # Create gtsummary table full table for supplemental analysis
@@ -300,13 +301,13 @@ table1
 saveRDS(table1, file = here::here("results", "tables", "table1_final.rds"))
 ```
 
-For maternal race, we have a sample size of n = 2695. The majority of the sample is White (branca), with 42.45% of the sample. Mixed-race (parda) is 29.2% of the sample, and Black (preta) is 28.32% of the sample. Let's now compare White patients to all patients of color by combining Black and mixed-race categories. I will create a dummy variable for color, called modified_color with two categories: Afro-Descent (comprising parda and preta) and Euro-Descent (comprising branca).
+For maternal skin color, we have a sample size of n = 2695. The majority of the sample is White (*branca*), with 42.45% of the sample. Mixed-race (*parda*) is 29.2% of the sample, and Black (*preta*) is 28.32% of the sample. I'll now compare White patients to all patients of color by combining Black and mixed-race categories. I will create a dummy variable for color, called `ModifiedColor` with two categories: Afro-Descent (comprising *parda* and *preta*) and Euro-Descent (comprising *branca*).
 
-We can see that of the clinic patients, 1551 (57.6%) were of African descent (defined as preta or parda) and 1144 (42.4%) were of European descent (branca).
+Of the clinic patients, 1551 (57.6%) were of African descent (defined as *preta* or *parda*) and 1144 (42.4%) were of European descent (branca).
 
-We can see that of a sample size of n = 2761, 88% of outcomes were natural deliveries. 
+Of a sample size of n = 2761, 88% of outcomes were natural deliveries. 
 
-Now let's take abortion out of this sample size to just look at labor and delivery outcomes.
+I'll now remove abortion from the dataset to look solely at labor and delivery outcomes.
 
 ```{r}
 # Calculate frequencies of birth category without abortion
@@ -318,11 +319,11 @@ birth_freq2 <- ML_summary %>%
   mutate(Percent = n/sum(n)*100) # Calculate percentage of each category
 print(birth_freq2)
 ```
-We can see that of a new sample size of n = 2672, 91% of outcomes were natural deliveries.
 
-Now let's look at maternal outcomes.
+Of the new sample of n = 2672, 91% of outcomes were natural deliveries.
 
-Now let's look at some common reproductive and perinatal health statistics: maternal mortality ratio (MMR), stillbirth rate (SBR), and sex ratio at birth (SRaB). The equation is MMR = MD/LB * 10,000. We can also look at stillbirth rate. The equation is SBR = SB/LB * 1000.
+Maternal outcomes are also important to understand, including the following reproductive and perinatal health statistics: maternal mortality ratio (MMR), stillbirth rate (SBR), and sex ratio at birth (SRaB). For MMR, the equation is MMR = MD/LB * 10,000. For SBR, the equation is SBR = SB/LB * 1000. For SRaB, the equation is SRaB = (M/F) * 100.
+
 ```{r}
 #MMR Maternal mortality ratio
 maternal_deaths <-23
@@ -346,9 +347,10 @@ sex_ratio <- ML_summary %>%
   mutate(SexRatio = M / F) * 100
 sex_ratio
 ```
-The MMR is 94.1% in this specific clinic. The SBR is 82.9% in this specific clinic. The sex ratio is 1.2 or there were 120 male live births per 100 female live births at this specific clinic. This is much higher than the current range of between 103 and 107 male births per 100 female births.
 
-Now we will create the summary table for mean birth weights across time and place.
+The MMR is 94.1% in this specific hospital. The SBR is 82.9% in this specific hospital. The sex ratio is 1.2 or there were 120 male live births per 100 female live births at this hospital. This is much higher than the current range of between 103 and 107 male births per 100 female births.
+
+Now I will create the summary table for mean birth weights across time and place.
 
 ```{r}
 #Path to summary data. Note the use of the here() package and not absolute paths
@@ -389,9 +391,10 @@ Because I am working on a different subset of the data, `ML_linear` for the stat
 Load the data. 
 
 ```{r}
-#Path to summary data. Note the use of the here() package and not absolute paths
+# Path to summary data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_linear.rds")
-#load data
+
+# Load data
 ML_linear <- readRDS(data_location)
 ```
 
@@ -399,8 +402,7 @@ Now I will create dummy variables.
 
 ```{r}
 # Create dummy variables
-
-#Check pre-structure
+# Check pre-structure
 str(ML_linear)
 
 # Create dummy variables for color and change to English using recode factor from dplyr
@@ -433,5 +435,3 @@ str(ML_linear)
 saveRDS(ML_linear, file = here("data", "processed-data", "ML_linear.rds"))
 ```
 # Notes
-
-For the previous code I worked on in relation to summary stats, see the `edacode-extra.R` file.

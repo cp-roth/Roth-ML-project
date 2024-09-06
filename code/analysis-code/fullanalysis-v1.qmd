@@ -27,17 +27,17 @@ rm(list=ls()) #clear the environment
 Load the data
 
 ```{r, message=FALSE,  warning=FALSE}
-#Path to summary data. Note the use of the here() package and not absolute paths
+# Path to summary data. Note the use of the here() package and not absolute paths
 data_location <- here::here("data","processed-data","ML_linear.rds")
-#load data
+
+# Load data
 ML_linear <- readRDS(data_location)
 str(ML_linear)
 ```
 
 # Preparation for Model Assessment
 
-First, I will create train and test data (75/25) to be able to evaluate the performance of our models. I will also set the seed to ensure reproducibility. For each model, I perform the following steps: 1) run the model on the train data; 2) perform cross-validation on the train data; 3) evaluate the model on the test data. The model outputs included in the final manuscript are on all the data.
-
+First, I will create train and test data (75/25) to be able to evaluate the performance of the models. I will also set the seed to ensure reproducibility. For each model, I perform the following steps: 1) run the model on the train data; 2) perform cross-validation on the train data; 3) evaluate the model on the test data. The model outputs included in the final manuscript are on all the data.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Fix the random numbers by setting the seed 
@@ -60,12 +60,16 @@ The first simple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \epsilon$$
 
-whereas $\alpha$ is the average birth weight, $\beta_1$ is the group deviation from the average birth weight, `BW` is birth weight in grams, `MA` is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. 
+whereas `BW` is birth weight in grams, $\alpha$ is the average birth weight, $\beta_1$ is the group deviation from the average birth weight, `MA` is maternal ancestry (Euro-descent, Afro-descent), and $\epsilon$ is the error term. 
 
 Full results are displayed in Table 2. 
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 1: Final model for paper using all data
+# Create a list to store R-squared values
+r2_1 <- list()
+rmse_1 <- list()
+
 # Model using recipes and workflows
 # Define recipe for model
 ML_recipe1 <- recipe(Weightgrams ~ ModifiedColor, data = ML_linear) %>% 
@@ -93,7 +97,7 @@ glance(ML_fit1) # Model-level statistics
 ML_fit1_pred <- predict(ML_fit1, new_data = ML_linear %>% select(-Weightgrams))
 ML_fit1_pred
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit1_pred <- bind_cols(ML_fit1_pred, ML_linear %>% select(Weightgrams))
 ML_fit1_pred
 
@@ -124,18 +128,38 @@ table_model1 <-
   modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
 table_model1
 
-#Print table
+# Print table
 table_model1
+
+# Extract RMSE and R2 for in-line text
+r2_1$model1 <- metrics_fit1[metrics_fit1$.metric == "rsq", ".estimate"]
+rmse_1$model1 <- metrics_fit1[metrics_fit1$.metric == "rmse", ".estimate"]
 
 # Save regression output into table
 saveRDS(table_model1, file = here::here("results", "tables", "table_model1_final.rds"))
+
+# Create a gtsummary table directly from the model with CIs
+table_model1_CI <-
+  tbl_regression(ML_fit1, exponentiate = FALSE, intercept = TRUE) %>% 
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
+  modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
+table_model1_CI
 ```
+
+The adjusted R-squared is `r round(r2_1$model1, 3)`, and the RMSE is `r round(rmse_1$model1)`. 
+
 ## Model 1 Performance
 
-First we will evaluate the model on our training data. 
+First, I will evaluate the model on the training data. 
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Training model 1
+# Create a list to store R-squared and RMSE values
+r2_1_train <- list()
+rmse_1_train <- list()
+
 # Model using recipes and workflows
 # Define recipe for model
 ML_recipe1_train <- recipe(Weightgrams ~ ModifiedColor, data = train_data) %>% 
@@ -163,7 +187,7 @@ glance(ML_fit1_train) # Model-level statistics
 ML_fit1_pred_train <- predict(ML_fit1_train, new_data = train_data %>% select(-Weightgrams))
 ML_fit1_pred_train
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit1_pred_train <- bind_cols(ML_fit1_pred_train, train_data %>% select(Weightgrams))
 ML_fit1_pred_train
 
@@ -194,12 +218,17 @@ table_model1_train <-
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
 table_model1_train
 
+# Extract R-squared and RMSE values for in-line text (because data frame with columns not list)
+r2_1_train$model1_train <- metrics_fit1_train[metrics_fit1_train$.metric == "rsq", ".estimate"]
+rmse_1_train$model1_train <- metrics_fit1_train[metrics_fit1_train$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model1_train, file = here::here("results", "tables", "table_model1_train.rds"))
 ```
-Our results here are not that different from the model run on all the data. Our adjusted R-squared is 0.01, the same as the full model. The RMSE is 488, which is slightly lower than the full model (494), which shows better performance.
 
-Now let's perform cross-validation on the training data.
+The results are similar to those from the model run on all the data. The adjusted R-squared is `r round(r2_1_train$model1_train, 3)`, the same as the full model. The RMSE is `r round(rmse_1_train$model1_train)`, which is slightly lower than the full model, `r round(rmse_1$model1)`, which shows better performance.
+
+Now, I will perform cross-validation on the training data.
 
 ```{r, message=FALSE,  warning=FALSE}
 # CV model 1
@@ -209,6 +238,10 @@ set.seed(rngseed)
 # Create 10-fold cross-validation
 folds <- vfold_cv(train_data, v = 10)
 folds
+
+# Create a list to store R-squared and RMSE values
+r2_1_cv <- list()
+rmse_1_cv <- list()
 
 # Define recipe for model
 ML_recipe1_cv <- recipe(Weightgrams ~ ModifiedColor, data = train_data) %>% 
@@ -235,15 +268,30 @@ ML_cv1_metrics <- collect_metrics(ML_wf1_cv_rs)
 ML_cv1_metrics <- ML_cv1_metrics[ML_cv1_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv1_metrics) %in% ".config")]
 ML_cv1_metrics
 
+# Extract R-squared and RMSE values for in-line text
+# For R-squared
+r2_1_cv$model1_cv <- ML_cv1_metrics %>%
+  filter(.metric == "rsq") %>%
+  pull(mean)
+
+# For RMSE
+rmse_1_cv$model1_cv <- ML_cv1_metrics %>%
+  filter(.metric == "rmse") %>%
+  pull(mean)
+
 # Save regression output into table
 saveRDS(ML_cv1_metrics, file = here::here("results", "tables", "ML_cv1_metrics.rds"))
 ```
-Performing cross-validation results in an RMSE that is the same as our training model (488), lower than our full model. The r-squared (0.017) is also higher than our training and full models (0.01), demonstrating better model performance.
+Performing cross-validation results in an RMSE that is the same as the training model `r round(rmse_1_cv$model1_cv)`, lower than the full model. The r-squared `r round(r2_1_cv$model1_cv, 3)` is also higher than the training `r round(r2_1_train$model1_train, 3)` and full models `r round(r2_1$model1, 3)`, demonstrating better model performance.
 
-Finally, let's run the model on our test data.
+Finally, I'll run the model on the test data.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Testing model 1
+# Create a list to store R-squared and RMSE values
+r2_1_test <- list()
+rmse_1_test <- list()
+
 # Model using recipes and workflows
 # Define recipe for model
 ML_recipe1_test <- recipe(Weightgrams ~ ModifiedColor, data = test_data) %>% 
@@ -271,7 +319,7 @@ glance(ML_fit1_test) # Model-level statistics
 ML_fit1_pred_test <- predict(ML_fit1_test, new_data = test_data %>% select(-Weightgrams))
 ML_fit1_pred_test
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit1_pred_test <- bind_cols(ML_fit1_pred_test, test_data %>% select(Weightgrams))
 ML_fit1_pred_test
 
@@ -302,11 +350,15 @@ table_model1_test <-
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
 table_model1_test
 
+# Extract R-squared and RMSE values for in-line text (because data frame with columns not list)
+r2_1_test$model1_test<- metrics_fit1_test[metrics_fit1_test$.metric == "rsq", ".estimate"]
+rmse_1_test$model1_test <- metrics_fit1_test[metrics_fit1_test$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model1_test, file = here::here("results", "tables", "table_model1_test.rds"))
 ```
 
-When running the model on our testing dataset, our results remain significant at the 0.05 level. The RMSE is 508 and the r-squared is 0.008. This shows a slightly worse fit than our training results. 
+When running the model on the testing dataset, the results remain significant at the 0.05 level. The RMSE is `r round(rmse_1_test$model1_test)` and the r-squared is `r round(r2_1_test$model1_test, 3)`. This shows a slightly worse fit than the training results. 
 
 # Model 2
 
@@ -314,10 +366,14 @@ The second multiple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$
 
-whereas $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `BW` is birth weight in grams, `MA` is maternal ancestry (Euro-descent, Afro-descent), `Gest` is gestational status (nulliparous or multiparous), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
+whereas `BW` is birth weight in grams, $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `MA` is maternal ancestry (Euro-descent, Afro-descent), `Gest` is gestational status (nulliparous or multiparous), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 2: Final model for paper using all data
+# Create a list to store R-squared values
+r2_2 <- list()
+rmse_2 <- list()
+
 # Using recipes and workflows
 # Define recipe for model
 ML_recipe2 <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>% 
@@ -347,7 +403,7 @@ glance(ML_fit2) # Model-level statistics
 ML_fit2_pred <- predict(ML_fit2, new_data = ML_linear %>% select(-Weightgrams))
 ML_fit2_pred
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit2_pred <- bind_cols(ML_fit2_pred, ML_linear %>% select(Weightgrams))
 ML_fit2_pred
 
@@ -377,17 +433,34 @@ table_model2 <- tbl_regression(ML_fit2, exponentiate = FALSE, intercept = TRUE) 
   modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
 table_model2
 
+# Extract RMSE and R2 for in-line text
+r2_2$model2 <- metrics_fit2[metrics_fit2$.metric == "rsq", ".estimate"]
+rmse_2$model2 <- metrics_fit2[metrics_fit2$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model2, file = here::here("results", "tables", "table_model2_final.rds"))
+
+# Create a gtsummary table directly from the model with CIs
+table_model2_CI <- tbl_regression(ML_fit2, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
+  modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
+table_model2_CI
 ```
-Our RMSE is 490 and our r-squared is 0.026.
+
+The RMSE is `r round(rmse_2$model2)` and the r-squared is `r round(r2_2$model2, 3)`.
 
 ## Model 2 Performance
 
-Now let's run the model on our training data. 
+Now, I'll run the model on the training data. 
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Training model 2
+# Create a list to store R-squared and RMSE values
+r2_2_train <- list()
+rmse_2_train <- list()
+
 # Using recipes and workflows
 # Define recipe for model
 ML_recipe2_train <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>% 
@@ -417,7 +490,7 @@ glance(ML_fit2_train) # Model-level statistics
 ML_fit2_pred_train <- predict(ML_fit2_train, new_data = train_data %>% select(-Weightgrams))
 ML_fit2_pred_train
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit2_pred_train <- bind_cols(ML_fit2_pred_train, train_data %>% select(Weightgrams))
 ML_fit2_pred_train
 
@@ -448,12 +521,16 @@ table_model2_train <- pull_workflow_fit(ML_fit2_train) %>%
   bold_p()
 table_model2_train
 
+# Extract RMSE and R2 for in-line text
+r2_2_train$model2_train <- metrics_fit2_train[metrics_fit2_train$.metric == "rsq", ".estimate"]
+rmse_2_train$model2_train <- metrics_fit2_train[metrics_fit2_train$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model2_train, file = here::here("results", "tables", "table_model2_train.rds"))
 ```
-Our RMSE is 483 and our r-squared is 0.03, a slightly better performance than the full model.
+The RMSE is `r round(rmse_2_train$model2_train)` and the r-squared is `r round(r2_2_train$model2_train, 3)` a slightly better performance than the full model.
 
-Now let's run cross-validation.
+Now I'll run cross-validation.
 
 ```{r, message=FALSE,  warning=FALSE}
 # CV model 2
@@ -463,6 +540,10 @@ set.seed(rngseed)
 # Create 10-fold cross-validation
 folds <- vfold_cv(train_data, v = 10)
 folds
+
+# Create a list to store R-squared and RMSE values
+r2_2_cv <- list()
+rmse_2_cv <- list()
 
 # Define recipe for model
 ML_recipe2_cv <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>% 
@@ -490,15 +571,30 @@ ML_cv2_metrics <- collect_metrics(ML_wf2_cv_rs)
 ML_cv2_metrics <- ML_cv2_metrics[ML_cv2_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv2_metrics) %in% ".config")]
 ML_cv2_metrics
 
+# Extract R-squared and RMSE values for in-line text
+# For R-squared
+r2_2_cv$model2_cv <- ML_cv2_metrics %>%
+  filter(.metric == "rsq") %>%
+  pull(mean)
+
+# For RMSE
+rmse_2_cv$model2_cv <- ML_cv2_metrics %>%
+  filter(.metric == "rmse") %>%
+  pull(mean)
+
 # Save regression output into table
 saveRDS(ML_cv2_metrics, file = here::here("results", "tables", "ML_cv2_metrics.rds"))
 ```
-Here, our RMSE is 483 and our r-squared is 0.026, the same as the training model.
+Here, the RMSE is `r round(rmse_2_cv$model2_cv)` and the r-squared is `r round(r2_2_cv$model2_cv, 3)`, the same as the training model `r round(rmse_2_train$model2_train)`, `r round(r2_2_train$model2_train, 3)`.
 
-Finally, let's run our model on the test data.
+Finally, I'll run the model on the test data.
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Testing model 2
+# Create a list to store R-squared and RMSE values
+r2_2_test <- list()
+rmse_2_test <- list()
+
 # Using recipes and workflows
 # Define recipe for model
 ML_recipe2_test <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = test_data) %>% 
@@ -528,7 +624,7 @@ glance(ML_fit2_test) # Model-level statistics
 ML_fit2_pred_test <- predict(ML_fit2_test, new_data = test_data %>% select(-Weightgrams))
 ML_fit2_pred_test
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit2_pred_test <- bind_cols(ML_fit2_pred_test, test_data %>% select(Weightgrams))
 ML_fit2_pred_test
 
@@ -559,14 +655,19 @@ table_model2_test <- pull_workflow_fit(ML_fit2_test) %>%
   bold_p()
 table_model2_test
 
+# Extract R-squared and RMSE values for in-line text (because data frame with columns not list)
+r2_2_test$model2_test<- metrics_fit2_test[metrics_fit2_test$.metric == "rsq", ".estimate"]
+rmse_2_test$model2_test <- metrics_fit2_test[metrics_fit2_test$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model2_test, file = here::here("results", "tables", "table_model2_test.rds"))
 ```
-Running the model on our test data, we see no significant results at any alpha level.
+
+Running the model on the test data, there are no significant results at any alpha level.
 
 ## Models 1 and 2 Sub-Samples
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 1: Sub-sample simple model (ML_lm1_sub)
 # Create a list to store R-squared values
 r_squared_values_sub <- list()
@@ -601,7 +702,7 @@ ML_lm1_sub_table
 # Save regression output into table
 saveRDS(ML_lm1_sub_table, file = here::here("results", "tables", "ML_lm1_sub_table.rds"))
 ```
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 2: Sub-sample multivariate model (ML_lm2_sub)
 # Filter data based on desired conditions
 filtered_data <- ML_linear %>%
@@ -636,7 +737,7 @@ saveRDS(ML_lm2_sub_table, file = here::here("results", "tables", "ML_lm2_sub_tab
 
 # Merging Model 1 and 2 and sub-sample 1 and 2 into Table
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Combine the four tables using tbl_merge
 table3 <- tbl_merge(
   list(table_model1, ML_lm1_sub_table, table_model2, ML_lm2_sub_table),
@@ -655,8 +756,12 @@ The second two models are also simple and multiple linear regressions with outco
 $$\text{BW} = \alpha + \beta_1 \text{MC} + \epsilon$$
 whereas $\alpha$ is the average birth weight, $\beta_1$ is the group deviation from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), and $\epsilon$ is the error term. Results are displayed in Table 4.
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 3: Final model for paper using all data
+# Create a list to store R-squared and RMSE values
+r2_3 <- list()
+rmse_3 <- list()
+
 # Using recipes and workflows
 # Simple linear model
 # Specify recipe
@@ -686,7 +791,7 @@ glance(ML_fit3) # Model-level statistics
 ML_fit3_pred <- predict(ML_fit3, new_data = ML_linear %>% select(-Weightgrams))
 ML_fit3_pred
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit3_pred <- bind_cols(ML_fit3_pred, ML_linear %>% select(Weightgrams))
 ML_fit3_pred
 
@@ -716,18 +821,34 @@ table_model3 <- tbl_regression(ML_fit3, exponentiate = FALSE, intercept = TRUE) 
   modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
 table_model3
 
+# Extract RMSE and R2 for in-line text
+r2_3$model3 <- metrics_fit3[metrics_fit3$.metric == "rsq", ".estimate"]
+rmse_3$model3 <- metrics_fit3[metrics_fit3$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model3, file = here("results", "tables", "table_model3_final.rds"))
+
+# Create a gtsummary table from model with CIs
+table_model3_CI <- tbl_regression(ML_fit3, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>%
+  add_glance_table(include = c(r.squared, nobs)) %>%
+  modify_header(statistic = "**T-Statistic**") # rename header from statistic to t-statistic
+table_model3_CI
 ```
 
-Our RMSE is 494 and our r-squared is 0.01.
+The RMSE is `r round(rmse_3$model3)` and the r-squared is `r round(r2_3$model3, 3)`.
 
 ## Model 3 Performance
 
-Let's now evaluate the model on our training data.
+Now I'll evaluate the model on our training data.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Training model 3
+# Create a list to store R-squared and RMSE values
+r2_3_train <- list()
+rmse_3_train <- list()
+
 # Using recipes and workflows
 # Specify recipe
 ML_recipe3_train <- recipe(Weightgrams ~ Color, data = train_data) %>%
@@ -754,7 +875,7 @@ glance(ML_fit3_train) # Model-level statistics
 ML_fit3_pred_train <- predict(ML_fit3_train, new_data = train_data %>% select(-Weightgrams))
 ML_fit3_pred_train
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit3_pred_train <- bind_cols(ML_fit3_pred_train, train_data %>% select(Weightgrams))
 ML_fit3_pred_train
 
@@ -783,13 +904,17 @@ table_model3_train <- tbl_regression(ML_fit3_train, exponentiate = FALSE, interc
   add_significance_stars(hide_ci = TRUE, hide_p = TRUE)
 table_model3_train
 
+# Extract RMSE and R2 for in-line text
+r2_3_train$model3_train <- metrics_fit3_train[metrics_fit3_train$.metric == "rsq", ".estimate"]
+rmse_3_train$model3_train <- metrics_fit3_train[metrics_fit3_train$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model3_train, file = here("results", "tables", "table_model3_train.rds"))
 ```
 
-Our RMSE is 489 and our r-squared is 0.01, slightly better performance than the full model. Our results are not significantly different from the full model.
+The RMSE is `r round(rmse_3_train$model3_train)` and the r-squared is `r round(r2_3_train$model3_train, 3)`, slightly better performance than the full model `r round(r2_3$model3, 3)`. The results are not significantly different from the full model.
 
-Now let's run cross-validation.
+Now I'll run cross-validation.
 
 ```{r, message=FALSE,  warning=FALSE}
 # CV model 3
@@ -799,6 +924,10 @@ set.seed(rngseed)
 # Create 10-fold cross-validation
 folds <- vfold_cv(train_data, v = 10)
 folds
+
+# Create list to store R-squared and RMSE values
+r2_3_cv <- list()
+rmse_3_cv <- list()
 
 # Define recipe for model
 ML_recipe3_cv <- recipe(Weightgrams ~ Color, data = train_data) %>%
@@ -827,15 +956,30 @@ ML_cv3_metrics <- collect_metrics(ML_wf3_cv_rs)
 ML_cv3_metrics <- ML_cv3_metrics[ML_cv3_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv3_metrics) %in% ".config")]
 ML_cv3_metrics
 
+# Extract R-squared and RMSE values for in-line text
+# For R-squared
+r2_3_cv$model3_cv <- ML_cv3_metrics %>%
+  filter(.metric == "rsq") %>%
+  pull(mean)
+
+# For RMSE
+rmse_3_cv$model3_cv <- ML_cv3_metrics %>%
+  filter(.metric == "rmse") %>%
+  pull(mean)
+
 # Save regression output into table
 saveRDS(ML_cv3_metrics, file = here::here("results", "tables", "ML_cv3_metrics.rds"))
 ```
-Using cross-validation, our RMSE is 487 and our r-squared is 0.01, a similar performance to our training model.
+Using cross-validation, the RMSE is `r round(rmse_3_cv$model3_cv)` and the r-squared is `r round(r2_3_cv$model3_cv, 3)`, similar performances to the training model `r round(rmse_3_train$model3_train)`, `r round(r2_3_train$model3_train, 3)`.
 
-Finally, let's run our model on the test data.
+Finally, I'll run the model on the test data.
 
 ```{r, message=FALSE, warning=FALSE}
 # Testing model 3
+# Create a list to store R-squared and RMSE values
+r2_3_test <- list()
+rmse_3_test <- list()
+
 # Using recipes and workflows
 # Specify recipe
 ML_recipe3_test <- recipe(Weightgrams ~ Color, data = test_data) %>%
@@ -862,7 +1006,7 @@ glance(ML_fit3_test) # Model-level statistics
 ML_fit3_pred_test <- predict(ML_fit3_test, new_data = test_data %>% select(-Weightgrams))
 ML_fit3_pred_test
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit3_pred_test <- bind_cols(ML_fit3_pred_test, test_data %>% select(Weightgrams))
 ML_fit3_pred_test
 
@@ -892,11 +1036,15 @@ table_model3_test <- tbl_regression(ML_fit3_test, exponentiate = FALSE, intercep
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
 table_model3_test
 
+# Extract R-squared and RMSE values for in-line text (because data frame with columns not list)
+r2_3_test$model3_test<- metrics_fit3_test[metrics_fit3_test$.metric == "rsq", ".estimate"]
+rmse_3_test$model3_test <- metrics_fit3_test[metrics_fit3_test$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model3_test, file = here("results", "tables", "table_model3_test.rds"))
 ```
 
-Much like in the other testing models, our results are not significant (except the intercept). Our performance is also worse (RMSE of 507 and r-squared of 0.008).
+Much like in the other testing models, the results are not significant (except the intercept). The performance is also worse (RMSE of `r round(rmse_3_test$model3_test)` and r-squared of `r round(r2_3_test$model3_test, 3)`).
 
 # Model 4
 
@@ -906,8 +1054,12 @@ $$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{N
 
 whereas $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), `Gest` is gestational status (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, and $\epsilon$ is the error term.
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Model 4: Final model for paper using all data
+# Create a list to store R-squared values
+r2_4 <- list()
+rmse_4 <- list()
+
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
@@ -938,7 +1090,7 @@ glance(ML_fit4) # Model-level statistics
 ML_fit4_pred <- predict(ML_fit4, new_data = ML_linear %>% select(-Weightgrams))
 ML_fit4_pred
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit4_pred <- bind_cols(ML_fit4_pred, ML_linear %>% select(Weightgrams))
 ML_fit4_pred
 
@@ -968,17 +1120,33 @@ table_model4 <- tbl_regression(ML_fit4, exponentiate = FALSE, intercept = TRUE) 
   modify_header(statistic = "**T-Statistic**")
 table_model4
 
+# Extract RMSE and R2 for in-line text
+r2_4$model4 <- metrics_fit4[metrics_fit4$.metric == "rsq", ".estimate"]
+rmse_4$model4 <- metrics_fit4[metrics_fit4$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model4, file = here("results", "tables", "table_model4_final.rds"))
+
+# Create a gtsummary table from model with CIs
+table_model4_CI <- tbl_regression(ML_fit4, exponentiate = FALSE, intercept = TRUE) %>%
+  modify_column_unhide(columns = c(statistic, std.error)) %>%
+  add_significance_stars(hide_ci = FALSE, hide_p = FALSE) %>% # Hide confidence intervals and p-values
+  add_glance_table(include = c(r.squared, nobs)) %>% # Add R-squared and number of observations
+  modify_header(statistic = "**T-Statistic**")
+table_model4_CI
 ```
-Our RMSE is 490 and our r-squared is 0.026.
+The RMSE is `r round(rmse_4$model4)` and the r-squared is `r round(r2_4$model4, 3)`.
 
 ## Model 4 Performance
 
-Let's now evaluate the model on our training data.
+I will now evaluate the model on the training data.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Model 4 training
+# Create list to store R-squared and RMSE values
+r2_4_train <- list()
+rmse_4_train <- list()
+
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
@@ -1009,7 +1177,7 @@ glance(ML_fit4_train) # Model-level statistics
 ML_fit4_pred_train <- predict(ML_fit4_train, new_data = train_data %>% select(-Weightgrams))
 ML_fit4_pred_train
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit4_pred_train <- bind_cols(ML_fit4_pred_train, train_data %>% select(Weightgrams))
 ML_fit4_pred_train
 
@@ -1039,12 +1207,17 @@ table_model4_train <- tbl_regression(ML_fit4_train, exponentiate = FALSE, interc
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
 table_model4_train
 
+# Extract RMSE and R2 for in-line text
+r2_4_train$model4_train <- metrics_fit4_train[metrics_fit4_train$.metric == "rsq", ".estimate"]
+rmse_4_train$model4_train <- metrics_fit4_train[metrics_fit4_train$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model4_train, file = here("results", "tables", "table_model4_train.rds"))
 ```
-Our RMSE is 483 and our r-squared is 0.033, a slightly better performance than the full model.
 
-Now let's run cross-validation.
+The RMSE is `r round(rmse_4_train$model4_train)` and the r-squared is `r round(r2_4_train$model4_train, 3)` a slightly better performance than the full model `r round(r2_4$model4, 3)`.
+
+Now I'll run cross-validation.
 
 ```{r, message=FALSE,  warning=FALSE}
 # CV model 4
@@ -1054,6 +1227,10 @@ set.seed(rngseed)
 # Create 10-fold cross-validation
 folds <- vfold_cv(train_data, v = 10)
 folds
+
+# Create list to store R-squared and RMSE values
+r2_4_cv <- list()
+rmse_4_cv <- list()
 
 # Define recipe for model
 ML_recipe4_cv <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
@@ -1085,15 +1262,30 @@ ML_cv4_metrics <- collect_metrics(ML_wf4_cv_rs)
 ML_cv4_metrics <- ML_cv4_metrics[ML_cv4_metrics$.metric %in% c("rmse", "rsq"), !(names(ML_cv4_metrics) %in% ".config")]
 ML_cv4_metrics
 
+# Extract R-squared and RMSE values for in-line text
+# For R-squared
+r2_4_cv$model4_cv <- ML_cv4_metrics %>%
+  filter(.metric == "rsq") %>%
+  pull(mean)
+
+# For RMSE
+rmse_4_cv$model4_cv <- ML_cv4_metrics %>%
+  filter(.metric == "rmse") %>%
+  pull(mean)
+
 # Save regression output into table
 saveRDS(ML_cv4_metrics, file = here::here("results", "tables", "ML_cv4_metrics.rds"))
-```
-Here, our RMSE is 484 and our r-squared is 0.025, a better performance than both the full model and training model.
+``` 
+Here, the RMSE is `r round(rmse_4_cv$model4_cv)` and the r-squared is `r round(r2_4_cv$model4_cv, 3)`, a better performance than both the full model `r round(rmse_4$model4)`, `r round(r2_4$model4, 3)` and the training model `r round(r2_4_train$model4_train, 3)`, `r round(rmse_4_train$model4_train)`.
 
-Finally, let's run our model on the test data.
+Finally, I will run model on the test data.
 
 ```{r, message=FALSE, warning=FALSE}
 # Model 4 testing
+# Create list to store R-squared and RMSE values
+r2_4_test <- list()
+rmse_4_test <- list()
+
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
@@ -1124,7 +1316,7 @@ glance(ML_fit4_test) # Model-level statistics
 ML_fit4_pred_test <- predict(ML_fit4_test, new_data = test_data %>% select(-Weightgrams))
 ML_fit4_pred_test
 
-# Predicted numeric outcome named .pred. Now we will match predicted values with corresponding observed outcome values
+# Predicted numeric outcome named .pred. Match predicted values with corresponding observed outcome values
 ML_fit4_pred_test <- bind_cols(ML_fit4_pred_test, test_data %>% select(Weightgrams))
 ML_fit4_pred_test
 
@@ -1154,14 +1346,19 @@ table_model4_test <- tbl_regression(ML_fit4_test, exponentiate = FALSE, intercep
   add_significance_stars(hide_ci = FALSE, hide_p = FALSE)
 table_model4_test
 
+# Extract R-squared and RMSE values for in-line text (because data frame with columns not list)
+r2_4_test$model4_test<- metrics_fit4_test[metrics_fit4_test$.metric == "rsq", ".estimate"]
+rmse_4_test$model4_test <- metrics_fit4_test[metrics_fit4_test$.metric == "rmse", ".estimate"]
+
 # Save regression output into table
 saveRDS(table_model4_test, file = here("results", "tables", "table_model4_test.rds"))
 ```
-Again, most of our results are not significant except the intercept given the small sample size.
+
+Again, most results are not significant except the intercept given the small sample size.
 
 ## Merge Models 3 and 4
 
-```{r}
+```{r, message=FALSE,  warning=FALSE}
 # Combine the two tables using tbl_merge
 table4 <- tbl_merge(list(table_model3, table_model4), tab_spanner = c("**Model 3**", "**Model 4**")) %>%
   modify_table_body(fun = ~.x %>% arrange(variable))
