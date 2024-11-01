@@ -9,7 +9,7 @@ format:
     number-sections: true
     highlight-style: github
     bibliography: ../../assets/Mada_Bib.bib
-    csl: ../../assets/vancouver.csl
+    csl: ../../assets/apa.csl
     suppress-bibliography: false
 ---
 

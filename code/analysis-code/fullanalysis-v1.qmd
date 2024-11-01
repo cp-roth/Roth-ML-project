@@ -674,7 +674,7 @@ r_squared_values_sub <- list()
 
 # Filter data based on desired conditions
 filtered_data <- ML_linear %>%
-  filter(Brazilian == "Brazilian")
+  filter(Brazilian == "yes")
 
 # Set reference level for "Euro-descent"
 ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
@@ -706,7 +706,7 @@ saveRDS(ML_lm1_sub_table, file = here::here("results", "tables", "ML_lm1_sub_tab
 # Model 2: Sub-sample multivariate model (ML_lm2_sub)
 # Filter data based on desired conditions
 filtered_data <- ML_linear %>%
-  filter(Brazilian == "Brazilian")
+  filter(Brazilian == "yes")
 
 # Set reference level for "Euro-descent"
 ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")

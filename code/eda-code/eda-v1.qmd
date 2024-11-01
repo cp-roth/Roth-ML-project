@@ -140,7 +140,7 @@ For the `Status` variable, the Supplementary Table 1 will include all of the gra
 
 For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta in Portuguese meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
 
-For the `Nationality` variable, I combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there were very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same.
+For the `Nationality` variable, I combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there were very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same. I also create a dummy variable to check for collinearity between immigration status and skin color. I create a `Brazilian` variable (yes/no), and then I run a sub-sample analysis dropping all non-Brazilians.
 
 Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose. For maternal skin color, these variables are `Weightblack`, `Weightmixed`, and `Weightwhite`. These are categorical variables (yes/no). From these, I create new continuous dummy variables for birth weight according to maternal skin color: `WeightgramsBlack`, `WeightgramsMixed`, and `WeightgramsWhite`. I do the same process for fetal sex: `Weightfemale`, `Weightmale`, `WeightgramsFemale`, and `WeightgramsMale`.
 
@@ -401,23 +401,8 @@ ML_linear <- readRDS(data_location)
 Now I will create dummy variables.
 
 ```{r}
-# Create dummy variables
 # Check pre-structure
 str(ML_linear)
-
-# Create dummy variables for color and change to English using recode factor from dplyr
-ML_linear$ModifiedColor <- factor(ifelse(ML_linear$Color %in% c("Black", "Mixed Race"), "Afro-Descent", "Euro-Descent"))
-
-# Create dummy variables for status and change to English
-ML_linear$ModifiedStatus <- recode_factor(ML_linear$Status, "Secundigesta" = "Multiparous", "Trigesta" = "Multiparous", "Multigesta" = "Multiparous", "Secundipara" = "Multiparous", "Multipara" = "Multiparous", "Primigesta" = "Nulliparous", "Nulipara" = "Nulliparous", "Primipara" = "Nulliparous")
-
-# Create dummy variables for nationality and change to English
-ML_linear$ModifiedNationality <- factor(case_when(
-  ML_linear$Nationality %in% c("German", "Austrian", "Spanish", "French", "Italian", "Polish", "Portuguese", "Romanian", "Russian", "Swiss") ~ "European",
-  ML_linear$Nationality %in% c("Argentine", "Paraguayan", "Uruguayan") ~ "Latin American",
-  ML_linear$Nationality == "Brazilian" ~ "Brazilian",
-  ML_linear$Nationality == "Syrian" ~ "Middle Eastern"
-))
 
 # Change remaining observations from Portuguese to English
 ML_linear <- ML_linear %>%
@@ -429,6 +414,31 @@ ML_linear <- ML_linear %>%
     FetalOutcome = recode_factor(FetalOutcome, "vivo" = "Live Birth", "morto" = "Stillbirth")
     )
 
+# Create new variables
+ML_linear <- ML_linear %>%
+  mutate(
+    ModifiedColor = factor(ifelse(Color %in% c("Black", "Mixed Race"), # dummy variables for color and change to English
+                                 "Afro-Descent", "Euro-Descent"),
+                          levels = c("Euro-Descent", "Afro-Descent")),
+    ModifiedStatus = factor(case_when( # dummy variables for status and change to English
+      Status %in% c("Secundigesta", "Trigesta", "Multigesta", "Secundipara", "Multipara") ~ "Multiparous",
+      Status %in% c("Primigesta", "Nulipara", "Primipara") ~ "Nulliparous",
+      TRUE ~ NA_character_
+    ), levels = c("Nulliparous", "Multiparous")),
+    ModifiedNationality = factor(case_when( # dummy variables for nationality and change to English
+      Nationality %in% c("German", "Austrian", "Spanish", "French", "Italian", 
+                        "Polish", "Portuguese", "Romanian", "Russian", "Swiss") ~ "European",
+      Nationality %in% c("Argentine", "Paraguayan", "Uruguayan") ~ "Latin American",
+      Nationality == "Brazilian" ~ "Brazilian",
+      Nationality == "Syrian" ~ "Middle Eastern",
+      TRUE ~ NA_character_
+    ), levels = c("Brazilian", "European", "Latin American", "Middle Eastern")),
+    Brazilian = factor(ifelse(ModifiedNationality == "Brazilian", # create dummy variable for Brazilian/non-Brazilian to check for collinearity between skin color and immigration status
+                             "yes", "no"),
+                      levels = c("yes", "no"))
+  )
+
+# Verify the new structure
 str(ML_linear)
 
 # Save new linear data with recoded factor variables
