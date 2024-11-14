@@ -364,9 +364,9 @@ When running the model on the testing dataset, the results remain significant at
 
 The second multiple linear regression model is as follows:
 
-$$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$
+$$\text{BW} = \alpha + \beta_1 \text{MA} + \beta_2 \text{Par} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \text{YrFE} + \epsilon$$
 
-whereas `BW` is birth weight in grams, $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `MA` is maternal ancestry (Euro-descent, Afro-descent), `Gest` is gestational status (nulliparous or multiparous), `Age` is maternal age in years, and $\epsilon$ is the error term. Results are displayed in Table 3.
+whereas `BW` is birth weight in grams, $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `MA` is maternal ancestry (Euro-descent, Afro-descent), `Par` is parity (nulliparous or multiparous), `Age` is maternal age in years, `YrFE` is year fixed effect, and $\epsilon$ is the error term. Results are displayed in Table 3.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Model 2: Final model for paper using all data
@@ -376,7 +376,7 @@ rmse_2 <- list()
 
 # Using recipes and workflows
 # Define recipe for model
-ML_recipe2 <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>% 
+ML_recipe2 <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality + Year, data = ML_linear) %>% 
   step_relevel(ModifiedColor, ref_level = "Euro-Descent") #%>% # Set reference level for ModifiedColor
   #step_dummy(ModifiedColor) #%>% # Convert all nominal variables to dummy variables. Cannot do this if I am merging tables in gtsummary
   #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors. Cannot do this if I am merging tables in gtsummary
@@ -463,10 +463,10 @@ rmse_2_train <- list()
 
 # Using recipes and workflows
 # Define recipe for model
-ML_recipe2_train <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>% 
-  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level for ModifiedColor
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+ML_recipe2_train <- recipe(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality + Year, data = train_data) %>% 
+  step_relevel(ModifiedColor, ref_level = "Euro-Descent") #%>% # Set reference level for ModifiedColor
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Define model specification
 ML_spec2_train <- linear_reg() %>% 
@@ -712,7 +712,7 @@ filtered_data <- ML_linear %>%
 ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
-ML_lm2_sub <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + + ModifiedStatus, data = filtered_data)
+ML_lm2_sub <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + Year, data = filtered_data)
 
 # Summarize model fit with tidiers
 ML_lm2_sub_summary <- summary(ML_lm2_sub) # Summary of fit
@@ -751,7 +751,7 @@ saveRDS(table3, file = here::here("results", "tables", "table3_final.rds"))
 
 # Model 3
 
-The second two models are also simple and multiple linear regressions with outcome variable as birthweight in grams. However, in these two models, I maintained maternal skin color as three categories, White (the reference group), Black, and mixed race to see if there is differential outcomes for Black and mixed-race women. The first simple linear regression model is as follows:
+The second two models are also simple and multiple linear regressions with outcome variable as birth weight in grams. However, in these two models, I maintained maternal skin color as three categories, White (the reference group), Black, and mixed race to see if there is differential outcomes for Black and mixed-race women. The first simple linear regression model is as follows:
 
 $$\text{BW} = \alpha + \beta_1 \text{MC} + \epsilon$$
 whereas $\alpha$ is the average birth weight, $\beta_1$ is the group deviation from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), and $\epsilon$ is the error term. Results are displayed in Table 4.
@@ -1050,9 +1050,9 @@ Much like in the other testing models, the results are not significant (except t
 
 The second multiple linear regression model is as follows:
 
-$$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Gest} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \epsilon$$
+$$\text{BW} = \alpha + \beta_1 \text{MC} + \beta_2 \text{Par} + \beta_3 \text{Nat} + \beta_4 \text{Age} + \text{YrFE} + \epsilon$$
 
-whereas $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), `Gest` is gestational status (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, and $\epsilon$ is the error term.
+whereas $\alpha$ is the average birth weight, $\beta_x$ are the group deviations from the average birth weight, `BW` is birth weight in grams, `MC` is maternal skin color (White, Black, and mixed race), `Par` is parity (nulliparous or multiparous), `Nat` is maternal nationality (Brazilian, Latin American, European, Middle Eastern), `Age` is maternal age in years, `YrFE` is year fixed effect, and $\epsilon$ is the error term.
 
 ```{r, message=FALSE,  warning=FALSE}
 # Model 4: Final model for paper using all data
@@ -1063,7 +1063,7 @@ rmse_4 <- list()
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
-ML_recipe4 <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
+ML_recipe4 <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality + Year, data = ML_linear) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
   step_relevel(ModifiedStatus, ref_level = "Multiparous") #%>% # Set reference level for ModifiedStatus
   #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
@@ -1150,11 +1150,11 @@ rmse_4_train <- list()
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
-ML_recipe4_train <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = train_data) %>%
+ML_recipe4_train <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality + Year, data = train_data) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
-  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") #%>% # Set reference level for ModifiedStatus
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Specify model
 ML_spec4_train <- linear_reg() %>%
@@ -1233,11 +1233,11 @@ r2_4_cv <- list()
 rmse_4_cv <- list()
 
 # Define recipe for model
-ML_recipe4_cv <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
+ML_recipe4_cv <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality + Year, data = ML_linear) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
-  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") #%>% # Set reference level for ModifiedStatus
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Set model specification
 ML_spec4_cv <- linear_reg() %>% set_engine("lm")
@@ -1289,11 +1289,11 @@ rmse_4_test <- list()
 # Using recipes and workflows
 # Complex linear model
 # Specify recipe
-ML_recipe4_test <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality, data = test_data) %>%
+ML_recipe4_test <- recipe(Weightgrams ~ Color + Age + ModifiedStatus + ModifiedNationality + Year, data = test_data) %>%
   step_relevel(Color, ref_level = "White") %>% # Set reference level for Color
-  step_relevel(ModifiedStatus, ref_level = "Multiparous") %>% # Set reference level for ModifiedStatus
-  step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
-  step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
+  step_relevel(ModifiedStatus, ref_level = "Multiparous") #%>% # Set reference level for ModifiedStatus
+  #step_dummy(all_nominal(), -all_outcomes()) %>% # Convert all nominal variables to dummy variables
+  #step_normalize(all_numeric_predictors()) # Normalize all numeric predictors
 
 # Specify model
 ML_spec4_test <- linear_reg() %>%

@@ -8,10 +8,10 @@ If reproducing this analysis, please run code in the following order. `.Qmd` fil
 2) `eda-v1.qmd` in the `eda-code` folder;
 3) `introanalyis-v1.qmd` in the `analysis-code` folder;
 4) `fullanalysis-v1.qmd` in the `analysis-code` folder.
-5) `Manuscript_Final_Lancet.qmd` in the `products`, `manuscript` folder.
-7) `Supplement_Cassia.qmd` in the `products`, `manuscript`, `supplement` folder.
+5) `Manuscript_Final_SSM.qmd` in the `products`, `manuscript` folder.
+7) `Supplemental_Matrials.qmd` in the `products`, `manuscript`, `supplement` folder.
 
-In addition, there is a `Manuscript_Draft.qmd` in the `products`, `manuscript` folder, which was the first version of this project.
+In addition, there is a `Manuscript_Draft.qmd` and a `Manuscript_Final` in the `products`, `manuscript` folder, which were the first versions of this project.
 
 Old `.R` documents with non-updated code are available in the `old-code` folder.
 

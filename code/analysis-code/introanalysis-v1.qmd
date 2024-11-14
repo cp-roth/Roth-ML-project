@@ -50,14 +50,12 @@ First, I will see how many infants were LBW or NBW for each maternal descendant 
 # See LBW and NBW with true denominator
 LBW_percentage <- ML_summary %>%
   filter(!is.na(ModifiedColor) & !is.na(BirthweightCategory)) %>% # Remove NAs from both variables
-group_by(ModifiedColor) %>% # Group by ModifiedColor
-
-  # Calculate the percentage for each group
-summarise(
-  total_count = n(),
-  lbw_count = sum(BirthweightCategory == "LBW"),
-  lbw_percentage = (lbw_count / total_count) * 100
-  )
+  group_by(ModifiedColor) %>% # Group by ModifiedColor
+  summarise( # Calculate the percentage for each group
+    total_count = n(),
+    lbw_count = sum(BirthweightCategory == "LBW"),
+    lbw_percentage = (lbw_count / total_count) * 100
+    )
 
 # Print result
 print(LBW_percentage)
@@ -88,7 +86,7 @@ ci_upper <- t_test_result$conf.int[2]
 
 After performing a Welch Two Sample t-test to compare the rates of LBW between Euro- and Afro-descent mothers, the results were as follows: t = `r round(t_statistic, 2)`, df = `r round(df, 1)`, p-value = `r round(p_value, digits = 3)`, mean difference = `r round(mean_diff, 4)`, 95% CI = \[`r round(ci_lower, 4)`, `r round(ci_upper, 4)`\].
 
-# Linear Models
+# Linear Models ModifiedColor
 
 To be able include metrics like $(R^2)$ dynamically in the Quarto document, I first need to store the values in a list. I will create a list to store the values. In each code chunk with a fitted model, I will add the $(R^2)$ to the list. Then I can use the stored values inline in the document.
 
@@ -97,14 +95,16 @@ To be able include metrics like $(R^2)$ dynamically in the Quarto document, I fi
 r_squared_values <- list()
 ```
 
+## Model 1
+
 I will now run a simple regression with the outcome variable (birth weight in grams) and the exposure variable maternal ancestry. I will use the recipe and workflow features of `tidymodels`.
 
 ```{r}
 # Model 1 using recipes and workflows
 # Define recipe for model
-ML_recipe1 <- recipe(Weightgrams ~ ModifiedColor, data = ML_linear) %>% 
-  step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level
-  step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
+ML_recipe1 <- recipe(Weightgrams ~ ModifiedColor, data = ML_linear) #%>% 
+  #step_relevel(ModifiedColor, ref_level = "Euro-Descent") %>% # Set reference level
+  #step_dummy(ModifiedColor) # Convert ModifiedColor to dummy variable
 
 # Specify model
 ML_spec1 <- linear_reg() %>% 
@@ -167,13 +167,14 @@ table_fit1
 # Save regression output into table
 saveRDS(table_fit1, file = here::here("results", "tables", "table_fit1.rds"))
 ```
+## Model Age
 
 Now I will run a second simple bivariate analysis, looking at infant birth weight as a function of maternal age. This time, when plotting weight as a function of maternal age, I will use a scatterplot.
 
 ```{r}
 # Model Age using recipes and workflows
 # Create recipe
-ML_recipe_age <- recipe(Weightgrams ~ Age, data = ML_linear)
+ML_recipe_age <- recipe(Weightgrams ~ Age + AgeSquared, data = ML_linear)
 
 # Specify model
 ML_spec_age <- linear_reg() %>% 
@@ -236,15 +237,17 @@ table_fit2
 # Save regression output into table
 saveRDS(table_fit2, file = here::here("results", "tables", "table_fit2.rds"))
 ```
+## Model 3
 
-Now I will run a slightly more complicated model that includes maternal skin color, age, nationality, and gestational status.
+Now I will run a slightly more complicated model that includes maternal skin color, age, age squared, nationality, and parity (`ModifiedStatus`). This is the basis for my main model.
 
 ```{r}
+# Model 3 using recipes and workflows
 # Set reference level for ModifiedColor
 ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
-ML_lm3 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, data = ML_linear)
+ML_lm3 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + AgeSquared + ModifiedStatus + ModifiedNationality, data = ML_linear)
 
 # Summarize model fit with tidiers
 ML_lm3_summary <- summary(ML_lm3) # Summary of fit
@@ -266,7 +269,7 @@ table_fit3
 saveRDS(table_fit3, file = here::here("results", "tables", "table_fit3.rds"))
 ```
 
-In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, we can see that older mothers are associated with giving birth to infants with higher birth weights.
+In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, we can see that older mothers are associated with giving birth to infants with higher birth weights. In the third model, neither age nor age-squared are significant. Nonetheless, birthweight appears to increases with age, but above the maternal age of 40, infant weight decreases. Thus, there is a reverse U-shaped relationship. The coefficients suggests that while birthweight increases with maternal age, it does so at a decreasing rate until a certain maternal age after which it begins decreasing.
 
 For all three models, the r-squared is small `r round(r_squared_values$model1, 3)`, `r round(r_squared_values$model2, 3)`, and `r round(r_squared_values$model3, 3)`, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by many factors, including genetic, environmental, and social factors.
 
@@ -282,6 +285,8 @@ There is potentially a (partial) multi-collinearity problem with maternal skin c
 # Create a list to store R-squared values
 r_squared_values2 <- list()
 ```
+
+### Model 4
 
 ```{r}
 # Model 4 sub-sample simple model
@@ -310,32 +315,16 @@ table_fit4
 saveRDS(table_fit4, file = here::here("results", "tables", "table_fit4.rds"))
 ```
 
-These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some sub-sample modeling to understand this issue. We will create a `Brazilian` (yes, no) variable, drop all non-Brazilians from the study, and run the original regression with the covariates.
+These results imply that Europeans had heavier infants than Brazilians. Since all women of color in this sample were Brazilian, there is a problem with multicollinearity. So I will perform some sub-sample modeling to understand this issue. In `eda-v1.qmd` I created a `Brazilian` (yes, no) variable, so here, I will drop all non-Brazilians from the study, and run the original regression with the covariates.
 
-```{r}
-# Create dummy variables for new category of Brazilian or not
-# Create dummy variables for status and change to English
-ML_linear <- mutate(ML_linear, 
-                    Brazilian = recode_factor(ModifiedNationality, 
-                                              "European" = "Non-Brazilian",
-                                              "Middle Eastern" = "Non-Brazilian",
-                                              "Latin American" = "Non-Brazilian",
-                                              "Brazilian" = "Brazilian"))
-
-# Check the structure of the updated data frame
-str(ML_linear)
-
-# Save ML_Linear as RDS
-save_data_location <- here::here("data","processed-data","ML_linear.rds")
-saveRDS(ML_linear, file = save_data_location)
-```
+### Model 5
 
 Now, I will run a regression with only this new variable.
 
 ```{r}
 # Model 5 sub-sample simple model
 # Set reference level for Brazilian
-ML_linear$Brazilian <- relevel(ML_linear$Brazilian, ref = "Brazilian")
+ML_linear$Brazilian <- relevel(ML_linear$Brazilian, ref = "yes")
 
 # Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
 ML_lm5 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ Brazilian, data = ML_linear)
@@ -359,12 +348,14 @@ table_fit5
 saveRDS(table_fit5, file = here::here("results", "tables", "table_fit5.rds"))
 ```
 
+### Model 6
+
 Here, non-Brazilians had babies on average weighing 100 grams more than Brazilians (p-value = 0.001). So I will now run a regression of only Brazilian women using `Afro-Descent` and `Euro-descent` categories.
 
 ```{r}
 # Filter data based on desired conditions
 filtered_data <- ML_linear %>%
-  filter(Brazilian == "Brazilian")
+  filter(Brazilian == "yes")
 
 # Model 6 sub-sample simple linear model
 # Set reference level for "Euro-descent"
@@ -394,7 +385,7 @@ saveRDS(table_fit6, file = here::here("results", "tables", "table_fit6.rds"))
 
 The $R^2$ for these models were `r round(r_squared_values2$model4, 3)`, `r round(r_squared_values2$model5, 3)`, and `r round(r_squared_values2$model6, 3)`.
 
-## Multivariate analysis
+# Linear Models Color
 
 Moving on from issues of collinearity, I will run a model where skin color is differentiated according to the original data, or with three categories (White, Black, and Mixed Race). I'll start with a simple model of infant birth weight as a function of maternal skin color. Then I will run a model with all the predictors.
 
@@ -402,6 +393,8 @@ Moving on from issues of collinearity, I will run a model where skin color is di
 # Create a list to store R-squared values
 r_squared_values3 <- list()
 ```
+
+## Model 7 
 
 ```{r}
 # Model 7 simple linear model
@@ -428,8 +421,12 @@ table_fit7
 
 # Save regression output into table
 saveRDS(table_fit7, file = here::here("results", "tables", "table_fit7.rds"))
+```
 
-# Complex linear model
+## Model 8
+
+```{r}
+# Model 8 multivariate linear model
 # Set reference level for Color
 ML_linear$Color <- relevel(ML_linear$Color, ref = "White")
 
@@ -457,7 +454,140 @@ saveRDS(table_fit8, file = here::here("results", "tables", "table_fit8.rds"))
 
 The $R^2$ for these models were `r round(r_squared_values3$model7, 3)` and `r round(r_squared_values3$model8, 3)`.
 
-## Logistic models
+# Year Fixed-Effect
+
+## Model Years (9, 10, 11)
+
+In the first round of peer review, one reviewer suggested that I should justify why I provide this as a cross-sectional approach rather than test for fixed effects by year given periodic epidemics in infectious disease such as malaria and yellow fever and changes in real wages. So I will run a model that includes year as a fixed effect here with the `ModifiedColor` variable as the main predictor variable.
+
+```{r}
+# Model 9: multivariate linear model with year as fixed effect using ModifiedColor
+ML_linear <- ML_linear %>%
+  mutate(Year = as.factor( # Create a new column called "Year" and make it a factor
+    substr(Date, 1, 4) # Take the first 4 characters of the Date column
+  ))
+
+# Save new variable into dataset
+save_data_location <- here::here("data","processed-data","ML_linear.rds")
+saveRDS(ML_linear, file = save_data_location)
+
+# Set reference level for Color
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm9 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality + Year, data = ML_linear)
+
+# Summarize model fit with tidiers
+ML_lm9_summary <- summary(ML_lm9) # Summary of fit
+tidy(ML_lm9, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+model_stats9 <- glance(ML_lm9) # Extract model-level statistics
+
+# Extract R-squared value
+r_squared_values3$model9 <- model_stats9$r.squared
+
+# Create a gtsummary table directly from the model
+table_fit9 <- tbl_regression(ML_lm9, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit9
+
+# Save regression output into table
+saveRDS(table_fit9, file = here::here("results", "tables", "table_fit9.rds"))
+```
+
+I will also run the model five times, once per year.
+
+```{r}
+# Model 10: multivariate linear model for each year (1922-1924) with ModifiedColor
+# Set reference level for Color
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Ensure year is created as character vector
+years <- c("1922", "1923", "1924", "1925", "1926")
+
+# Create models for all years at once
+table_years <- ML_linear %>%
+  mutate(Year = as.character(substr(Date, 1, 4))) %>% # Create a new column called "Year" and make it a factor
+  filter(Year %in% years) %>%
+  group_by(Year) %>%
+  nest() %>%
+  mutate(
+    model = map(data, ~linear_reg() %>% 
+                  set_engine("lm") %>% 
+                  fit(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality, 
+                      data = .x)),
+    tables = map(model, ~tbl_regression(.x, 
+                                      exponentiate = FALSE, 
+                                      intercept = TRUE) %>% 
+                   bold_p() %>% 
+                   add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+                   modify_column_unhide(columns = c(statistic, std.error)))
+  )
+
+# To view results for a specific year:
+table_years %>% 
+  filter(Year == "1922") %>% 
+  pull(tables) %>% 
+  .[[1]]
+
+
+# Create named list
+tables_list <- table_years %>%
+  arrange(Year) %>%
+  pull(tables) %>%
+  set_names(paste0("Year_", years))
+
+# Create gt summary table
+combined_table_years <- tbl_merge(
+ tbls = tables_list,
+ tab_spanner = c("**1922**", "**1923**", "**1924**", "**1925**", "**1926**")
+) %>%
+ modify_table_styling(
+   columns = everything(),
+   align = "center"
+ ) %>%
+ modify_table_body(fun = ~.x %>% arrange(variable))
+combined_table_years
+
+# Save regression output into table
+saveRDS(combined_table_years, file = here::here("results", "tables", "combined_table_years.rds"))
+```
+
+Given that 1923 demonstrates a coefficient for infant birth weights to Afro-descended mothers nearly 3 times the overall coefficient (-84 to -237), I will drop the observations from 1923 and re-run the regression to see if the results are still robust. The coefficient for infants born to Afro-descended mothers is not significant and is lower than in the full model (-40). This demonstrates that the births from 1923 seem to be driving the overall results. Nonetheless, the overall hypothesis still holds. Infants born to Afro-descended mothers had lower birth weights than those born to Euro-descended mothers, both in years where all birth weights were higher and years in which all birth weights were lower. Economic uncertainty affected women of African descent more than those of European descent. Additionally, these results could be due to smaller sample sizes and larger standard errors -- noise in the data.
+
+```{r}
+# Model 11: Multivariate model using ModifiedColor without observations from 1923
+# Filter out observations from 1923
+ML_linear_filtered <- ML_linear %>%
+  filter(Year != "1923")
+
+# Set reference level for Color
+ML_linear$ModifiedColor <- relevel(ML_linear$ModifiedColor, ref = "Euro-Descent")
+
+# Specify and fit model using linear_reg() (default engine, OLS) from tidymodels
+ML_lm11 <- linear_reg() %>% set_engine("lm") %>% fit(Weightgrams ~ ModifiedColor + Age + ModifiedStatus + ModifiedNationality + Year, data = ML_linear_filtered)
+
+# Summarize model fit with tidiers
+ML_lm11_summary <- summary(ML_lm11) # Summary of fit
+tidy(ML_lm11, conf.int = TRUE) %>% mutate(p.value = round(p.value, 5)) # Coefficients and confidence intervals with p-values rounded to 5 decimal places
+model_stats11 <- glance(ML_lm11) # Extract model-level statistics
+
+# Extract R-squared value
+r_squared_values3$model11 <- model_stats11$r.squared
+
+# Create a gtsummary table directly from the model
+table_fit11 <- tbl_regression(ML_lm11, exponentiate = FALSE, intercept = TRUE) %>% 
+  bold_p() %>% 
+  add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
+  modify_column_unhide(columns = c(statistic, std.error))
+table_fit11
+
+# Save regression output into table
+saveRDS(table_fit11, file = here::here("results", "tables", "table_fit11.rds"))
+```
+
+# Logistic models
 
 Now I will still consider `Birthweight` as the outcome of interest, but I will use the dummy variable created in the `eda-v1.qmd` file that categorizes infant birth weight into normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) and fit a logistic model, using the main predictor of interest, `ModifiedColor`.
 
@@ -479,6 +609,8 @@ ML_log_split <- initial_split(ML_linear, prop = 0.75, strata = BirthweightCatego
 ML_log_train <- training(ML_log_split)
 ML_log_test <- testing(ML_log_split)
 ```
+
+## Log Model 1
 
 Now I will run the first logistic model with `ModifiedColor` as the predictor.
 
@@ -577,6 +709,8 @@ all_logistic_models$model1 <- logistic_model_metrics1
 
 With an ROC_AUC of `r round(all_logistic_models$model1$auc, 3)`, the model is performing worse than random guessing. The pseudo-$R^2$ is `r round(all_logistic_models$model1$pseudo_r_squared, 3)`.
 
+## Log Model 2
+
 Now I will run another logistic model with `Color` as the predictor.
 
 ```{r}
@@ -666,13 +800,15 @@ print(roc_plot2)
 
 # Store metrics in a list for dynamic inline text
 logistic_model_metrics2 <- list(
-  pseudo_r_squared = mcfadden_r2_1,
+  pseudo_r_squared = mcfadden_r2_2,
   auc = roc_auc_result1$.estimate
 )
 all_logistic_models$model2 <- logistic_model_metrics2 # add to list of lists
 ```
 
 The ROC_AUC for the second simple logistic regression model is `r round(all_logistic_models$model2$auc, 3)`, or still worse than random guessing. The pseudo- $R^2$ is `r round(all_logistic_models$model2$auc, 3)`.
+
+## Log Model 3
 
 Now, I will run two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates.
 
@@ -763,13 +899,15 @@ print(roc_plot3)
 
 # Store metrics in a list for dynamic inline text
 logistic_model_metrics3 <- list(
-  pseudo_r_squared = mcfadden_r2_1,
+  pseudo_r_squared = mcfadden_r2_3,
   auc = roc_auc_result1$.estimate
 )
 all_logistic_models$model3 <- logistic_model_metrics3 # add to list of lists
 ```
 
 The ROC_AUC here is `r round(all_logistic_metrics$model3$auc, 3)`, still worse than random guessing. The pseudo-$R^2$ is `r round (all_logistic_metrics$model3$pseudo_r_squared, 3)`.
+
+## Log Model 4
 
 ```{r}
 # Logistic model 4: Multiple logistic regression model with Color as the predictor
@@ -786,9 +924,9 @@ ML_linear <- ML_linear %>%
 
 # Create recipe
 # Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
-log4_recipe <- recipe(BirthweightCategory ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) %>%
-  step_dummy(all_nominal(), -all_outcomes()) %>%
-  step_normalize(all_predictors())
+log4_recipe <- recipe(BirthweightCategory ~ Color + Age + ModifiedStatus + ModifiedNationality, data = ML_linear) #%>%
+ # step_dummy(all_nominal(), -all_outcomes()) %>%
+ # step_normalize(all_predictors())
 
 # Define model specification
 log4_spec <- logistic_reg() %>%
@@ -860,7 +998,7 @@ print(roc_plot4)
 
 # Store metrics in a list for dynamic inline text
 logistic_model_metrics4 <- list(
-  pseudo_r_squared = mcfadden_r2_1,
+  pseudo_r_squared = mcfadden_r2_4,
   auc = roc_auc_result1$.estimate
 )
 all_logistic_models$model4 <- logistic_model_metrics4 # add to list of lists
@@ -868,7 +1006,7 @@ all_logistic_models$model4 <- logistic_model_metrics4 # add to list of lists
 
 In the final model, the ROC_AUC is `r round(all_logistic_metrics$model4$auc, 3)` still worse than random guessing. The pseudo-$R^2$ is `r round(all_logistic_metrics$model4$pseudo_r_squared, 3)`.
 
-# Merge unadjusted log models 1 and 2
+## Merge unadjusted log models 1 and 2
 
 ```{r}
 # Combine the two tables using tbl_stack for unadjusted ORs
@@ -880,6 +1018,113 @@ table5
 
 # Save regression output into table
 saveRDS(table5, file = here("results", "tables", "table5_final.rds"))
+```
+
+## Log Model Stilbirth
+
+Reviewer 3 wrote: "A logit analysis using stillbirth as an outcome would bring robustness to the racial disparities that the author highlights. That there are 221 stillbirths creates this possibility and might even reveal greater racial disparities. While these could not be definitively linked to syphilis, this might provide further insight into that data limitation. Again, causation cannot be overstated, but given that the author cannot speak to prematurity with the data (another important indicator of maternal stress), this would be an interesting avenue to explore."
+
+```{r}
+# Check factor levels
+levels(ML_summary$ModifiedColor) # Reference is Euro-Descent
+levels(ML_summary$FetalOutcome) # Reference is Live Birth
+
+# Set the reference level explicitly to NBW
+ML_summary_log <- ML_summary %>%
+  filter(!is.na(FetalOutcome) & !is.na(ModifiedColor)) %>% #filter out NAs
+  mutate(FetalOutcome = relevel(FetalOutcome, ref = "Live Birth"),
+         ModifiedColor = relevel(ModifiedColor, ref = "Euro-Descent"))
+
+#set seed
+set.seed(456)
+ML_log_split2 <- initial_split(ML_summary_log, prop = 0.75, strata = FetalOutcome)
+
+# Create training and test datasets
+ML_log_train2 <- training(ML_log_split2)
+ML_log_test2 <- testing(ML_log_split2)
+
+# Logistic model 5: simple logistic regression model with stillbirth as outcome and ModifiedAncestry as the predictor
+# Create recipe
+# Create recipe simple logistic model (creating dummy variables and standardizing continuous variables)
+log5_recipe <- recipe(FetalOutcome ~ ModifiedColor, data = ML_summary_log) # %>%
+  #step_dummy(all_nominal(), -all_outcomes()) %>%
+  #step_normalize(all_predictors())
+
+# Define model specification
+log5_spec <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+# Create workflow
+log5_wf <- workflow() %>%
+  add_recipe(log5_recipe) %>%
+  add_model(log5_spec)
+
+# Fit model
+log5_fit <- log5_wf %>%
+fit(data = ML_summary_log)
+
+# Extract fitted model from workflow
+log5_fitted <- extract_fit_parsnip(log5_fit)$fit
+
+# Create a gtsummary table directly from the model
+table_log5 <- tbl_regression(log5_fitted, exponentiate = TRUE) # exponentiate true for ORs
+
+#Bold significant p-values and add n
+table_log5 <- bold_p(table_log5, t = 0.05) %>%
+  add_n()
+table_log5
+
+# Save regression output into table
+saveRDS(table_log5, file = here::here("results", "tables", "table_log5.rds"))
+
+# Calculate metrics using pseudo-R2
+# Extract model metrics using broom
+model_metrics5 <- glance(log5_fitted)
+
+# Calculate McFadden's R-squared
+# McFadden's R-squared = 1 - (deviance(model) / deviance(null model))
+mcfadden_r2_5 <- 1 - (model_metrics5$deviance / model_metrics5$null.deviance)
+
+# Print McFadden's R-squared
+print(mcfadden_r2_5)
+
+# Calculate performance metrics using ROC_AUC
+# Fit the model on the training data
+log5_fit <- log5_wf %>% fit(data = ML_log_train2)
+
+# Predict probabilities on the test set
+prob_preds5 <- predict(log5_fit, new_data = ML_log_test2, type = "prob")
+
+# Combine predictions with true values
+results5 <- bind_cols(ML_log_test2, prob_preds5)
+
+# Calculate ROC-AUC
+roc_auc_result5 <- roc_auc(results5, truth = FetalOutcome, `.pred_Live Birth`)
+
+# Print ROC-AUC
+print(roc_auc_result5)
+
+# Create and plot the ROC curve
+roc_curve_data5 <- roc_curve(results5, truth = FetalOutcome, `.pred_Live Birth`)
+
+# Plotting the ROC curve
+roc_plot5 <- ggplot(roc_curve_data5, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 2) +
+  labs(title = "ROC Curve",
+       x = "1 - Specificity",
+       y = "Sensitivity")
+
+# Print the plot
+print(roc_plot5)
+
+# Store metrics in a list for dynamic inline text
+logistic_model_metrics5 <- list(
+  pseudo_r_squared = mcfadden_r2_5,
+  auc = roc_auc_result1$.estimate
+)
+all_logistic_models$model5 <- logistic_model_metrics5 # add to list of lists1
 ```
 
 # Predominant and residual distributions

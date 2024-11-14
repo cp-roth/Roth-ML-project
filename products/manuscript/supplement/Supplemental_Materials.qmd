@@ -8,7 +8,7 @@ format:
     number-sections: true
     highlight-style: github
     bibliography: ../../../assets/Mada_Bib.bib
-    csl: ../../../assets/vancouver.csl
+    csl: ../../../assets/apa.csl
     suppress-bibliography: false
 ---
 # Supplemental Materials
@@ -25,7 +25,7 @@ library(flextable) #for nice tables
 
 ## Schematic of workflow
 
-If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalyis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder. This is not updated since 15 August 2024.
+If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalyis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder. These files have not been updated since 15 August 2024.
 
 ## Data import and cleaning
 
@@ -33,7 +33,7 @@ The GitHub repository for this project includes all relevant materials. All disc
 
 ## Data Source
 
-In this paper, I analyze a unique sample of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
+In this paper, I analyze a unique dataset of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
 
 The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013].
 
@@ -41,7 +41,25 @@ The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio
 
 ## Study Measures
 
-There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex. 
+There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex.
+
+In the first round of peer review, the reviewers suggested calculating median birth weight for different immigrant groups by nationality to better justify groupings. Ball [@ball2020] found that Portuguese immigrants had worse economic opportunities in São Paulo during the same time period. Although the Portuguese immigrant experience in Rio de Janeiro was likely better due to community, merchant connection, Portuguese business owners, and job availability, I needed to better justify my nationality categorization. In the `eda-v1.qmd` file, I calculated the mean birth weight for individual nationalities and performed a t-test between Portuguese infants and infants born to all other European nationalities and Portuguese infants and infants born to White Brazilian mothers. All results were not significant at the alpha 0.05 level. Thus, I will maintain the nationality categorizations of European, Brazilian, Latin American, and Middle Eastern.
+
+```{r}
+#| label: tbl-mean
+#| tbl-cap: "Mean Birthweights by Nationality"
+#| echo: FALSE
+table_mean <- readRDS(here::here("results", "tables", "table_nationality_stats_final.rds"))
+flex_table <- as_flex_table(table_mean)
+flex_table
+```
+```{r}
+#| label: tbl-ttest
+#| tbl-cap: "T-Test Results"
+#| echo: FALSE
+table_ttest <- readRDS(here::here("results", "tables", "table_ttest_final.rds"))
+table_ttest
+```
 
 ### Full Summary Table
 
@@ -94,21 +112,11 @@ Figure 4 visualizes the relationship of birth weight and length, stratified by s
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
 
-Finally, I calculated the sex ratio at birth (SRaB).
-
-The SRaB is:
-
-$$SRaB = \frac{M}{F} \times 100$$
-
-where the total number of live male births (M) is divided by 100 live female births (F) in a given period.
-
-The sex ratio was 1.2: there were 120 male live births per 100 female live births. This is much higher than the current range of between 103 and 107 male births per 100 female births [@ritchie2024]. Historically, a skewed sex ratio suggests that preferential infanticide or abortion was occurring -- parents were more likely to terminate a pregnancy or kill an infant if it was female. Contrary to popular belief, this practice occurred in both Asian and European countries, although no evidence of it exists for the Americas [@hanlon2016]. However, this explanation does not hold for a maternity clinic in which women were seeking care to deliver their infants. The skewed sex ratio deserves further study.
-
 ## Models
 
 ### Linear Models
 
-For the basic statistical analysis, I ran three linear models to understand the relationship between maternal factors and infant birth weight. The first model is a simple linear regression with outcome variable (birthweight in grams) and exposure variable maternal ancestry (`Euro-descent` or `Afro-descent`).
+For the basic statistical analysis, I ran three linear models to understand the relationship between maternal factors and infant birth weight. The first model is a simple linear regression with outcome variable (birth weight in grams) and exposure variable maternal ancestry (`Euro-descent`, the reference, and `Afro-descent`). There is an association between maternal skin color and infant birth weight, with Euro-descended women having infants with higher birth weights than Afro-descended women. This initial finding serves as the impetus for the rest of the models.
 
 ```{r}
 #| label: tbl-table1
@@ -119,7 +127,7 @@ flex_table <- as_flex_table(table1)
 flex_table
 ```
 
-The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age.
+The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age on both a linear scale and age-squared with `ModifiedColor` as the main predictor variable. Neither age nor age-squared were significant. Peer reviewers asked me to include $age^2$ in the model to improve the fit. Including $age^2$ in the model did not improve the fit, and the coefficient was not significant. Despite a lack of statistical significance, the coefficients suggests that while birth weight increases with maternal age, it does so at a decreasing rate. At certain maternal age, infant birth weight begins decreasing, presenting a reverse U-shaped curve.
 
 ```{r}
 #| label: tbl-table2
@@ -130,33 +138,70 @@ flex_table <- as_flex_table(table2)
 flex_table
 ```
 
-The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, nationality, and gestational status on infant birth weight. 
+The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, age squared, nationality, and gestational status on infant birth weight with the `ModifiedColor` variable as the main predictor variable.
 
 ```{r}
-#| label: tbl-table3
-#| tbl-cap: "Model 3"
+#| label: tbl-age2
+#| tbl-cap: "Age-Squared"
 #| echo: FALSE
-table3 <- readRDS(here::here("results", "tables", "table_fit3.rds"))
-flex_table <- as_flex_table(table3)
+table_age2 <- readRDS(here::here("results", "tables", "table_fit3.rds"))
+flex_table <- as_flex_table(table_age2)
 flex_table
 ```
 
-In the first and third models, there appears to be an association between maternal skin color and infant birth weight, with Euro-descended women (the reference group) having infants with higher birth weights than Afro-descended women. In the second model, older mothers are associated with giving birth to infants with higher birth weights.
-
-The fourth exploratory model again runs a multivariate linear regression, this time using skin color as it was differentiated in the original data, or with three categories (White, Black, and Mixed Race). 
+Peer review suggested that I control for year-specific effects given possible periodic epidemics in infectious disease such as malaria and yellow fever and changes in real wages. I do this by including year fixed effects. The fourth model looks at the relationship between maternal skin color, age, nationality, gestational status, and year fixed effects on infant birth weight with `ModifiedColor` as the main predictor variable. Generally, differences across years are common given changes in macroeconomic conditions such as real wages and epidemic disease. The coefficient for the main predictor variable `Afro-descent` is -84, compared to -86 in the full model without year fixed effects. Thus, controlling for year-specific effects, the model provides similar coefficients for birth weight, which were highest in 1922. This result is consistent with lower birth weights due to significant inflation and increased cost of living in Rio de Janeiro from 1923 to 1925 [@lobo2024].
 
 ```{r}
 #| label: tbl-table4
 #| tbl-cap: "Model 4"
 #| echo: FALSE
-table4 <- readRDS(here::here("results", "tables", "table_fit4.rds"))
-flex_table <- as_flex_table(table4)
+table4 <- readRDS(here::here("results", "tables", "table_fit9.rds"))
+flex_table <-as_flex_table(table4)
+flex_table
+```
+
+I also tested the model five times, one for each year.
+
+```{r}
+#| label: tbl-table5
+#| tbl-cap: "Model 5"
+#| echo: FALSE
+table5 <- readRDS(here::here("results", "tables", "combined_table_years.rds"))
+flex_table <-as_flex_table(table5)
+flex_table
+```
+
+In every year, the coefficient for Afro-descended infants is consistently negative. However, the coefficient is statistically significant at conventional levels only for the 1923 sub-sample, in which the coefficient for infant birth weights to Afro-descended mothers was nearly 3 times the sample coefficient (-237 compared to -84). Thus, I then dropped the observations from 1923 and re-ran the model to see if the results remained robust.
+
+```{r}
+#| label: tbl-table6
+#| tbl-cap: "Model 6: 1922, 1924, 1925, 1926"
+#| echo: FALSE
+table6 <- readRDS(here::here("results", "tables", "table_fit11.rds"))
+flex_table <- as_flex_table(table6)
+flex_table
+```
+
+In this sub-sample model (Model 6), the coefficient for infants born to Afro-descended mothers was both not significant and lower than in the full model (-40). However, dropping the observations from 1923 has reduced my sample size by about 25%. It appears that births from 1923 are driving the overall results. In 1922, Brazil experienced an economic crisis with a drop in coffee prices, high inflation, and a resulting fiscal emergency, which most likely affected the port city and capital of Rio de Janeiro [@fritsch1993]. It appears that economic uncertainty affected women of African descent more than those of European descent in this year. 
+
+Additionally, these results could be due to smaller sample sizes and larger standard errors -- noise in the data. This reflects the limitations of historical data and historical research given small sample sizes.
+
+The last exploratory model again runs a multivariate linear regression, this time using skin color as it was differentiated in the original data, or with three categories (White, Black, and Mixed Race). 
+
+```{r}
+#| label: tbl-table7
+#| tbl-cap: "Model 7"
+#| echo: FALSE
+table7 <- readRDS(here::here("results", "tables", "table_fit8.rds"))
+flex_table <- as_flex_table(table7)
 flex_table
 ```
 
 For all models in this study, the $(R^2)$ is small, indicating that the model does not explain much of the variance in birth weight. This is likely due to the fact that birth weight is a complex trait influenced by genetic (not related to skin color), environmental, and social factors [@leimert2020]. Yet, as Claudia Goldin and Robert A. Margo have shown for nineteenth-century Philadelphia, the inclusion of gestational age greatly improved the regression fit in their studies, demonstrating that gestational age could explain much of the variance of birth weight [@goldin1989]. Nonetheless, other scholars have shown that even though differential rates of PTB explain some of the variance in birth weight according to maternal skin color in the United States, up to 91 percent of the Black-White gap in full-term birth weight remained unexplained [@costa2004]. 
 
 Here, I am exploring if maternal skin color is associated with lower infant birth weight during a historical time period in Rio de Janeiro, Brazil. Given my hypothesis, that the legacies of slavery affected maternal-fetal health, then maternal skin color is also probably associated with premature birth, which is correlated to infant birth weight.
+
+All code for these models is available in the `introanalysis-v1.qmd` file.
 
 ### Logistic Models
 
@@ -214,6 +259,17 @@ In these two models, the only significant finding is from the final logistic mod
 
 Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@senn2005]. Thus, I will not include these logistic regressions in the final analysis.
 
+In the first round of peer review, the reviewers suggested that a logit analysis using stillbirth as an outcome would bring robustness to the racial disparities I highlight in the linear regression. After running a simple logistic regression with `FetalOutcome` as the predictor variable and `ModifiedColor` as the outcome, infants born to African-descended women had a 9% higher odds of having a stillbirth than Euro-descended women. However, all results were not significant [95% CI 0.82, 1.45; p-value 0.6], and thus I will not include them in the final analysis.
+
+```{r}
+#| label: tbl-table9
+#| tbl-cap: "Model 9"
+#| echo: FALSE
+table9 <- readRDS(here::here("results", "tables", "table_log5.rds"))
+flex_table <- as_flex_table(table9)
+flex_table
+```
+
 ## Performance Measures
 
 Given that this study is an inferential, hypothesis-supporting approach that is exploring how specific maternal predictors affect the outcome of interest, birth weight, please see the `fullanalysis-v1.qmd` for all predictive metrics, where I applied test/train (75-25 split) and cross-validation to test performance. Model performance did not significantly improve with these additional tests. When run on testing data, most results were insignificant, given the smaller sample size.
@@ -221,7 +277,7 @@ Given that this study is an inferential, hypothesis-supporting approach that is 
 Here I include the cross-validation results for the linear models.
 
 ```{r}
-#| label: tbl-table9
+#| label: tbl-table10
 #| tbl-cap: "Cross-Validation Model 1"
 #| echo: FALSE
 ML_cv1_metrics <- readRDS(here::here("results", "tables", "ML_cv1_metrics.rds"))
@@ -229,7 +285,7 @@ ML_cv1_metrics
 ```
 
 ```{r}
-#| label: tbl-table10
+#| label: tbl-table11
 #| tbl-cap: "Cross-Validation Model 2"
 #| echo: FALSE
 ML_cv2_metrics <- readRDS(here::here("results", "tables", "ML_cv2_metrics.rds"))
@@ -237,7 +293,7 @@ ML_cv2_metrics
 ```
 
 ```{r}
-#| label: tbl-table11
+#| label: tbl-table12
 #| tbl-cap: "Cross-Validation Model 3"
 #| echo: FALSE
 ML_cv3_metrics <- readRDS(here::here("results", "tables", "ML_cv3_metrics.rds"))
@@ -245,7 +301,7 @@ ML_cv3_metrics
 ```
 
 ```{r}
-#| label: tbl-table12
+#| label: tbl-table13
 #| tbl-cap: "Cross-Validation Model 4"
 #| echo: FALSE
 ML_cv4_metrics <- readRDS(here::here("results", "tables", "ML_cv4_metrics.rds"))
@@ -254,8 +310,8 @@ ML_cv4_metrics
 
 The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
 
-# Appendix
-
-## AI Use
+# AI Use
 
 During the preparation of this work the author used the LLMs ChatGPT, CoPilot, and Claude in order to troubleshoot coding errors in R. After using this tool/service, the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.
+
+# References
