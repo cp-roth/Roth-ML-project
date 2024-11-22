@@ -1,0 +1,151 @@
+---
+title: "Data_in_Brief"
+author: Cassia Roth
+date: "`r Sys.Date()`"
+format:
+  docx:
+    toc: false
+    number-sections: true
+    highlight-style: github
+    bibliography: ../../../assets/Mada_Bib.bib
+    csl: ../../../assets/apa.csl
+    suppress-bibliography: false
+---
+# Data-in-Brief
+
+```{r}
+# Load packages
+library(tidyverse) #for data processing/cleaning
+library(skimr) #for nice visualization of data 
+library(here) #to set paths
+library(renv) #for package management
+library(gtsummary) #for summary tables
+library(flextable) #for nice tables
+```
+
+## Abstract
+
+This article presents clinical data collected from historical archival sources in Rio de Janeiro, Brazil between 1922 and 1926 with the aim of exploring racial and socio-economic disparities in birth weight, and thus providing insights into maternal, fetal, and infant health, in a major urban center in early twentieth-century Latin America.
+
+The dataset comprises 2845 recorded clinical visits to a public maternity hospital, the Maternidade Laranjeiras, between June 1922 and May 1926 in Rio de Janeiro, Brazil. The records were extracted from Brazil’s major obstetrics and gynecology journal, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*. Physical copies of the journal are located in various archives in Rio de Janeiro, Brazil.
+
+The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. Vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926) were not locatable in the historical archives.
+
+In the initial months of publication, the individual clinical reports included more complete information, including duration of labor or detailed descriptions of surgical procedures. Over time, clinical notes became streamlined. When physicians intervened in birth, the notes included the type of intervention, the indication, and the obstetrician [@roth2020; @roth2020a]. From the available issues, the following information was recorded, when available, for all patients: patient number, gravidity or parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013]. Most clinical notes were short; only those that described surgical births such as cesarean sections included details [@roth2021].
+
+The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca CB/A-Biomédica A, Universidade Estadual do Rio de Janeiro (UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, all volumes were photographed. Then, between January and August 2017, data was manually put into Excel from the digital reproductions and then converted into a .csv file for upload into R.
+
+The dataset presented in the article combines raw data of hospital records with additional analysis data derived from cleaning, processing, and engineering new variables from the raw data.
+
+The data provided in this article offers a valuable historical resource for historians and epidemiologists interested in historical trends in maternal, fetal, and infant health. It enables comparative analyses with historical datasets available for North America and Western Europe.
+
+## Specifications
+
+### Subject
+
+History
+
+### Specific subject area
+
+Historical hospital records that provide evidence of infant birth weight in Brazil.
+
+### Type of data
+
+Raw
+
+Additional variables created by cleaning and processing data.
+
+Table (.csv format)
+
+Supporting materials (codebook and excel versions)
+
+### Data collection
+
+Clinical patient records for all patient visits to the Maternidade Laranjeiras between 1922 and 1926 were published in a historical medical journal. Between January 2012 and July 2013, relevant journal volumes and issues were photographed. Between January and August 2017, data was input into Excel from the digital reproductions and converted into a .csv file for upload into R).
+
+### Data source location
+
+The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca CB/A-Biomédica A, Universidade Estadual do Rio de Janeiro (UERJ), all in Rio de Janeiro, Brazil.
+
+### Data accessibility
+
+### Related research article
+
+## Value of the data
+
+*	This dataset provides heretofore unpublished archival data into health outcomes in an understudied geographic region in the fields of history and epidemiology. It offers valuable insights into historical health outcomes related to racial and socioeconomic inequality in a major urban location in the Western Hemisphere. The data provide evidence to validate or challenge the existing body of research concerning birth weight, race, and socioeconomic inequality in other locations.
+
+*	Researchers can utilize the data to make various comparisons in birth weight outcomes according to maternal variables across time and place. Although the accompanying article has utilized the data as a cross-sectional analysis, other researchers can combine this data set with other historical sets to detect trends, employing various methodological approaches.
+
+*	Open-access historical data sets on health outcomes are rare for all locations and historical periods, but particularly for non-North American and Western European locals. This dataset serves as a fundamental resource for historians and historical demographers and epidemiologists studying maternal, fetal, and infant health in the past and today.
+
+## Background
+
+I initially collected this data during archival research for a PhD dissertation on the intertwined medical histories of abortion and childbirth in Rio de Janeiro, Brazil [@roth2020]. Historical datasets on quantitative outcomes of maternal, fetal, and infant health are sparse for all contexts, but particularly for non-North American and Western European historical contexts [@costa1998; @costa2004; @steckel1986; @ward1993]. Originally, the records were recorded for qualitative analysis of changes in operatory techniques including cesarean sections and embryotomies within a major public hospital in Brazil’s then-capital city of Rio de Janeiro, the Maternidade Laranjeiras. Thus, I did not extract all information from the hospital records given time constraints. Excluded information is as follows: pelvic measurements, length of various labor stages (first, second, and third), fetal presentation during delivery, placental weight, umbilical cord length, maternal pulse and temperature after delivery, timing of milk production, and timing of umbilical cord healing.
+
+The extracted data includes demographic information on all women entering the hospital for gynecological and obstetric treatment, the majority to deliver an infant. It thus allows researchers to test associations between maternal variables including skin color, age, and parity and infant outcomes including birth weight, birth length, and stillbirth and neonatal mortality rates. It also provides information on maternal mortality ratios.
+
+In addition to the published article, this dataset offers detailed information on the raw data, allowing further comparative investigations with other historical datasets on birth weight.
+
+## Data description
+
+The files associated with this data-in-brief article includes:
+* Raw data: The original raw data, the codebook, and the processed data are available in the `data` folder.
+
+- Hospital records data in .csv and .xlsx format (MaternidadeLaranjeiras.csv; MaternidadeLaranjeiras.xlsx): The hospital records data file contains 23 variables and 2845 entries of clinical visits to the Maternidade Laranjeiras hospital. Blank entries in the dataset indicate the information was missing from the original published archival records.
+
+-	Codebook in .csv and .xlsx format (Codebook.csv; Codebook.xlsx): The codebook provides explanations and details regarding all 23 variables included in the original raw data hospital records.
+
+- Mean birth weights in .csv and .xlsx format (Mean_Birthweights.csv; Mean_Birthweights.xlsx): The mean birth weight files provide data on published mean birth weights from different historical and epidemiological studies for comparison.
+
+- Fertility rates in .csv and .xlsx format (1940_FertilityRates.csv; 1940_FertilityRates.xlsx): The fertility rate files provide archival and published data on total fertility rates (TFR) for Rio de Janeiro, São Paulo (city and state), and Brazil between 1930 and 1940.
+
+- README.md file outlines content of the `raw-data` folder.
+
+* Processed data: Processed data comprises all data sets cleaned and processed throughout the exploratory, intro analysis, and full analysis stages.
+
+- ML_summary.rds: Processed data for all summary statistics. The processed summary data comprises 67 variables and 2845 observations.
+
+- ML_linear.rds: Processed data for all linear models. The processed linear data comprises 19 variables and 1920 observations.
+
+- Mean_Birthweights.rds: Processed data for mean birth weights table.
+
+- Fertility_Rates_rds: Processed data for information on total fertility rates (TFR).
+
+- README.md file outlines content of the `processed-data` folder.
+
+## Experimental design, materials and methods
+
+I collected the data between January 2012 and July 2013, when I photographed relevant journal volumes and issues. Between January and August 2017, I manually input data into Excel from the digital reproductions and converted into a .csv file for upload into R.
+
+In R, I conducted multiple processing, cleaning, and engineering of recorded variables. If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder, which includes all discussions of data import; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalysis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder, which has not been updated since 15 August 2024.
+
+All discussions of variable cleaning, processing, and feature engineering are available in the files above with accompanying code that is fully reproducible.
+
+## Limitations
+
+Historical data is limited by the people and administrative structures that initially created it. Historical datasets for Brazil are characterized by limited sample sizes, missing data, and imprecise or undefined measurements [@ball2020; @franken2025].
+
+This dataset excludes multiple months of clinical records due to gaps in the archival sources. During data collection, I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926) in the historical archives, and thus this dataset has missing data. Further, the dataset is of limited size (n=2,845) and restricted to a short historical period (1922–1926). 
+
+Birth weight measurements were also relatively imprecise and the methods for weighing newborns was not included in the original records. All birth weights were rounded to the nearest 50 g.
+
+Finally, the initial clinical records excluded important information related to birth weight as a health outcome, including gestational age, maternal marital or civil status, and post-natal feeding regimens.
+
+## Ethics statement
+
+The author has read and follow the ethical requirements for publication in Data in Brief and confirms that the current work does not involve human subjects, animal experiments, or any data collected from social media platforms.
+
+## CRediT author statement
+
+Cassia Roth was the sole author for this dataset.
+
+## Acknowledgments
+
+The author acknowledges Andreas Handel for help on creating reproducible code and William Summerhill for mentorship during the data collection and analysis process. The National Science Foundation (1226599) and the Fulbright IIE funded the archival research portion of this research.
+
+## Declaration of competing interests
+
+The author declares that she has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+# References

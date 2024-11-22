@@ -23,27 +23,19 @@ library(gtsummary) #for summary tables
 library(flextable) #for nice tables
 ```
 
-## Schematic of workflow
+## Background
 
-If reproducing this analysis, please run code in the following order: 1) `processingfile-v1.qmd` in the `processing-code` folder; 2) `eda-v1.qmd` in the `eda-code` folder; 3) `introanalyis-v1.qmd` in the `analysis-code` folder; 4) `fullanalysis-v1.qmd` in the `analysis-code` folder. Older versions of code in `.r` are available in the `old-code` folder. These files have not been updated since 15 August 2024.
+In this paper, I analyze a unique dataset of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. These hospital records were a result of a public-private expansion in what was then called maternal-infant healthcare services in Brazil's urban centers, specifically the capital city of Rio de Janeiro. By the 1920s, at least in Brazil’s large cities, public maternity hospitals, established in the previous three decades, had grown in number and size as obstetricians and public health officials worked to provide prenatal care and hospitalize labor and delivery [@barreto2015; @barreto2016; @mott2002; @roth2020]. Dedicated maternity hospitals such as Laranjeiras were central to this hospitalization process. There, obstetricians and gynecologists, all male and mostly White, began implementing surgical advances [@martins2004; @rohden2009; @roth2021].Although the notes show no direct evidence of racist medical practice, the hospital space was one of gender and racial hierarchy – not separate from Brazilian society but its microcosm. Underlying these structural and technological changes was the scientific motherhood movement, supported by both physicians and elite women, which relied on advances in medical knowledge and clinical infrastructure to support a technocratic model towards pregnancy and motherhood. This movement essentialized notions of gender, foregrounding physicians’ scientific authority [@besse1996; @freire2009; @martins2008]. As the higher Maternal Mortality Ratio (MMR) and stillbirth rate (SBR) in the clinic compared to the city of Rio de Janeiro demonstrate, delivering in the presence of licensed clinicians did not necessarily improve outcomes for the mother and infant and supports other historical studies that interventionist obstetric procedures before antibiotics and blood transfusions could be detrimental to maternal-infant health [@goldin1989].
 
-## Data import and cleaning
+During the same period, centuries-old racial hierarchies forged under racial slavery morphed into new allegedly scientific ways to categorize humans based on skin color in post-abolition contexts. In Brazil, with a large Black and mixed-race population, early twentieth-century racist thinkers first embraced a theory of whitening in which they believed that racial mixture would eventually lead to a White population [@schwarcz1993; @skidmore1993]. Both government- and private-run initiatives to attract European immigrants had begun as early as the 1870s, in an effort to replace the slave labor force not with freed Blacks but with White immigrants [@ball2020; @skidmore1993]. In the 1920s and 1930s, scientists and policymakers turned toward preventive eugenic theories that focused on improving environmental factors rather than coercively restricting reproduction through sterilization [@stepan1991]. Although some eugenicists called for sterilization of unfit citizens, they never couched these discussions in explicitly racial terms [@roth2020b; @Wegner2013]. In the end, however, whiteness still remained a cultural and social goal even if the state did not engage in coercive measures of reproductive control.
 
-The GitHub repository for this project includes all relevant materials. All discussions of data import are detailed in `processingfile-v1.qmd` in the `processing-code` folder. The original raw data, the codebook, and the processed data are available in the `data` folder.
-
-## Data Source
-
-In this paper, I analyze a unique dataset of 2845 recorded clinical visits to Maternidade Laranjeiras between June 1922 and May 1926. I extracted the sample from Brazil’s major obstetrics and gynecology journal in the first half of the twentieth century, the *Revista de Gynecologia e d’Obstetricia* (RGO). The RGO was associated with the country’s medical association, the National Academy of Medicine (Academia Nacional de Medicina, ANM) and the Brazilian Society of Obstetrics and Gynecology (Sociedade de Obstetricia e Gynecologia do Brasil), both based in Rio de Janeiro. The journal started in August 1907 as the *Revista de Gynecologia e D’Obstetricia do Rio de Janeiro*. In 1919, it changed to the *Revista de Gynecologia, D’Obstetricia e de Pediatria*. In 1922, it became the *Revista de Gynecologia e D’Obstetricia*.
-
-The journal published obstetricians’ and gynecologists’ clinical observations, analyses of new surgical techniques, and ANM proceedings. Between June 1922 and May 1926, RGO also published the monthly clinical reports of all women treated at the Maternidade Laranjeiras. I was unable to locate vol. 18, nos. 4, 5, 6, 8 (1924) and vol. 20, no. 4 (1926). From the available issues, I recorded the following information, when available, for all patients: patient number, gravidity and parity, skin color, age, nationality, type of delivery (natural, interventionist, operative), maternal outcome (death, discharge, transferal to separate hospital), birth outcome (spontaneous abortion, stillbirth, live birth, or neonatal death), and the mother’s reproductive history. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013].
-
-The journal is held at the Biblioteca Nacional (BN), the Maternidade Escola, Rio de Janeiro (ME-UFRJ), and the Biblioteca CB/A-Biomédica A, Universidade Estadual do Rio de Janeiro (UERJ), all in Rio de Janeiro, Brazil. Between January 2012 and July 2013, I manually digitized the journal by photographing each volume. Then, between January and August 2017, I manually input the data into Excel from the digital reproductions. I then converted this into a .csv file for upload into R.
+Census data reflects these racial currents. Brazil did not conduct censuses in 1900 or 1910, and the 1920 census excluded skin color. In 1890, Rio de Janeiro's female population comprised 56% White, 29% mixed race, and 15% Black. In 1940, the next census to include skin color, the city’s female population in 1940 comprised 69% White women, 18% mixed-race women, and 12.5% Black women. Brazil did not record censuses in 1900 or 1910 and excluded skin color in 1920. The shift from mixed-race to white women was probably an reporting artifice rather than true change [@roth2020]. 
 
 ## Study Measures
 
 There are three continuous variables: maternal age, infant birth weight, and infant length. There are nine categorical variables: skin color; ancestry; parity; nationality; combined nationality; birth outcome; maternal outcome; fetal outcome; and fetal sex.
 
-In the first round of peer review, the reviewers suggested calculating median birth weight for different immigrant groups by nationality to better justify groupings. Ball [@ball2020] found that Portuguese immigrants had worse economic opportunities in São Paulo during the same time period. Although the Portuguese immigrant experience in Rio de Janeiro was likely better due to community, merchant connection, Portuguese business owners, and job availability, I needed to better justify my nationality categorization. In the `eda-v1.qmd` file, I calculated the mean birth weight for individual nationalities and performed a t-test between Portuguese infants and infants born to all other European nationalities and Portuguese infants and infants born to White Brazilian mothers. All results were not significant at the alpha 0.05 level. Thus, I will maintain the nationality categorizations of European, Brazilian, Latin American, and Middle Eastern.
+To justify the nationality groupings, I calculated mean birth weight for different immigrant groups by nationality. Ball [-@ball2020] found that Portuguese immigrants had worse economic opportunities in São Paulo during the same time period. Although the Portuguese immigrant experience in Rio de Janeiro was likely better due to community, merchant connection, Portuguese business owners, and job availability, I needed to better justify my nationality categorization. In the `eda-v1.qmd` file, I calculated the mean birth weight for individual nationalities and performed a t-test between Portuguese infants and infants born to all other European nationalities and Portuguese infants and infants born to White Brazilian mothers. All results were not significant at the alpha 0.05 level. Thus, I will maintain the nationality categorizations of European, Brazilian, Latin American, and Middle Eastern.
 
 ```{r}
 #| label: tbl-mean
@@ -63,7 +55,7 @@ table_ttest
 
 ### Full Summary Table
 
-Here is the code for the full summary table of all variables. 
+This summary table includes all original variables. 
 
 ```{r}
 #| label: tbl-tablesupplemental
@@ -74,7 +66,7 @@ flex_table <- as_flex_table(table_supplemental)
 flex_table
 ```
 
-## Basic Statistical Analysis
+## Exploratory Analysis
 
 To better understand our outcome of interest, birth weight, the exploratory analysis includes the distribution of the data. Figure 1 is a histogram of the birth weight data, with the two dotted red lines marking the upper and lower limits of what the WHO now defines as normal birth weight [@worldhealthorganization2022].
 
@@ -111,6 +103,22 @@ Figure 4 visualizes the relationship of birth weight and length, stratified by s
 #| echo: FALSE
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
+Here, I also create a plot of the distribution of birth weights at Laranjeiras, following Wilcox's discussion of the residual and predominant birth weight distributions [@wilcox2001].
+
+```{r}
+#| label: fig-schematic-5
+#| fig-cap: Birth Weight Distribution for Afro- and Euro-Descended Infants, Maternidade Laranjeiras, 1922-1926
+#| echo: FALSE
+knitr::include_graphics(here("results","figures","residual_plot_divided.png"))
+```
+
+I also calculate (SRaB) in the hospital:
+
+$$SRaB = \frac{M}{F} \times 100$$
+
+where the total number of live male births (M) is divided by 100 live female births (F) in a given period.
+
+The sex ratio in Maternidade Laranjeiras was 1.2: there were 120 male live births per 100 female live births. The sex ratio of 120 male live births per 100 female live births is much higher than the current range of between 103 and 107 male births per 100 female births [@ritchie2024]. Historically, a skewed sex ratio suggests that preferential infanticide or abortion was occurring -- parents were more likely to terminate a pregnancy or kill an infant if it was female. Contrary to popular belief, this practice occurred in both Asian and European countries, although no evidence of it exists for the Americas [@hanlon2016]. However, this explanation does not hold for a maternity clinic in which women were seeking care to deliver their infants. Yet, the skewed sex ratio remains important to note even if we don't understand the underlying cause.
 
 ## Models
 
@@ -127,7 +135,7 @@ flex_table <- as_flex_table(table1)
 flex_table
 ```
 
-The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age on both a linear scale and age-squared with `ModifiedColor` as the main predictor variable. Neither age nor age-squared were significant. Peer reviewers asked me to include $age^2$ in the model to improve the fit. Including $age^2$ in the model did not improve the fit, and the coefficient was not significant. Despite a lack of statistical significance, the coefficients suggests that while birth weight increases with maternal age, it does so at a decreasing rate. At certain maternal age, infant birth weight begins decreasing, presenting a reverse U-shaped curve.
+The second simple bivariate linear analysis, looks at infant birth weight as a function of maternal age on both a linear scale and age-squared with `ModifiedColor` as the main predictor variable. Neither age nor age-squared were significant.  Including $age^2$ in the model did not improve the fit, and the coefficient was not significant. Despite a lack of statistical significance, the coefficients suggests that while birth weight increases with maternal age, it does so at a decreasing rate. At a certain maternal age, infant birth weight begins decreasing, presenting a reverse U-shaped curve.
 
 ```{r}
 #| label: tbl-table2
@@ -212,11 +220,11 @@ I consider `Birthweight` as the outcome of interest, but I transformed it into a
 The first model is a simple logistic regression, with modified maternal skin color as the predictor variable.
 
 ```{r}
-#| label: tbl-table5
-#| tbl-cap: "Model 5"
+#| label: tbl-table8
+#| tbl-cap: "Model 8"
 #| echo: FALSE
-table5 <- readRDS(here::here("results", "tables", "table_log1.rds"))
-flex_table <- as_flex_table(table5)
+table8 <- readRDS(here::here("results", "tables", "table_log1.rds"))
+flex_table <- as_flex_table(table8)
 flex_table
 ```
 
@@ -225,11 +233,11 @@ Model 5 demonstrates that women of African-descent had higher odds of giving bir
 The second model is also a simple logistic regression, this time using `Color` as the predictor variable (Black, mixed race, and White).
 
 ```{r}
-#| label: tbl-table6
-#| tbl-cap: "Model 6"
+#| label: tbl-table9
+#| tbl-cap: "Model 9"
 #| echo: FALSE
-table6 <- readRDS(here::here("results", "tables", "table_log2.rds"))
-flex_table <- as_flex_table(table6)
+table9 <- readRDS(here::here("results", "tables", "table_log2.rds"))
+flex_table <- as_flex_table(table9)
 flex_table
 ```
 
@@ -238,20 +246,20 @@ When using the hospital records' original skin color categories, mixed-race wome
 Then, I ran two more logistic models, one with `ModifiedColor` and the other covariates `Age`, `ModifiedStatus`, `ModifiedNationality`, and one with `Color` and these same covariates. The results are below.
 
 ```{r}
-#| label: tbl-table7
-#| tbl-cap: "Model 7"
+#| label: tbl-table10
+#| tbl-cap: "Model 10"
 #| echo: FALSE
-table7 <- readRDS(here::here("results", "tables", "table_log3.rds"))
-flex_table <- as_flex_table(table7)
+table10 <- readRDS(here::here("results", "tables", "table_log3.rds"))
+flex_table <- as_flex_table(table10)
 flex_table
 ```
 
 ```{r}
-#| label: tbl-table8
-#| tbl-cap: "Model 8"
+#| label: tbl-table11
+#| tbl-cap: "Model 11"
 #| echo: FALSE
-table8 <- readRDS(here::here("results", "tables", "table_log4.rds"))
-flex_table <- as_flex_table(table8)
+table11 <- readRDS(here::here("results", "tables", "table_log4.rds"))
+flex_table <- as_flex_table(table11)
 flex_table
 ```
 
@@ -259,14 +267,14 @@ In these two models, the only significant finding is from the final logistic mod
 
 Best practice is to not categorize continuous variables, as this can include arbitrary cutoffs for variables that are best understood continuously [@senn2005]. Thus, I will not include these logistic regressions in the final analysis.
 
-In the first round of peer review, the reviewers suggested that a logit analysis using stillbirth as an outcome would bring robustness to the racial disparities I highlight in the linear regression. After running a simple logistic regression with `FetalOutcome` as the predictor variable and `ModifiedColor` as the outcome, infants born to African-descended women had a 9% higher odds of having a stillbirth than Euro-descended women. However, all results were not significant [95% CI 0.82, 1.45; p-value 0.6], and thus I will not include them in the final analysis.
+Performing a logistic regression with stillbirth as an outcome could bring robustness to the racial disparities I highlight in the linear regression. After running a simple logistic regression with `FetalOutcome` as the predictor variable and `ModifiedColor` as the outcome, infants born to African-descended women had a 9% higher odds of having a stillbirth than Euro-descended women. However, all results were not significant [95% CI 0.82, 1.45; p-value 0.6], and thus I exclude them from the final analysis.
 
 ```{r}
-#| label: tbl-table9
-#| tbl-cap: "Model 9"
+#| label: tbl-table12
+#| tbl-cap: "Model 12"
 #| echo: FALSE
-table9 <- readRDS(here::here("results", "tables", "table_log5.rds"))
-flex_table <- as_flex_table(table9)
+table12 <- readRDS(here::here("results", "tables", "table_log5.rds"))
+flex_table <- as_flex_table(table12)
 flex_table
 ```
 
@@ -274,41 +282,15 @@ flex_table
 
 Given that this study is an inferential, hypothesis-supporting approach that is exploring how specific maternal predictors affect the outcome of interest, birth weight, please see the `fullanalysis-v1.qmd` for all predictive metrics, where I applied test/train (75-25 split) and cross-validation to test performance. Model performance did not significantly improve with these additional tests. When run on testing data, most results were insignificant, given the smaller sample size.
 
-Here I include the cross-validation results for the linear models.
-
-```{r}
-#| label: tbl-table10
-#| tbl-cap: "Cross-Validation Model 1"
-#| echo: FALSE
-ML_cv1_metrics <- readRDS(here::here("results", "tables", "ML_cv1_metrics.rds"))
-ML_cv1_metrics
-```
-
-```{r}
-#| label: tbl-table11
-#| tbl-cap: "Cross-Validation Model 2"
-#| echo: FALSE
-ML_cv2_metrics <- readRDS(here::here("results", "tables", "ML_cv2_metrics.rds"))
-ML_cv2_metrics
-```
-
-```{r}
-#| label: tbl-table12
-#| tbl-cap: "Cross-Validation Model 3"
-#| echo: FALSE
-ML_cv3_metrics <- readRDS(here::here("results", "tables", "ML_cv3_metrics.rds"))
-ML_cv3_metrics
-```
-
-```{r}
-#| label: tbl-table13
-#| tbl-cap: "Cross-Validation Model 4"
-#| echo: FALSE
-ML_cv4_metrics <- readRDS(here::here("results", "tables", "ML_cv4_metrics.rds"))
-ML_cv4_metrics
-```
-
 The performance metrics for the logistic models are available in the `introanalysis-v1.qmd` file.
+
+## Discussion
+
+Differences in birth weight between racialized groups is the paper's significant result and supports findings in other contexts. For example, differences in birth weight and childhood growth patterns among differently racialized groups in South Africa since the end of Apartheid also show a gap between White and Black and “colored” children that starts at birth and increases over time even as all children have gotten larger (@cameron2003).
+
+Although not discussed in the main analysis, discussions of epigenetic markers associated with the lived experience of racism might also be applicable to racial differences in birth weight outcomes. Studies have connected racial disparities in pregnancy outcomes, including PTB and LBW, with the accumulation of stress over the pregnant person’s life course (and the life courses of their ancestors) understood as allostatic load measured by biomarkers such as cortisol and blood pressure, mediated through epigenetic mechanisms (@leimert2020). Although there is no genetic basis for race, experiences of racism can result in the accumulation of stressors that can be expressed epigenetically and lead to adverse pregnancy and health outcomes across generations through transgenerational epigenetic inheritance (@jasienska2009; @leimert2020). Yet, it is crucial to remember that these are not deterministic processes but can be counteracted by social and political interventions that address the root causes of racism and its effects on health (@meloni2022).
+
+A more complete analysis would further explore interactions between birth weight and birth length, which can be a proxy for the nutritional and health status of the mother later in pregnancy (@santana2021). The third trimester is when most fetal weight gain occurs, and maternal malnutrition during this period can have a dramatic effect on infant birth weight (@jasienska2009; @ward1993).
 
 # AI Use
 

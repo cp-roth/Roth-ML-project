@@ -74,9 +74,9 @@ skimr::skim(ML_raw)
 
 # Clean data
 
-I created this dataset from published clinical notes from a specific maternity hospital in Rio de Janeiro, Brazil for multiple projects, mostly of a qualitative nature. Thus, I was interested in the notes clinicians included on difficult deliveries and their outcomes. These variables include qualitative information that can be excluded from our processed data, since we are not looking at qualitative notes on cases. Thus, I will remove the following variables as I process the data: `Nationality_Notes`, `Maternal_Notes`, `CauseofDeath`, `PreviousHistory`, and `Notes`. Nonetheless, for `Fetal_Notes`, we need to keep the Fetal_Notes variable at the moment as it qualifies the `FetalOutcome` variable. Further, I will exclude `Birth_Notes`, but first I will need to extract information on gestation (twin versus singleton birth).
+I created this dataset from published clinical notes from a specific maternity hospital in Rio de Janeiro, Brazil for multiple projects, mostly of a qualitative nature. Thus, I was interested in the notes clinicians included on difficult deliveries and their outcomes. These variables include qualitative information that can be excluded from our processed data, since we are not looking at qualitative notes on cases. Thus, I will remove the following variables as I process the data: `Nationality_Notes`, `Maternal_Notes`, `CauseofDeath`, `PreviousHistory`, and `Notes`. Nonetheless, for `Fetal_Notes`, we need to keep the Fetal_Notes variable as it qualifies the `FetalOutcome` variable. Further, I will exclude `Birth_Notes`, but first I will need to extract information on gestation (twin versus singleton birth).
 
-I also don't need the citation information to run regressions. So I will remove the following variables as I process our data: `VolN`, `Page`, `Number`. 
+I also don't need the citation information to run regressions. I will remove the following variables as I process our data: `VolN`, `Page`, `Number`. 
 
 ```{r}
 # Remove unnecessary variables
@@ -225,8 +225,8 @@ Mean_Birthweights <- read_csv(data_location)
 # Structure of Data
 glimpse(Mean_Birthweights)
 
-# Remove median and maternal age variables given missing data
-Mean_Birthweights <- Mean_Birthweights %>% dplyr::select(-Median, -`Maternal Age (mean)`, -"<2500gm (%)", -`Page #`)
+# Remove median,maternal age, low brith weight, page numbers, and types of measurement variables given missing data
+Mean_Birthweights <- Mean_Birthweights %>% dplyr::select(-Median, -`Maternal Age (mean)`, -"<2500gm (%)", -`Page #`, -"Measurement")
 
 # Structure of data
 glimpse(Mean_Birthweights)

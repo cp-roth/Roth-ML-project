@@ -1,2 +1,2 @@
-This folder contains the main data set titled 'Maternidade Laranjeiras' in both Excel and .csv form as well as a Codebook in a separate Excel and .csv form, which details all the column variables.
+This folder contains the main data set titled 'Maternidade Laranjeiras' in both Excel and .csv form as well as a Codebook in a separate Excel and .csv form, which details all the column variables. It also includes data for historical mean birth weights extracted from other published studies. Finally, it includes data on fertility rates from both primary and secondary sources for 1930s and 1940s Rio de Janeiro, Brazil.
 

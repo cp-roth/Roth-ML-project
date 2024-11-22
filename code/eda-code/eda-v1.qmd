@@ -138,13 +138,13 @@ Before we create a summary table, I will engage in another round of data cleanin
 
 For the `Status` variable, the Supplementary Table 1 will include all of the gravidity or parity categories from the original data. But I will also create a dummy variable for the summary table for both the final paper and the linear analysis: one category for first pregnancy/birth and one for second or more pregnancies/births. With this, I am removing the distinction between parity and gravidity since it is unclear from the original data if the physicians were categorizing the women before the delivery or after. Thus, I am assuming that both gravidity and parity refer to previous births, which risks including a history of stillbirths into a presumed history of live births. However, because these data are about women entering a hospital to give birth, rather than to receive prenatal care for a pregnancy, and this assumption can provide more statistical power for a linear regression, I assume this risk. 
 
-For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta in Portuguese meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. 
+For first pregnancy/birth, I combine all "primi" statuses and "nulli" statuses (gravida or parous) into `nulliparous`. For second or more pregnancies/births, I combine all multiple statuses (gravida or parous) into `multiparous`. This combines "multigesta", "secundigesta", and "trigesta" (-gesta in Portuguese meaning -gravida in English) into `multiparous`, since they mean the same thing (two or more pregnancies). I also combine "secundipara" and "multipara" into the category `multiparous`, since this means two or more births. The words in Portuguese and English here are the same. Gravidity refers to the total number of pregnancies a woman has, regardless of duration. Parity refers to a woman’s number of past pregnancies that reached viability and have been delivered, regardless of the number of children [@posner2013].
 
 For the `Nationality` variable, I combine all European nationalities into one category, "European", all Latin American nationalities into "Latin American", and all Middle Eastern nationalities into "Middle Eastern". I am combining categories because for many of the `European` and `Latin American` categories, there were very few observations. Moreover, I am interested in immigration as a general status rather than the relationship between specific immigrant countries and health status in Brazil. "Brazilian" will remain the same. I also create a dummy variable to check for collinearity between immigration status and skin color. I create a `Brazilian` variable (yes/no), and then I run a sub-sample analysis dropping all non-Brazilians.
 
 Finally, for the summary table, in which I want to include infant birth weight stratified by maternal skin color and by fetal sex, I will create new dummy variables here for that purpose. For maternal skin color, these variables are `Weightblack`, `Weightmixed`, and `Weightwhite`. These are categorical variables (yes/no). From these, I create new continuous dummy variables for birth weight according to maternal skin color: `WeightgramsBlack`, `WeightgramsMixed`, and `WeightgramsWhite`. I do the same process for fetal sex: `Weightfemale`, `Weightmale`, `WeightgramsFemale`, and `WeightgramsMale`.
 
-Using these new dummy variables, I created new dummy variables defining if the infants were normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) for all infants and then stratified by maternal skin color. These are `Afro_NBW` and `Afro_LBW`; and `Euro_NBW` and `Euro_LBW`. I will use these to see how many infants were low birth weight or normal birth weight for each maternal skin category in the `introanalysis-v1.qmd` file.
+Using these dummy variables, I created further dummy variables defining if the infants were normal birth weight (NBW $>2500$ g) or low birth weight (LBW $\leq2500$ g) for all infants and then stratified by maternal skin color. These are `Afro_NBW` and `Afro_LBW`; and `Euro_NBW` and `Euro_LBW`. I will use these to see how many infants were low birth weight or normal birth weight for each maternal skin category in the `introanalysis-v1.qmd` file.
 
 I will now change the observations from Portuguese to English for the remaining observations to clean up things for the summary table. In the future, I should perform this step in the processing script.
 
@@ -454,7 +454,7 @@ table_nationality_stats
 # Save table for supplemental analysis
 saveRDS(table_nationality_stats, file = here::here("results", "tables", "table_nationality_stats_final.rds"))
 ```
-The t-tests demonstrate no significant difference in the mean birthweight between Portuguese and all other European immigrants and between Portuguese and White Brazilian women. This suggests that differentiating European nationality further will not influence the regression results.
+The t-tests demonstrate no significant difference in the mean birth weight between Portuguese and all other European immigrants and between Portuguese and White Brazilian women. This suggests that differentiating European nationality further will not influence the regression results.
 
 Further, because there is only 1 observation for Austrian nationality; 3 observations for French nationality; and 2 observations for Polish and Swiss nationalities, I will drop these from my larger summary table.
 
@@ -637,7 +637,8 @@ table2 <- flextable(Mean_Birthweights) %>%
   ) %>%
   bold(part = "header") %>%
   #autofit() %>%
-  set_table_properties(layout = "autofit", width = 1, align = "center")
+  set_table_properties(layout = "autofit", width = 1, align = "center") %>%
+  add_footer_lines("*All values are sample means except the Steckel estimate, which is a regression coefficient.")
 table2
 
 #Save table
