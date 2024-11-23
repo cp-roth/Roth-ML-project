@@ -519,7 +519,8 @@ table_years <- ML_linear %>%
                       data = .x)),
     tables = map(model, ~tbl_regression(.x, 
                                       exponentiate = FALSE, 
-                                      intercept = TRUE) %>% 
+                                      intercept = TRUE,
+                                      conf.int = FALSE) %>% 
                    bold_p() %>% 
                    add_glance_table(include = c(r.squared, adj.r.squared, nobs)) %>%
                    modify_column_unhide(columns = c(statistic, std.error)))
