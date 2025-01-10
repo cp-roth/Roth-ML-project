@@ -94,7 +94,7 @@ Figure 4 visualizes the relationship of birth weight and length, stratified by s
 #| echo: FALSE
 knitr::include_graphics(here("results","figures","length_weight_sex.png"))
 ```
-I also create a plot of the distribution of birth weights at Laranjeiras, following Wilcox's [-@wilcox2001] discussion of the residual and predominant birth weight distributions.
+I also created a plot of the distribution of birth weights at Laranjeiras, following Wilcox's [-@wilcox2001] discussion of the residual and predominant birth weight distributions.
 
 ```{r}
 #| label: fig-schematic-5
@@ -103,7 +103,7 @@ I also create a plot of the distribution of birth weights at Laranjeiras, follow
 knitr::include_graphics(here("results","figures","residual_plot_divided.png"))
 ```
 
-I also calculate sex ratio at birth (SRaB) in the hospital:
+I also calculated sex ratio at birth (SRaB) in the hospital:
 
 $$SRaB = \frac{M}{F} \times 100$$
 
@@ -137,7 +137,7 @@ flex_table <- as_flex_table(table2)
 flex_table
 ```
 
-The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, age squared, nationality, and gestational status on infant birth weight with the `ModifiedColor` variable as the main predictor variable.
+The third exploratory statistical model is a multilinear regression, looking at the relationship of maternal skin color, age, $age^2$, nationality, and gestational status on infant birth weight with the `ModifiedColor` variable as the main predictor variable.
 
 ```{r}
 #| label: tbl-age2
